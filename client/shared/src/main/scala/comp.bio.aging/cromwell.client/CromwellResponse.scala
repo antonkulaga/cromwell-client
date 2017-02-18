@@ -29,3 +29,5 @@ trait WorkflowResponse extends CromwellResponse
 @JsonCodec case class Logs(calls: Map[String, List[LogCall]], id: String) extends WorkflowResponse
 
 @JsonCodec case class LogCall(stderr: String, stdout: String, attempt: Int, shardIndex: Int) extends CromwellResponse
+
+@JsonCodec case class Backends(supportedBackends: List[String], defaultBackend: String) extends CromwellResponse

@@ -4,13 +4,13 @@ import java.nio.file.Paths
 
 import wdl4s.WdlNamespace
 
-import scala.util.Try
+import caseapp._
 
-/**
-  * Created by antonkulaga on 2/18/17.
-  */
-class Main {
-  def loadWdl(path: String): Try[WdlNamespace] = {
-    WdlNamespace.loadUsingPath(Paths.get(path), None, None)
-  }
-}
+import scala.util.Try
+/*
+sealed trait CromwellCommand extends Command
+
+//TODO: add commands
+@AppName("Cromwell-Client-CLI")
+object Main extends CommandAppOf[CromwellCommand]
+*/

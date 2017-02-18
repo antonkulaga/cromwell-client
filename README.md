@@ -27,7 +27,7 @@ import scala.concurrent.Future
 val client = CromwellClient.localhost
 val workflow = "/home/antonkulaga/denigma/rna-seq/RNA_Seq.wdl"
 val file = File(workflow)
-val result: Future[Status] = client.postWorkflow(file.lines.mkString("\n"))
+val result: Future[Status] = client.postWorkflowFiles(file)
 ```
 
 Get the outputs by the id:

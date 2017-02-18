@@ -22,12 +22,11 @@ import io.circe.syntax._
 import io.circe._
 import io.circe.generic.semiauto._
 
-object CromwellClient {
-  lazy val localhost = new CromwellClient("http://localhost:8000/api", "v1")
-}
+trait CromwellClientShared {
 
-class CromwellClient(base: String, version: String = "v1") {
-
+  def base: String
+  def version: String
+  
   private implicit def tryToFuture[T](t: Try[T]): Future[T] = {
     t match{
       case Success(s) => Future.successful(s)
@@ -95,5 +94,7 @@ class CromwellClient(base: String, version: String = "v1") {
   def getLogsRequest(id: String): Future[SimpleHttpResponse] = getRequest(s"/workflows/${version}/${id}/logs")
 
   def getLogs(id: String): Future[Logs] = get[Logs](s"/workflows/${version}/${id}/logs")
+
+  def getBackends: Future[Backends] =  get[Backends](s"/workflows/${version}/backends")
 
 }

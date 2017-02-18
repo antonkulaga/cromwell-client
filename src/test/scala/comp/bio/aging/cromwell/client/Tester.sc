@@ -1,4 +1,5 @@
 import java.io.{File => JFile}
+
 import better.files._
 import comp.bio.aging.cromwell.client.CromwellClient
 
@@ -17,6 +18,8 @@ val id = "548a191d-deaf-4ad8-9c9c-9083b6ecbff8"
 
 val logs = client.waitFor(client.getLogs(id))
 println(logs)
+
+val backends = client.waitFor(client.getBackends)
 /*
 val result = client.waitFor(client.postWorkflow(file.lines.mkString("\n")))
 val id = result.id
