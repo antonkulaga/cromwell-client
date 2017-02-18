@@ -1,9 +1,11 @@
+/org.denigma.kappa/messages/ServerMessages.scala
 *.class
 *.log
+logs
 
 # sbt specific
-.cache
-.history
+.cache/
+.history/
 .lib/
 dist/*
 target/
@@ -11,7 +13,24 @@ lib_managed/
 src_managed/
 project/boot/
 project/plugins/project/
+.idea
 
 # Scala-IDE specific
 .scala_dependencies
 .worksheet
+build
+.classpath
+.project
+.settings
+.cache-main
+bin
+org.scala-ide.sdt.core/META-INF/MANIFEST.MF
+org.scala-ide.sdt.update-site/site.xml
+
+#VIM specific
+tags
+.*.swp
+.*.swo
+
+#MAC OS specific
+.DS_Store
