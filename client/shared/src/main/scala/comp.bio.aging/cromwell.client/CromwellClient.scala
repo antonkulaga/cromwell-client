@@ -88,8 +88,12 @@ class CromwellClient(base: String, version: String = "v1") {
     post[Status](s"/workflows/${version}")(new MultiPartBody(parts))
   }
 
-  def getOutputs(id: String) = getRequest(s"/workflows/${version}/${id}/outputs")
+  def getOutputsRequest(id: String): Future[SimpleHttpResponse] = getRequest(s"/workflows/${version}/${id}/outputs")
 
-  def getLogs(id: String) = getRequest(s"/workflows/${version}/${id}/outputs")
+  def getOutputs(id: String): Future[Outputs] = get[Outputs](s"/workflows/${version}/${id}/outputs")
+
+  def getLogsRequest(id: String): Future[SimpleHttpResponse] = getRequest(s"/workflows/${version}/${id}/logs")
+
+  def getLogs(id: String): Future[Logs] = get[Logs](s"/workflows/${version}/${id}/logs")
 
 }

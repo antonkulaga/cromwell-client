@@ -25,10 +25,6 @@ import comp.bio.aging.cromwell.client._
 import scala.concurrent.Future
 
 val client = CromwellClient.localhost
-val version = client.waitFor(client.getVersion)
-
-val stats = client.waitFor(client.getStats)
-
 val workflow = "/home/antonkulaga/denigma/rna-seq/RNA_Seq.wdl"
 val file = File(workflow)
 val result: Future[Status] = client.postWorkflow(file.lines.mkString("\n"))
