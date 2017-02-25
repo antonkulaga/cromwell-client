@@ -67,7 +67,9 @@ lazy val  cromwellClient = crossProject
 		crossScalaVersions := Seq("2.12.1", "2.11.8"),
 
 		libraryDependencies ++= Seq(
-			"fr.hmil" %%% "roshttp" % "2.0.1"
+			"fr.hmil" %%% "roshttp" % "2.0.1",
+			"com.beachape" %% "enumeratum" % "1.5.7",
+			"com.lihaoyi" %%% "pprint" % "0.4.4"
     ),
 		libraryDependencies ++= Seq(
 			"io.circe" %%% "circe-core",

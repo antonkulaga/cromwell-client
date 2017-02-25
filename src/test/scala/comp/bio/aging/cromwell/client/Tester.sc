@@ -1,27 +1,41 @@
 import java.io.{File => JFile}
 
 import better.files._
-import comp.bio.aging.cromwell.client.CromwellClient
-
+import comp.bio.aging.cromwell.client.{CromwellClient, Status}
+import fr.hmil.roshttp.body.JSONBody
+import fr.hmil.roshttp.body.JSONBody._
 val client = CromwellClient.localhost
-
-/*
-val version = client.waitFor(client.getVersion)
+import fr.hmil.roshttp.body.Implicits._
 
 val stats = client.waitFor(client.getStats)
 
 val workflow = "/home/antonkulaga/denigma/rna-seq/RNA_Seq.wdl"
 val file = File(workflow)
-*/
 
-val id = "548a191d-deaf-4ad8-9c9c-9083b6ecbff8"
+def runWorkflow(): Status = {
 
-val logs = client.waitFor(client.getLogs(id))
-println(logs)
+  val input =  JSONObject(
+    "wf.hello.pattern"-> "^[a-z]+$",
+    "wf.hello.in"-> "/home/antonkulaga/Documents/test.txt"
+  )
+  client.waitFor(client.postWorkflowFiles(file, Some(input)))
+}
 
-val backends = client.waitFor(client.getBackends)
+//runWorkflow()
+client.waitFor(client.mapQuery()(r=>client.getOutputsRequest(r.id))).map(r=>r.body)
+val outputs = client.waitFor(client.getAllOutputs())
+pprint.pprintln(outputs)
+outputs.head
+//val logs = client.waitFor(client.getAllLogs())
+//pprint.pprintln(logs)
+
+
+//val id = "f9ed8341-4a16-4fd2-a5b6-71946d0e325c"
 /*
-val result = client.waitFor(client.postWorkflow(file.lines.mkString("\n")))
-val id = result.id
-val status = result.status
-*/
+val b = client.waitFor(client.getMetadataRequest(id)).body
+val metadata = client.waitFor(client.getMetadata(id))
+val failures = metadata.failures
+pprint.pprintln(failures)
+  */
+//client.waitFor(client.getLogsRequest(id)).body
+//client.waitFor(client.getLogs(id))

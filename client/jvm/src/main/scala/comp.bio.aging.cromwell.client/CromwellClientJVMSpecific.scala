@@ -1,5 +1,6 @@
 package comp.bio.aging.cromwell.client
 import fr.hmil.roshttp.body.JSONBody
+import fr.hmil.roshttp.body.JSONBody.JSONObject
 
 import scala.concurrent.Future
 
@@ -12,8 +13,8 @@ trait CromwellClientJVMSpecific {
   import java.io.{File => JFile}
   import better.files._
 
-  def postWorkflowFiles(file: File, workflowInputs: Option[JSONBody] = None,
-                   workflowOptions: Option[JSONBody] = None,
-                   wdlDependencies: Option[JSONBody] = None): Future[Status] =
+  def postWorkflowFiles(file: File, workflowInputs: Option[JSONObject] = None,
+                   workflowOptions: Option[JSONObject] = None,
+                   wdlDependencies: Option[JSONObject] = None): Future[Status] =
     self.postWorkflow(file.lines.mkString("\n"), workflowInputs, workflowOptions, wdlDependencies)
 }

@@ -1,5 +1,6 @@
 package comp.bio.aging.cromwell.client
 
+import cats.MonadCombine
 import fr.hmil.roshttp.HttpRequest
 import fr.hmil.roshttp.body.JSONBody.JSONObject
 
@@ -21,6 +22,7 @@ import io.circe.parser._
 import io.circe.syntax._
 import io.circe._
 import io.circe.generic.semiauto._
+import cats.implicits._
 
 trait CromwellClientShared {
 
@@ -72,13 +74,12 @@ trait CromwellClientShared {
 
   def getStats: Future[Stats] = get[Stats](s"/engine/${version}/stats")
 
-
   def getVersion: Future[Version] = get[Version](s"/engine/${version}/version")
 
   def postWorkflow(fileContent: String,
-                   workflowInputs: Option[JSONBody] = None,
-                   workflowOptions: Option[JSONBody] = None,
-                   wdlDependencies: Option[JSONBody] = None
+                   workflowInputs: Option[JSONObject] = None,
+                   workflowOptions: Option[JSONObject] = None,
+                   wdlDependencies: Option[JSONObject] = None
                   ): Future[Status] = {
     val parts = Map[String, BodyPart]("wdlSource" -> PlainTextBody(fileContent)) ++
       workflowInputs.fold(Map.empty[String, BodyPart])(part  => Map("workflowInputs" -> part))
@@ -91,10 +92,68 @@ trait CromwellClientShared {
 
   def getOutputs(id: String): Future[Outputs] = get[Outputs](s"/workflows/${version}/${id}/outputs")
 
+  protected def queryString(status: WorkflowStatus = WorkflowStatus.Undefined) = status match {
+    case WorkflowStatus.Undefined => s"/workflows/${version}/query"
+    case status: WorkflowStatus =>  s"/workflows/${version}/query?status=${status.entryName}"
+  }
+
+  def getQueryRequest(status: WorkflowStatus = WorkflowStatus.Undefined): Future[SimpleHttpResponse] =
+    getRequest(queryString(status))
+
+  def getQuery(status: WorkflowStatus = WorkflowStatus.Undefined) = {
+    val url = queryString(status)
+    get[QueryResults](url)
+  }
+
+  def mapQuery[T](status: WorkflowStatus = WorkflowStatus.Undefined)(fun: QueryResult => Future[T]): Future[List[T]] = {
+    val url = queryString(status)
+    val results = get[QueryResults](url)
+    results.flatMap(r=>Future.sequence(r.results.map(fun)))
+  }
+
+  def getAllOutputs(status: WorkflowStatus = WorkflowStatus.Undefined): Future[List[Outputs]] =
+    mapQuery(status)(r=>this.getOutputs(r.id))
+
+  //def getAllSucceeded: Future[QueryResults] = getQuery(WorkflowStatus.Succeeded)
+
   def getLogsRequest(id: String): Future[SimpleHttpResponse] = getRequest(s"/workflows/${version}/${id}/logs")
 
   def getLogs(id: String): Future[Logs] = get[Logs](s"/workflows/${version}/${id}/logs")
 
+  def getAllLogs(status: WorkflowStatus = WorkflowStatus.Undefined): Future[List[Logs]] = mapQuery(status)(r=>getLogs(r.id))
+
   def getBackends: Future[Backends] =  get[Backends](s"/workflows/${version}/backends")
 
+  def getMetadataRequest(id: String): Future[SimpleHttpResponse] = getRequest(s"/workflows/${version}/${id}/metadata")
+
+  def getMetadata(id: String): Future[Metadata] = get[Metadata](s"/workflows/${version}/${id}/metadata")
+
+}
+
+import enumeratum._
+
+sealed trait WorkflowStatus extends EnumEntry
+
+object WorkflowStatus extends Enum[WorkflowStatus] {
+
+  /*
+   `findValues` is a protected method that invokes a macro to find all `Greeting` object declarations inside an `Enum`
+
+   You use it to implement the `val values` member
+  */
+  val values = findValues
+
+  case object Submitted extends WorkflowStatus
+
+  case object Running extends WorkflowStatus
+
+  case object Aborting extends WorkflowStatus
+
+  case object Failed extends WorkflowStatus
+
+  case object Succeeded extends WorkflowStatus
+
+  case object Aborted extends WorkflowStatus
+
+  case object Undefined extends WorkflowStatus
 }
