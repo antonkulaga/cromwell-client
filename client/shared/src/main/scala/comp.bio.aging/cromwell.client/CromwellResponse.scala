@@ -1,4 +1,6 @@
 package comp.bio.aging.cromwell.client
+import java.time.{LocalDateTime, LocalTime, ZonedDateTime}
+
 import scala.concurrent.{Await, Future}
 import scala.concurrent.duration._
 import fr.hmil.roshttp.body.Implicits._
@@ -34,11 +36,32 @@ object CallOutput {
       case Some(json) => Right(CallOutput(json))
     }
   }
+
+
 }
 
 @JsonCodec case class Outputs(outputs: Map[String,  CallOutput], id: String) extends WorkflowResponse
 
-@JsonCodec case class QueryResult(id: String, name: String, start: String, end: String) extends WorkflowResponse
+
+object QueryResult{
+  import cats.syntax.either._
+  // import cats.syntax.either._
+
+  import java.time.Instant
+  // import java.time.Instant
+
+  implicit val encodeInstant: Encoder[ZonedDateTime] = Encoder.encodeString.contramap[ZonedDateTime](_.toString)
+  // encodeInstant: io.circe.Encoder[java.time.Instant] = io.circe.Encoder$$anon$11@62b49832
+
+  implicit val decodeInstant: Decoder[ZonedDateTime] = Decoder.decodeString.emap { str =>
+    Either.catchNonFatal(ZonedDateTime.parse(str)).leftMap(t => "ZonedDateTime")
+  }
+}
+
+@JsonCodec case class QueryResult(id: String, status: String, start: ZonedDateTime, end: ZonedDateTime) extends WorkflowResponse
+{
+  lazy val duration: FiniteDuration = FiniteDuration(java.time.Duration.between(start.toInstant, end.toInstant).toMillis, MILLISECONDS)
+}
 
 @JsonCodec case class Status(id: String, status: String) extends WorkflowResponse
 

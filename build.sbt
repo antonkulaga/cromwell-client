@@ -80,11 +80,13 @@ lazy val  cromwellClient = crossProject
   .jvmSettings(
     libraryDependencies ++= Seq(
 			"com.github.pathikrit" %% "better-files" % "2.17.1",
+			"io.circe" %%% "circe-java8" % circeVersion,
 			"com.lihaoyi" % "ammonite" % "0.8.2" % Test cross CrossVersion.full
     ),
 		initialCommands in (Test, console) := """ammonite.Main().run()"""
   )
   .jsSettings(
+		libraryDependencies += "org.scala-js" %%% "scalajs-java-time" % "0.2.0",
     jsDependencies += RuntimeDOM % Test
   )
 

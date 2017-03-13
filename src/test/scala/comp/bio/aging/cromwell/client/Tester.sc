@@ -9,23 +9,44 @@ import fr.hmil.roshttp.body.Implicits._
 
 val stats = client.waitFor(client.getStats)
 
-val workflow = "/home/antonkulaga/denigma/rna-seq/RNA_Seq.wdl"
+//val workflow = "/home/antonkulaga/denigma/rna-seq/worms_RNA_Seq.wdl"
+//val workflow = "/home/antonkulaga/denigma/rna-seq/RNA_Seq.wdl"
+
+
+val workflow = "/home/antonkulaga/denigma/rna-seq/bedtools.wdl"
 val file = File(workflow)
 
-def runWorkflow(): Status = {
+val data = "/home/antonkulaga/data/bedtutorial/"
 
-  val input =  JSONObject(
-    "wf.hello.pattern"-> "^[a-z]+$",
-    "wf.hello.in"-> "/home/antonkulaga/Documents/test.txt"
-  )
+val first = data + "cpg.bed"
+val second = data + "exons.bed"
+
+val input =  JSONObject(
+  "bedtest.file1"-> first,
+  "bedtest.file2"-> second
+)
+
+def runWorkflow(): Status = {
   client.waitFor(client.postWorkflowFiles(file, Some(input)))
 }
 
 //runWorkflow()
-client.waitFor(client.mapQuery()(r=>client.getOutputsRequest(r.id))).map(r=>r.body)
+
+val last = client.waitFor(client.getQuery()).results.last
+pprint.pprintln(last)
+println(last.start)
+println(last.end)
+println(last.duration.toSeconds)
+
+
+//val metadata = client.waitFor(client.getMetadata(last.id))
+//pprint.pprintln(metadata)
+
+
+//client.waitFor(client.mapQuery()(r=>client.getOutputsRequest(r.id))).map(r=>r.body)
 val outputs = client.waitFor(client.getAllOutputs())
 pprint.pprintln(outputs)
-outputs.head
+//outputs.headjd
 //val logs = client.waitFor(client.getAllLogs())
 //pprint.pprintln(logs)
 
@@ -39,3 +60,6 @@ pprint.pprintln(failures)
   */
 //client.waitFor(client.getLogsRequest(id)).body
 //client.waitFor(client.getLogs(id))
+
+
+//GSE69263
