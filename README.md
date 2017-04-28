@@ -4,6 +4,14 @@ cromwell-client
 Scala/ScalaJS Client for the Cromwell workflow engine.
 This is a work-in-progress, not all methods have been implemented and no tests yet.
 
+Adding to dependencies
+----------------------
+
+add the following to you build.sbt
+
+resolvers += sbt.Resolver.bintrayRepo("comp-bio-aging", "main")
+libraryDependencies += "comp.bio.aging" %%% "cromwell-client" % "0.0.2"
+
 Usage
 -----
 

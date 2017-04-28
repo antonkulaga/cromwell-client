@@ -8,9 +8,9 @@ lazy val commonSettings = Seq(
 
 	organization := "comp.bio.aging",
 
-	scalaVersion :=  "2.11.8",
+	scalaVersion :=  "2.12.2",
 
-	version := "0.0.1",
+	version := "0.0.2",
 
 	unmanagedClasspath in Compile ++= (unmanagedResources in Compile).value,
 
@@ -47,7 +47,7 @@ lazy val commonSettings = Seq(
 
 commonSettings
 
-lazy val circeVersion = "0.7.0"
+lazy val circeVersion = "0.7.1"
 
 lazy val  cromwellClient = crossProject
   .crossType(CrossType.Full)
@@ -64,11 +64,11 @@ lazy val  cromwellClient = crossProject
 
     name := "cromwell-client",
 
-		crossScalaVersions := Seq("2.12.1", "2.11.8"),
+		crossScalaVersions := Seq("2.12.2", "2.11.11"),
 
 		libraryDependencies ++= Seq(
 			"fr.hmil" %%% "roshttp" % "2.0.1",
-			"com.beachape" %% "enumeratum" % "1.5.7",
+			"com.beachape" %% "enumeratum" % "1.5.12",
 			"com.lihaoyi" %%% "pprint" % "0.4.4"
     ),
 		libraryDependencies ++= Seq(
@@ -81,7 +81,7 @@ lazy val  cromwellClient = crossProject
     libraryDependencies ++= Seq(
 			"com.github.pathikrit" %% "better-files" % "2.17.1",
 			"io.circe" %%% "circe-java8" % circeVersion,
-			"com.lihaoyi" % "ammonite" % "0.8.2" % Test cross CrossVersion.full
+			"com.lihaoyi" % "ammonite" % "0.8.3" % Test cross CrossVersion.full
     ),
 		initialCommands in (Test, console) := """ammonite.Main().run()"""
   )
@@ -94,11 +94,11 @@ lazy val cromwellClientJVM = cromwellClient.jvm
 
 lazy val cromwellClientJS = cromwellClient.js
 
-lazy val wdl4sV = "0.10-e040cf8-SNAP"
+lazy val wdl4sV = "0.12-97a84f3-SNAP"
 
 libraryDependencies ++= Seq(
 	"org.broadinstitute" %% "wdl4s" % wdl4sV,
-	"com.github.alexarchambault" %% "case-app" % "1.2.0-M1"
+	"com.github.alexarchambault" %% "case-app" % "1.2.0-M3"
 )
 
 dependsOn(cromwellClientJVM)

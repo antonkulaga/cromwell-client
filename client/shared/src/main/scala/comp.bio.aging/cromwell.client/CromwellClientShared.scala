@@ -1,7 +1,7 @@
 package comp.bio.aging.cromwell.client
 
 import cats.MonadCombine
-import fr.hmil.roshttp.HttpRequest
+import fr.hmil.roshttp.{AnyBody, HttpRequest}
 import fr.hmil.roshttp.body.JSONBody.JSONObject
 
 import scala.concurrent.ExecutionContext
@@ -14,7 +14,7 @@ import scala.concurrent.{Await, Future}
 import scala.concurrent.duration._
 import fr.hmil.roshttp.body.Implicits._
 import fr.hmil.roshttp.body.JSONBody._
-import fr.hmil.roshttp.body.{BodyPart, JSONBody, MultiPartBody, PlainTextBody}
+import fr.hmil.roshttp.body._
 import io.circe.Decoder.Result
 import io.circe.generic.JsonCodec
 import io.circe._
@@ -44,7 +44,7 @@ trait CromwellClientShared {
     }
   }
 
-  def waitFor[T](fut: Future[T])(implicit atMost: FiniteDuration = 3 seconds): T = {
+  def waitFor[T](fut: Future[T])(implicit atMost: FiniteDuration = 10 seconds): T = {
     Await.result(fut, atMost)
   }
 
@@ -86,6 +86,30 @@ trait CromwellClientShared {
       workflowOptions.fold(Map.empty[String, BodyPart])(part => Map("workflowOptions" -> part))
       workflowOptions.fold(Map.empty[String, BodyPart])(part => Map("wdlDependencies" -> part))
     post[Status](s"/workflows/${version}")(new MultiPartBody(parts))
+  }
+
+  def postWorkflowStrings(fileContent: String,
+                   workflowInputs: String,
+                   workflowOptions: String = "",
+                   wdlDependencies: String = ""
+                  ): Future[Status] = {
+    val parts = Map[String, BodyPart](
+      "wdlSource" -> PlainTextBody(fileContent),
+      "workflowInputs" -> AnyBody(workflowInputs)
+    )
+    val partsExtended = (workflowOptions, wdlDependencies) match {
+      case ("", "") => parts
+      case (opts, "") =>
+        parts ++ Map[String,BodyPart]("workflowOptions" -> AnyBody(opts))
+      case ("", deps) =>
+        parts ++ Map[String,BodyPart]("wdlDependencies" -> AnyBody(deps))
+      case (opts, deps) =>
+        parts ++ Map[String,BodyPart](
+          "workflowOptions" -> AnyBody.apply(workflowOptions),
+          "wdlDependencies" -> AnyBody.apply(wdlDependencies)
+        )
+    }
+    post[Status](s"/workflows/${version}")(new MultiPartBody(partsExtended ))
   }
 
   def getOutputsRequest(id: String): Future[SimpleHttpResponse] = getRequest(s"/workflows/${version}/${id}/outputs")
