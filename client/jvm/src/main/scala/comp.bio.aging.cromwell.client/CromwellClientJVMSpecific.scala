@@ -1,4 +1,6 @@
 package comp.bio.aging.cromwell.client
+import java.nio.ByteBuffer
+
 import fr.hmil.roshttp.body.{BodyPart, JSONBody, MultiPartBody, PlainTextBody}
 import fr.hmil.roshttp.body.JSONBody.JSONObject
 
@@ -13,21 +15,51 @@ trait CromwellClientJVMSpecific {
   import java.io.{File => JFile}
   import better.files._
 
-  def postWorkflowFiles(file: File, workflowInputs: Option[JSONObject] = None,
-                      workflowOptions: Option[JSONObject] = None,
-                      wdlDependencies: Option[JSONObject] = None): Future[Status] =
-    self.postWorkflow(file.lines.mkString("\n"), workflowInputs, workflowOptions, wdlDependencies)
+  def postWorkflowFiles(file: File): Future[Status] ={
+    self.postWorkflow(file.lines.mkString("\n"), None, None, None)
+  }
+
+  protected def zipFolder(file: File) = {
+    /*
+    val dir = File.newTemporaryDirectory()
+    val child = dir.createChild(file.name, true).createDirectory()
+    val zp = dir.createChild(s"${file.name}.zip", false)
+    child.zipTo(zp)
+    child.zip()
+    */
+    file.zip()
+  }
+
+  def postWorkflowFiles(file: File,
+                        workflowInputs: File,
+                        wdlDependencies: File): Future[Status] ={
+    self.postWorkflowStrings(
+      file.lines.mkString("\n"),
+      if(workflowInputs.exists) workflowInputs.lines.mkString("\n") else "",
+      "",
+      Some(ByteBuffer.wrap(zipFolder(wdlDependencies).loadBytes))
+    )
+  }
+
+  def postWorkflowFiles(file: File,
+                        workflowInputs: File,
+                        workflowOptions: File,
+                        wdlDependencies: File): Future[Status] ={
+    self.postWorkflowStrings(
+      file.lines.mkString("\n"),
+      if(workflowInputs.exists) workflowInputs.lines.mkString("\n") else "",
+      if(workflowOptions.exists) workflowOptions.lines.mkString("\n") else "",
+      Some(ByteBuffer.wrap(zipFolder(wdlDependencies).loadBytes))
+    )
+  }
+
 
   def postWorkflowFiles(fileContent: File,
                    workflowInputs: File
                   ): Future[Status] = {
     val wdl = fileContent.lines.mkString("\n")
-    val inputs = workflowInputs.lines.mkString("\n")
-    println(s"wdl\n ${wdl}")
-    println("==================")
-    println("inputs")
-    println(inputs)
-    self.postWorkflowStrings(wdl, inputs)
+    val inputs = if(workflowInputs.exists) workflowInputs.lines.mkString("\n") else ""
+    self.postWorkflowStrings(wdl, inputs, "")
   }
 
 }

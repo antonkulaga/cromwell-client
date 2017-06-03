@@ -1,8 +1,6 @@
 package comp.bio.aging.cromwell.client
 
-import comp.bio.aging.cromwell.client.Subber.client
-
-object Runner extends scala.App{
+object Tester extends scala.App{
   import java.io.{File => JFile}
   import scala.concurrent.duration._
   import better.files._
@@ -14,25 +12,30 @@ object Runner extends scala.App{
 
   import fr.hmil.roshttp.body.Implicits._
 
-
   val stats = client.waitFor(client.getStats)
-  val base = "/home/antonkulaga/denigma/rna-seq/workflows"
-  val sourcePath = s"${base}/worms"
-  val workflow = s"${sourcePath}/main_workflow.wdl"
-  val inputs = s"${sourcePath}/inputs/input.json"
-  val subs = s"${sourcePath}/subs"
+
+  val sourcePath = "/home/antonkulaga/denigma/rna-seq"
+  val workflow = s"${sourcePath}/test.wdl"
+  val inputs = s"${sourcePath}/input_test.json"
+
+  //docker run -v ~/data/nematodes/SRP058747/SRR2040663:/root itsjeffreyy/sratoolkit  /opt/sratoolkit/sam-dump SRR2040663.sra > SRR2040663.sam
 
   val file = File(workflow)
+  val filePath = "/home/shelluser/nematodes"
 
   val input = File(inputs)
 
   def runWorkflow(): Status = {
-    client.waitFor(client.postWorkflowFiles(file, input, File(subs)))
+    client.waitFor(client.postWorkflowFiles(file, input))
   }
 
+  println("???????????????")
   val status = runWorkflow()
   pprint.pprintln(status)
+  println("!!!!!!!!!!")
   println("OUTPUTS")
   val outputs = client.waitFor(client.getAllOutputs())
   pprint.pprintln(outputs)
+  //java -jar cromwell.jar run /home/antonkulaga/denigma/rna-seq/worms_RNA_Seq.wdl  /home/antonkulaga/denigma/rna-seq/local.input.json
+
 }

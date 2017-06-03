@@ -39,7 +39,7 @@ trait CromwellClientShared {
 
   private implicit def eitherErrorToFuture[T, TError<: Error](t: Either[TError, T]): Future[T] = {
     t match{
-      case Left(e:Error) => Future.failed(e)
+      case Left(e: Error) => Future.failed(e)
       case Right(s) => Future.successful(s)
     }
   }
@@ -76,30 +76,80 @@ trait CromwellClientShared {
 
   def getVersion: Future[Version] = get[Version](s"/engine/${version}/version")
 
+  /**
+    * 400
+    * Malformed Workflow ID
+    * 403
+    * Workflow in terminal status
+    * 404
+    * Workflow ID Not Found
+    * 500
+    * Internal Error
+    */
+  def abort(id: String) =  get[Status](s"/workflows/${version}/${id}/abort")
+
+  /**
+    * 400
+    * Malformed Input
+    * 500
+    * Internal Error
+    * @param fileContent
+    * @param workflowInputs
+    * @param workflowOptions
+    * @param wdlDependencies
+    * @return
+    */
   def postWorkflow(fileContent: String,
                    workflowInputs: Option[JSONObject] = None,
                    workflowOptions: Option[JSONObject] = None,
-                   wdlDependencies: Option[JSONObject] = None
+                   wdlDependencies: Option[java.nio.ByteBuffer] = None
                   ): Future[Status] = {
-    val parts = Map[String, BodyPart]("wdlSource" -> PlainTextBody(fileContent)) ++
-      workflowInputs.fold(Map.empty[String, BodyPart])(part  => Map("workflowInputs" -> part))
-      workflowOptions.fold(Map.empty[String, BodyPart])(part => Map("workflowOptions" -> part))
-      workflowOptions.fold(Map.empty[String, BodyPart])(part => Map("wdlDependencies" -> part))
+    val params: List[(String, BodyPart)] =
+      ("wdlSource" -> PlainTextBody(fileContent)) ::
+        workflowInputs.fold(List.empty[(String, BodyPart)])(part  => List("workflowInputs" -> part)) ++
+        workflowOptions.fold(List.empty[(String, BodyPart)])(part  => List("workflowOptions" -> part)) ++
+        wdlDependencies.fold(List.empty[(String, BodyPart)])(part  => List("wdlDependencies" -> ByteBufferBody(part)))
+    val parts = Map[String, BodyPart](params:_*)
     post[Status](s"/workflows/${version}")(new MultiPartBody(parts))
   }
 
   def postWorkflowStrings(fileContent: String,
                    workflowInputs: String,
+                   workflowOptions: String,
+                   wdlDependencies: Option[java.nio.ByteBuffer] = None
+                  ): Future[Status] = {
+    val inputs: List[(String, BodyPart)] = if(workflowInputs == "") Nil else
+      List(("workflowInputs" , AnyBody(workflowInputs)))
+    val options: List[(String, BodyPart)] = if(workflowOptions == "") Nil else
+      List(("workflowOptions" , AnyBody(workflowOptions)))
+    val deps: List[(String, BodyPart)] =
+      wdlDependencies.fold(List.empty[(String, BodyPart)])(part  => List("wdlDependencies" -> ByteBufferBody(part)))
+    val params = ("wdlSource" , PlainTextBody(fileContent)) :: inputs ++ options ++ deps
+    val parts = Map[String, BodyPart](params:_*)
+    /*
+    println("WORKFLOW STRINGS!")
+    println(fileContent)
+    pprint.pprintln(parts)
+    println("====")
+    */
+    post[Status](s"/workflows/${version}")(new MultiPartBody(parts))
+  }
+
+  /*
+
+
+  def postWorkflowStrings(fileContent: String,
+                   workflowInputs: String,
                    workflowOptions: String = "",
-                   wdlDependencies: String = ""
+                   wdlDependencies: Option[java.nio.ByteBuffer] = None
                   ): Future[Status] = {
     val parts = Map[String, BodyPart](
       "wdlSource" -> PlainTextBody(fileContent),
       "workflowInputs" -> AnyBody(workflowInputs)
     )
     val partsExtended = (workflowOptions, wdlDependencies) match {
-      case ("", "") => parts
-      case (opts, "") =>
+      case ("", None) => parts
+      case (opts, None) =>
         parts ++ Map[String,BodyPart]("workflowOptions" -> AnyBody(opts))
       case ("", deps) =>
         parts ++ Map[String,BodyPart]("wdlDependencies" -> AnyBody(deps))
@@ -111,6 +161,7 @@ trait CromwellClientShared {
     }
     post[Status](s"/workflows/${version}")(new MultiPartBody(partsExtended ))
   }
+  */
 
   def getOutputsRequest(id: String): Future[SimpleHttpResponse] = getRequest(s"/workflows/${version}/${id}/outputs")
 

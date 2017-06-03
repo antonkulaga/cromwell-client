@@ -10,7 +10,7 @@ lazy val commonSettings = Seq(
 
 	scalaVersion :=  "2.12.2",
 
-	version := "0.0.2",
+	version := "0.0.3",
 
 	unmanagedClasspath in Compile ++= (unmanagedResources in Compile).value,
 
@@ -47,7 +47,7 @@ lazy val commonSettings = Seq(
 
 commonSettings
 
-lazy val circeVersion = "0.7.1"
+lazy val circeVersion = "0.8.0"
 
 lazy val  cromwellClient = crossProject
   .crossType(CrossType.Full)
@@ -69,7 +69,7 @@ lazy val  cromwellClient = crossProject
 		libraryDependencies ++= Seq(
 			"fr.hmil" %%% "roshttp" % "2.0.1",
 			"com.beachape" %% "enumeratum" % "1.5.12",
-			"com.lihaoyi" %%% "pprint" % "0.4.4"
+			"com.lihaoyi" %%% "pprint" % "0.5.2"
     ),
 		libraryDependencies ++= Seq(
 			"io.circe" %%% "circe-core",
@@ -81,12 +81,12 @@ lazy val  cromwellClient = crossProject
     libraryDependencies ++= Seq(
 			"com.github.pathikrit" %% "better-files" % "2.17.1",
 			"io.circe" %%% "circe-java8" % circeVersion,
-			"com.lihaoyi" % "ammonite" % "0.8.3" % Test cross CrossVersion.full
+			"com.lihaoyi" % "ammonite" % "0.8.4" % Test cross CrossVersion.full
     ),
 		initialCommands in (Test, console) := """ammonite.Main().run()"""
   )
   .jsSettings(
-		libraryDependencies += "org.scala-js" %%% "scalajs-java-time" % "0.2.0",
+		libraryDependencies += "org.scala-js" %%% "scalajs-java-time" % "0.2.1",
     jsDependencies += RuntimeDOM % Test
   )
 
@@ -94,7 +94,7 @@ lazy val cromwellClientJVM = cromwellClient.jvm
 
 lazy val cromwellClientJS = cromwellClient.js
 
-lazy val wdl4sV = "0.12-97a84f3-SNAP"
+lazy val wdl4sV = "0.13-d3813ad-SNAP"
 
 libraryDependencies ++= Seq(
 	"org.broadinstitute" %% "wdl4s" % wdl4sV,

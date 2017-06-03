@@ -12,4 +12,4 @@ addSbtPlugin("io.get-coursier" % "sbt-coursier" % "1.0.0-RC1")
 
 addSbtPlugin("se.marcuslonnberg" % "sbt-docker" % "1.4.0")
 
-addSbtPlugin("org.scala-js" % "sbt-scalajs" % "0.6.15")
+addSbtPlugin("org.scala-js" % "sbt-scalajs" % "0.6.16")

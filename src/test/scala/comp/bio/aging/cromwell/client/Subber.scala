@@ -1,8 +1,6 @@
 package comp.bio.aging.cromwell.client
 
-import comp.bio.aging.cromwell.client.Subber.client
-
-object Runner extends scala.App{
+object Subber extends scala.App{
   import java.io.{File => JFile}
   import scala.concurrent.duration._
   import better.files._
@@ -14,12 +12,12 @@ object Runner extends scala.App{
 
   import fr.hmil.roshttp.body.Implicits._
 
-
   val stats = client.waitFor(client.getStats)
+
   val base = "/home/antonkulaga/denigma/rna-seq/workflows"
-  val sourcePath = s"${base}/worms"
+  val sourcePath = s"${base}/sub"
   val workflow = s"${sourcePath}/main_workflow.wdl"
-  val inputs = s"${sourcePath}/inputs/input.json"
+  val inputs = s"${sourcePath}/input_test.json"
   val subs = s"${sourcePath}/subs"
 
   val file = File(workflow)
@@ -30,9 +28,15 @@ object Runner extends scala.App{
     client.waitFor(client.postWorkflowFiles(file, input, File(subs)))
   }
 
+  println("???????????????")
+
   val status = runWorkflow()
-  pprint.pprintln(status)
+  //pprint.pprintln(status)
+  println("!!!!!!!!!!")
   println("OUTPUTS")
+
   val outputs = client.waitFor(client.getAllOutputs())
   pprint.pprintln(outputs)
+  //java -jar cromwell.jar run /home/antonkulaga/denigma/rna-seq/worms_RNA_Seq.wdl  /home/antonkulaga/denigma/rna-seq/local.input.json
+
 }

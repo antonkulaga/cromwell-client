@@ -75,7 +75,7 @@ object QueryResult{
 
 @JsonCodec case class SubmittedFiles(inputs: String, workflow: String, options: String) extends CromwellResponse
 
-@JsonCodec case class WorkflowFailure(message: String) extends CromwellResponse
+@JsonCodec case class WorkflowFailure(message: String, causedBy: List[WorkflowFailure] = Nil) extends CromwellResponse
 
 @JsonCodec case class Metadata(workflowName: String,
                                submittedFiles: SubmittedFiles,
