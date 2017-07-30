@@ -96,35 +96,35 @@ trait CromwellClientShared {
     * @param fileContent
     * @param workflowInputs
     * @param workflowOptions
-    * @param wdlDependencies
+    * @param workflowDependencies
     * @return
     */
   def postWorkflow(fileContent: String,
                    workflowInputs: Option[JSONObject] = None,
                    workflowOptions: Option[JSONObject] = None,
-                   wdlDependencies: Option[java.nio.ByteBuffer] = None
+                   workflowDependencies: Option[java.nio.ByteBuffer] = None
                   ): Future[Status] = {
     val params: List[(String, BodyPart)] =
-      ("wdlSource" -> PlainTextBody(fileContent)) ::
+      ("workflowSource" -> PlainTextBody(fileContent)) ::
         workflowInputs.fold(List.empty[(String, BodyPart)])(part  => List("workflowInputs" -> part)) ++
         workflowOptions.fold(List.empty[(String, BodyPart)])(part  => List("workflowOptions" -> part)) ++
-        wdlDependencies.fold(List.empty[(String, BodyPart)])(part  => List("wdlDependencies" -> ByteBufferBody(part)))
+        workflowDependencies.fold(List.empty[(String, BodyPart)])(part  => List("workflowDependencies" -> ByteBufferBody(part)))
     val parts = Map[String, BodyPart](params:_*)
     post[Status](s"/workflows/${version}")(new MultiPartBody(parts))
   }
 
   def postWorkflowStrings(fileContent: String,
-                   workflowInputs: String,
-                   workflowOptions: String,
-                   wdlDependencies: Option[java.nio.ByteBuffer] = None
+                          workflowInputs: String,
+                          workflowOptions: String,
+                          workflowDependencies: Option[java.nio.ByteBuffer] = None
                   ): Future[Status] = {
     val inputs: List[(String, BodyPart)] = if(workflowInputs == "") Nil else
       List(("workflowInputs" , AnyBody(workflowInputs)))
     val options: List[(String, BodyPart)] = if(workflowOptions == "") Nil else
       List(("workflowOptions" , AnyBody(workflowOptions)))
     val deps: List[(String, BodyPart)] =
-      wdlDependencies.fold(List.empty[(String, BodyPart)])(part  => List("wdlDependencies" -> ByteBufferBody(part)))
-    val params = ("wdlSource" , PlainTextBody(fileContent)) :: inputs ++ options ++ deps
+      workflowDependencies.fold(List.empty[(String, BodyPart)])(part  => List("workflowDependencies" -> ByteBufferBody(part)))
+    val params = ("workflowSource" , PlainTextBody(fileContent)) :: inputs ++ options ++ deps
     val parts = Map[String, BodyPart](params:_*)
     /*
     println("WORKFLOW STRINGS!")
@@ -141,22 +141,22 @@ trait CromwellClientShared {
   def postWorkflowStrings(fileContent: String,
                    workflowInputs: String,
                    workflowOptions: String = "",
-                   wdlDependencies: Option[java.nio.ByteBuffer] = None
+                   workflowDependencies: Option[java.nio.ByteBuffer] = None
                   ): Future[Status] = {
     val parts = Map[String, BodyPart](
-      "wdlSource" -> PlainTextBody(fileContent),
+      "workflowSource" -> PlainTextBody(fileContent),
       "workflowInputs" -> AnyBody(workflowInputs)
     )
-    val partsExtended = (workflowOptions, wdlDependencies) match {
+    val partsExtended = (workflowOptions, workflowDependencies) match {
       case ("", None) => parts
       case (opts, None) =>
         parts ++ Map[String,BodyPart]("workflowOptions" -> AnyBody(opts))
       case ("", deps) =>
-        parts ++ Map[String,BodyPart]("wdlDependencies" -> AnyBody(deps))
+        parts ++ Map[String,BodyPart]("workflowDependencies" -> AnyBody(deps))
       case (opts, deps) =>
         parts ++ Map[String,BodyPart](
           "workflowOptions" -> AnyBody.apply(workflowOptions),
-          "wdlDependencies" -> AnyBody.apply(wdlDependencies)
+          "workflowDependencies" -> AnyBody.apply(workflowDependencies)
         )
     }
     post[Status](s"/workflows/${version}")(new MultiPartBody(partsExtended ))

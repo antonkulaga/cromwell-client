@@ -8,13 +8,14 @@ object Tester extends scala.App{
   import fr.hmil.roshttp.body.JSONBody._
   val port = "38000"
   //val client = CromwellClient.localhost
-  val client = new CromwellClient(s"http://localhost:${port}/api", "v1")
+  val host = "localhost"
+  val client = new CromwellClient(s"http://${host}:${port}/api", "v1")
 
   import fr.hmil.roshttp.body.Implicits._
 
   val stats = client.waitFor(client.getStats)
 
-  val sourcePath = "/home/antonkulaga/denigma/rna-seq"
+  val sourcePath = "/home/antonkulaga/rna-seq"
   val workflow = s"${sourcePath}/test.wdl"
   val inputs = s"${sourcePath}/input_test.json"
 

@@ -1,4 +1,3 @@
-import com.typesafe.sbt.SbtNativePackager.autoImport._
 import org.scalajs.sbtplugin.ScalaJSPlugin.autoImport._
 import sbt.Keys.{javaOptions, javacOptions, resolvers, scalacOptions}
 import sbt._
@@ -8,9 +7,9 @@ lazy val commonSettings = Seq(
 
 	organization := "comp.bio.aging",
 
-	scalaVersion :=  "2.12.2",
+	scalaVersion :=  "2.12.3",
 
-	version := "0.0.3",
+	version := "0.0.6",
 
 	unmanagedClasspath in Compile ++= (unmanagedResources in Compile).value,
 
@@ -24,10 +23,6 @@ lazy val commonSettings = Seq(
 
 	resolvers += "Broad Artifactory Snapshots" at "https://artifactory.broadinstitute.org/artifactory/libs-snapshot/",
 
-	maintainer := "Anton Kulaga <antonkulaga@gmail.com>",
-
-	packageDescription := """cromwell-client""",
-
 	bintrayRepository := "main",
 
 	bintrayOrganization := Some("comp-bio-aging"),
@@ -38,7 +33,7 @@ lazy val commonSettings = Seq(
 
 	exportJars := true,
 
-	addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.full),
+	addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.1" cross CrossVersion.full),
 
 	scalacOptions ++= Seq( "-target:jvm-1.8", "-feature", "-language:_" ),
 
@@ -59,15 +54,13 @@ lazy val  cromwellClient = crossProject
     fork in run := true,
 
     parallelExecution in Test := false,
-
-    packageSummary := "cromwellClient",
-
+    
     name := "cromwell-client",
 
-		crossScalaVersions := Seq("2.12.2", "2.11.11"),
+		crossScalaVersions := Seq("2.12.3", "2.11.11"),
 
 		libraryDependencies ++= Seq(
-			"fr.hmil" %%% "roshttp" % "2.0.1",
+			"fr.hmil" %%% "roshttp" % "2.0.2",
 			"com.beachape" %% "enumeratum" % "1.5.12",
 			"com.lihaoyi" %%% "pprint" % "0.5.2"
     ),
@@ -80,13 +73,13 @@ lazy val  cromwellClient = crossProject
   .jvmSettings(
     libraryDependencies ++= Seq(
 			"com.github.pathikrit" %% "better-files" % "2.17.1",
-			"io.circe" %%% "circe-java8" % circeVersion,
-			"com.lihaoyi" % "ammonite" % "0.8.4" % Test cross CrossVersion.full
-    ),
-		initialCommands in (Test, console) := """ammonite.Main().run()"""
+			"io.circe" %%% "circe-java8" % circeVersion
+			//"com.lihaoyi" % "ammonite" % "1.0.1" % Test cross CrossVersion.full
+    )
+		//initialCommands in (Test, console) := """ammonite.Main().run()"""
   )
   .jsSettings(
-		libraryDependencies += "org.scala-js" %%% "scalajs-java-time" % "0.2.1",
+		//libraryDependencies += "org.scala-js" %%% "scalajs-java-time" % "0.2.2",
     jsDependencies += RuntimeDOM % Test
   )
 
@@ -94,11 +87,11 @@ lazy val cromwellClientJVM = cromwellClient.jvm
 
 lazy val cromwellClientJS = cromwellClient.js
 
-lazy val wdl4sV = "0.13-d3813ad-SNAP"
+lazy val wdl4sV = "0.14-f126e40-SNAP"
 
 libraryDependencies ++= Seq(
 	"org.broadinstitute" %% "wdl4s" % wdl4sV,
-	"com.github.alexarchambault" %% "case-app" % "1.2.0-M3"
+	"com.github.alexarchambault" %% "case-app" % "1.2.0-M4"
 )
 
 dependsOn(cromwellClientJVM)

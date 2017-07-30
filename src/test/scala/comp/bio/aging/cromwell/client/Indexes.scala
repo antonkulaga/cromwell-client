@@ -1,19 +1,12 @@
 package comp.bio.aging.cromwell.client
 
-import comp.bio.aging.cromwell.client.Subber.client
-
-object Runner extends scala.App{
-  import java.io.{File => JFile}
-  import scala.concurrent.duration._
+object Indexes extends scala.App{
   import better.files._
-  import comp.bio.aging.cromwell.client.{CromwellClient, Status}
-  import fr.hmil.roshttp.body.JSONBody._
-  val port = "38000"
-  //val client = CromwellClient.localhost
-  val client = new CromwellClient(s"http://localhost:${port}/api", "v1")
+  //val host = "10.8.0.1" //localhost
+  val host  = "//localhost"
+  val port = "8000" //"38000"
 
-  import fr.hmil.roshttp.body.Implicits._
-
+  val client = new CromwellClient(s"http://${host}:${port}/api", "v1")
 
   val stats = client.waitFor(client.getStats)
   val base = "/home/antonkulaga/rna-seq/workflows"
