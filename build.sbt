@@ -2,14 +2,16 @@ import org.scalajs.sbtplugin.ScalaJSPlugin.autoImport._
 import sbt.Keys.{javaOptions, javacOptions, resolvers, scalacOptions}
 import sbt._
 
+name := "cromwell-client-parent"
+
 //settings for all the projects
 lazy val commonSettings = Seq(
 
-	organization := "comp.bio.aging",
+	organization := "group.research.aging",
 
-	scalaVersion :=  "2.12.3",
+	scalaVersion :=  "2.12.4",
 
-	version := "0.0.6",
+	version := "0.0.7",
 
 	unmanagedClasspath in Compile ++= (unmanagedResources in Compile).value,
 
@@ -23,6 +25,10 @@ lazy val commonSettings = Seq(
 
 	resolvers += "Broad Artifactory Snapshots" at "https://artifactory.broadinstitute.org/artifactory/libs-snapshot/",
 
+	addCompilerPlugin(
+		"org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.full
+	),
+
 	bintrayRepository := "main",
 
 	bintrayOrganization := Some("comp-bio-aging"),
@@ -33,8 +39,6 @@ lazy val commonSettings = Seq(
 
 	exportJars := true,
 
-	addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.1" cross CrossVersion.full),
-
 	scalacOptions ++= Seq( "-target:jvm-1.8", "-feature", "-language:_" ),
 
 	javacOptions ++= Seq("-source", "1.8", "-target", "1.8", "-Xlint", "-J-Xss5M", "-encoding", "UTF-8")
@@ -44,25 +48,24 @@ commonSettings
 
 lazy val circeVersion = "0.8.0"
 
+lazy val hammockVersion = "0.7.0"
+
 lazy val  cromwellClient = crossProject
   .crossType(CrossType.Full)
   .in(file("client"))
   .settings(commonSettings: _*)
   .settings(
-    mainClass in Compile := Some("comp.bio.aging.cromwell"),
-
     fork in run := true,
 
     parallelExecution in Test := false,
     
     name := "cromwell-client",
 
-		crossScalaVersions := Seq("2.12.3", "2.11.11"),
-
 		libraryDependencies ++= Seq(
 			"fr.hmil" %%% "roshttp" % "2.0.2",
 			"com.beachape" %% "enumeratum" % "1.5.12",
-			"com.lihaoyi" %%% "pprint" % "0.5.2"
+			"com.lihaoyi" %%% "pprint" % "0.5.3",
+			"com.pepegar" %%% "hammock-circe" % hammockVersion
     ),
 		libraryDependencies ++= Seq(
 			"io.circe" %%% "circe-core",
@@ -74,24 +77,59 @@ lazy val  cromwellClient = crossProject
     libraryDependencies ++= Seq(
 			"com.github.pathikrit" %% "better-files" % "2.17.1",
 			"io.circe" %%% "circe-java8" % circeVersion
-			//"com.lihaoyi" % "ammonite" % "1.0.1" % Test cross CrossVersion.full
     )
-		//initialCommands in (Test, console) := """ammonite.Main().run()"""
   )
   .jsSettings(
-		//libraryDependencies += "org.scala-js" %%% "scalajs-java-time" % "0.2.2",
-    jsDependencies += RuntimeDOM % Test
+		jsEnv := new org.scalajs.jsenv.jsdomnodejs.JSDOMNodeJSEnv
   )
 
 lazy val cromwellClientJVM = cromwellClient.jvm
 
 lazy val cromwellClientJS = cromwellClient.js
 
-lazy val wdl4sV = "0.14-f126e40-SNAP"
+
+lazy val cromwellWeb = crossProject
+	.crossType(CrossType.Full)
+	.in(file("web"))
+	.settings(commonSettings: _*)
+	.settings(
+
+		parallelExecution in Test := false,
+
+		name := "cromwell-web"
+	)
+	.jsSettings(
+		libraryDependencies ++= Seq(
+			"in.nvilla" %%% "monadic-html" % "0.3.2"
+		),
+		jsEnv := new org.scalajs.jsenv.jsdomnodejs.JSDOMNodeJSEnv,
+		scalaJSUseMainModuleInitializer := true
+	)
+	.jsConfigure(p=>p.enablePlugins(ScalaJSWeb))
+	.jvmSettings(
+		libraryDependencies ++= Seq(
+			"com.typesafe.akka" %% "akka-http" % "10.0.10",
+			"com.pepegar" %% "hammock-akka-http" % hammockVersion
+		),
+		pipelineStages in Assets := Seq(scalaJSPipeline),
+		fork in run := true
+	)
+	.jvmConfigure(p=>p.enablePlugins(SbtWeb, SbtTwirl))
+	.dependsOn(cromwellClient)
+
+lazy val webJS = cromwellWeb.js
+lazy val webJVM = cromwellWeb.jvm.settings(
+	scalaJSProjects := Seq(webJS)
+)
+
+
+lazy val wdl4sV = "0.15"
 
 libraryDependencies ++= Seq(
 	"org.broadinstitute" %% "wdl4s" % wdl4sV,
 	"com.github.alexarchambault" %% "case-app" % "1.2.0-M4"
 )
 
-dependsOn(cromwellClientJVM)
+dependsOn(webJVM)
+
+mainClass in Compile := (mainClass in webJVM in Compile).value

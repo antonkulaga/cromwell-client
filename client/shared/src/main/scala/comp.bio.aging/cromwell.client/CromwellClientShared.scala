@@ -1,6 +1,5 @@
 package comp.bio.aging.cromwell.client
 
-import cats.MonadCombine
 import fr.hmil.roshttp.{AnyBody, HttpRequest}
 import fr.hmil.roshttp.body.JSONBody.JSONObject
 

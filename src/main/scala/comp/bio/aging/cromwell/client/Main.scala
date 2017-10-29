@@ -2,7 +2,6 @@ package comp.bio.aging.cromwell.client
 
 import java.nio.file.Paths
 
-import wdl4s.WdlNamespace
 
 import caseapp._
 
