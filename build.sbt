@@ -50,6 +50,12 @@ lazy val circeVersion = "0.8.0"
 
 lazy val hammockVersion = "0.7.0"
 
+lazy val semanticUI = "2.2.10"
+
+lazy val webcomponents = "1.0.1"
+
+lazy val jquery = "3.1.1"
+
 lazy val  cromwellClient = crossProject
   .crossType(CrossType.Full)
   .in(file("client"))
@@ -73,10 +79,14 @@ lazy val  cromwellClient = crossProject
 			"io.circe" %%% "circe-parser"
 		).map(_ % circeVersion)
 	)
+	.disablePlugins(RevolverPlugin)
   .jvmSettings(
     libraryDependencies ++= Seq(
 			"com.github.pathikrit" %% "better-files" % "2.17.1",
-			"io.circe" %%% "circe-java8" % circeVersion
+			"io.circe" %%% "circe-java8" % circeVersion,
+			"org.webjars" % "Semantic-UI" %  semanticUI,
+			"org.webjars" % "jquery" % jquery,
+			"org.webjars" % "webcomponentsjs" % webcomponents
     )
   )
   .jsSettings(
@@ -96,8 +106,13 @@ lazy val cromwellWeb = crossProject
 
 		parallelExecution in Test := false,
 
-		name := "cromwell-web"
+		name := "cromwell-web",
+
+		libraryDependencies  ++= Seq(
+			"com.github.japgolly.scalacss" % "core_2.12" % "0.5.3"
+		)
 	)
+	.disablePlugins(RevolverPlugin)
 	.jsSettings(
 		libraryDependencies ++= Seq(
 			"in.nvilla" %%% "monadic-html" % "0.3.2"
@@ -109,9 +124,12 @@ lazy val cromwellWeb = crossProject
 	.jvmSettings(
 		libraryDependencies ++= Seq(
 			"com.typesafe.akka" %% "akka-http" % "10.0.10",
+			"com.vmunier" %% "scalajs-scripts" % "1.1.1",
 			"com.pepegar" %% "hammock-akka-http" % hammockVersion
 		),
 		pipelineStages in Assets := Seq(scalaJSPipeline),
+		compile in Compile := ((compile in Compile) dependsOn scalaJSPipeline).value,
+		(emitSourceMaps in fullOptJS) := true,
 		fork in run := true
 	)
 	.jvmConfigure(p=>p.enablePlugins(SbtWeb, SbtTwirl))
@@ -133,3 +151,5 @@ libraryDependencies ++= Seq(
 dependsOn(webJVM)
 
 mainClass in Compile := (mainClass in webJVM in Compile).value
+
+(fullClasspath in Runtime) += (packageBin in webJVM in Assets).value

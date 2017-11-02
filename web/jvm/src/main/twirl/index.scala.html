@@ -1,0 +1,17 @@
+@(content:Option[Html] = None)
+<html>
+  <head title="Cromwell client UI">
+    <script type="text/javascript" src="/lib/jquery/jquery.min.js"></script>
+    <link rel="stylesheet" href="/lib/Semantic-UI/semantic.css" />
+    <script type="text/javascript" src="/lib/Semantic-UI/semantic.js"></script>
+    <link rel="stylesheet" href="/styles/mystyles.css" />
+  </head>
+    <body>
+      @scalajs.html.scripts("web", name => s"/assets/$name", name => getClass.getResource(s"/public/$name") != null)
+
+      <main id="main" class="ui segment">
+        @{if(content.isDefined) content else ""}
+
+      </main>
+    </body>
+</html>
