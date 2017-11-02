@@ -1,17 +1,23 @@
 package group.research.aging.cromwell.web
 
+import group.research.aging.CromwellClient
 import org.scalajs.dom
 
 import scala.scalajs.js
 
 object CromwellWeb extends scala.App {
 
-    dom.window.alert("HELLO WORLD!")
     import mhtml._
     import scala.xml.Node
     import org.scalajs.dom
 
+
+    val url = Var("")
+
+    val client = new CromwellClient(s"${url.getOrElse("http://agingkills.westeurope.cloudapp.azure.com:8000")}/api", "v1")
+
     val count: Var[Int] = Var(0)
+
 
     val doge: Node =
         <img style="width: 100px;" src="http://doge2048.com/meta/doge-600.png"/>

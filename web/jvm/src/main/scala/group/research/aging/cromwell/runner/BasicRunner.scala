@@ -3,50 +3,46 @@ package group.research.aging.cromwell.runner
 import java.io.{File => JFile}
 
 import better.files._
-import comp.bio.aging.cromwell.client._
+import group.research.aging.cromwell.client._
 
 class BasicRunner(
                    val base: String,
                    val source: String,
                    val workflow: String,
-                   val host: String = "pipelines1.westeurope.cloudapp.azure.com",
-                   val port: Int = 8000
+                   val client: CromwellClient
                  )  extends scala.App {
 
-  lazy val urlEngine = s"http://${host}:${port}"
-  lazy val urlWorfklows = s"http://${host}:${port}/api"
+  lazy val sourcePath = if (source.startsWith("/")) source else s"${base}/${source}"
 
-  lazy val engine = new CromwellClient(urlEngine, "v1")
-  lazy val client = new CromwellClient(urlWorfklows, "v1")
+  lazy val workflowFile = File(if (workflow.startsWith("/")) workflow else s"${sourcePath}/${workflow}")
 
-  def stats = client.waitFor(engine.getStats)
+  def stats: Stats = client.waitFor(client.getStats)
 
-  lazy val sourcePath = if(source.startsWith("/")) source else s"${base}/${source}"
-  lazy val workflowFile = File(if(workflow.startsWith("/")) workflow else s"${sourcePath}/${workflow}")
+  def outputs: Seq[Outputs] = client.waitFor(client.getAllOutputs())
 
-  protected def runWorkflow(file: File, input: File): Status = {
-    client.waitFor(client.postWorkflowFiles(file, input))
+  def getInputFile(input: String): File = File(if (input.startsWith("/")) input else s"${sourcePath}/inputs/${input}")
+
+  def getSubs(subs: String): Option[File] = if (subs=="") None else {
+    val f = File(if (subs.startsWith("/")) subs else s"${sourcePath}/${subs}")
+    if(f.exists) Some(f) else None
   }
 
-  protected def runWorkflow(file: File, input: File, subs: File): Status = {
-    client.waitFor(client.postWorkflowFiles(file, input, subs))
+  def getOptions(option: String): Option[File] = if (option=="") None else {
+    val f: File = File(if (option.startsWith("/")) option else s"${sourcePath}/inputs/${option}")
+    if (f.exists) Some(f) else None
   }
 
-  def runWithSubs(input: String, subs: String = "subs") = {
-    lazy val subWorkflows = File( if(subs.startsWith("/")) subs else s"${sourcePath}/${subs}")
-    val inputFile = File( if(input.startsWith("/")) input else s"${sourcePath}/inputs/${input}")
-    val status = runWorkflow(workflowFile, inputFile, subWorkflows)
-    println("OUTPUTS:")
-    val outputs = client.waitFor(client.getAllOutputs())
-    pprint.pprintln(outputs)
-  }
-
-
-  def run(input: String) = {
-    val inputFile = File( if(input.startsWith("/")) input else s"${sourcePath}/inputs/${input}")
-    val status = runWorkflow(workflowFile, inputFile)
-    println("OUTPUTS:")
-    val outputs = client.waitFor(client.getAllOutputs())
+  def run(input: String, options: String = "", subs: String = ""): Unit = {
+    val status = client.waitFor(
+      client.postWorkflowFiles(
+        workflowFile,
+        getInputFile(input),
+        getOptions(options),
+        getSubs(subs)
+      )
+    )
+    println(status)
+    println("------")
     pprint.pprintln(outputs)
   }
 

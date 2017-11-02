@@ -140,16 +140,16 @@ lazy val webJVM = cromwellWeb.jvm.settings(
 	scalaJSProjects := Seq(webJS)
 )
 
-
-lazy val wdl4sV = "0.15"
-
-libraryDependencies ++= Seq(
-	"org.broadinstitute" %% "wdl4s" % wdl4sV,
-	"com.github.alexarchambault" %% "case-app" % "1.2.0-M4"
-)
-
 dependsOn(webJVM)
 
 mainClass in Compile := (mainClass in webJVM in Compile).value
 
 (fullClasspath in Runtime) += (packageBin in webJVM in Assets).value
+
+libraryDependencies += "com.lihaoyi" % "ammonite" % "1.0.3" % "test" cross CrossVersion.full
+
+sourceGenerators in Test += Def.task {
+	val file = (sourceManaged in Test).value / "amm.scala"
+	IO.write(file, """object amm extends App { ammonite.Main().run() }""")
+	Seq(file)
+}.taskValue

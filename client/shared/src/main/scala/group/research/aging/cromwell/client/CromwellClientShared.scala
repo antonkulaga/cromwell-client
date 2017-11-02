@@ -1,33 +1,37 @@
-package comp.bio.aging.cromwell.client
+package group.research.aging.cromwell.client
 
-import fr.hmil.roshttp.{AnyBody, HttpRequest}
-import fr.hmil.roshttp.body.JSONBody.JSONObject
-
-import scala.concurrent.ExecutionContext
-import monix.execution.Scheduler.Implicits.global
-
-import scala.util.{Failure, Success, Try}
-import fr.hmil.roshttp.response.SimpleHttpResponse
-
-import scala.concurrent.{Await, Future}
-import scala.concurrent.duration._
 import fr.hmil.roshttp.body.Implicits._
-import fr.hmil.roshttp.body.JSONBody._
+import fr.hmil.roshttp.body.JSONBody.JSONObject
 import fr.hmil.roshttp.body._
-import io.circe.Decoder.Result
-import io.circe.generic.JsonCodec
+import fr.hmil.roshttp.response.SimpleHttpResponse
+import fr.hmil.roshttp.{AnyBody, HttpRequest}
 import io.circe._
 import io.circe.parser._
-import io.circe.syntax._
-import io.circe._
-import io.circe.generic.semiauto._
-import cats.implicits._
+import monix.execution.Scheduler.Implicits.global
+
+import scala.concurrent.duration._
+import scala.concurrent.{Await, Future}
+import scala.util.{Failure, Success, Try}
 
 trait CromwellClientShared {
 
   def base: String
   def version: String
-  
+
+  lazy val api = "/api"
+
+  def makeWorkflowOptions(output: String, log: String="", call_log: String = ""): String =
+    s"""
+      |{
+      | "write_to_cache": true,
+      | "read_from_cache": true,
+      | "final_workflow_outputs_dir": "${output}",
+      | ${if(log!="") s""" "final_workflow_log_dir": "${log}", """ else ""}
+      | ${if (call_log != "") s""" "final_call_logs_dir": "${call_log}", """ else ""}
+      |}
+    """.stripMargin
+
+
   private implicit def tryToFuture[T](t: Try[T]): Future[T] = {
     t match{
       case Success(s) => Future.successful(s)
@@ -59,6 +63,10 @@ trait CromwellClientShared {
     }
   }
 
+  def getAPI[T](subpath: String)(implicit decoder: Decoder[T]): Future[T] = {
+    get[T](api + subpath)(decoder)
+  }
+
   def postRequest(subpath: String)(multipart: MultiPartBody): Future[SimpleHttpResponse] = {
     val request = HttpRequest(base + subpath)
     request.post(multipart)
@@ -70,6 +78,9 @@ trait CromwellClientShared {
       eitherErrorToFuture(result)
     }
   }
+
+  def postAPI[T](subpath: String)(multipart: MultiPartBody)(implicit decoder: Decoder[T]): Future[T] =
+    post[T](api + subpath)(multipart)(decoder)
 
   def getStats: Future[Stats] = get[Stats](s"/engine/${version}/stats")
 
@@ -85,7 +96,7 @@ trait CromwellClientShared {
     * 500
     * Internal Error
     */
-  def abort(id: String) =  get[Status](s"/workflows/${version}/${id}/abort")
+  def abort(id: String) =  getAPI[Status](s"/workflows/${version}/${id}/abort")
 
   /**
     * 400
@@ -109,7 +120,7 @@ trait CromwellClientShared {
         workflowOptions.fold(List.empty[(String, BodyPart)])(part  => List("workflowOptions" -> part)) ++
         workflowDependencies.fold(List.empty[(String, BodyPart)])(part  => List("workflowDependencies" -> ByteBufferBody(part)))
     val parts = Map[String, BodyPart](params:_*)
-    post[Status](s"/workflows/${version}")(new MultiPartBody(parts))
+    postAPI[Status](s"/workflows/${version}")(new MultiPartBody(parts))
   }
 
   def postWorkflowStrings(fileContent: String,
@@ -125,54 +136,20 @@ trait CromwellClientShared {
       workflowDependencies.fold(List.empty[(String, BodyPart)])(part  => List("workflowDependencies" -> ByteBufferBody(part)))
     val params = ("workflowSource" , PlainTextBody(fileContent)) :: inputs ++ options ++ deps
     val parts = Map[String, BodyPart](params:_*)
-    /*
-    println("WORKFLOW STRINGS!")
-    println(fileContent)
-    pprint.pprintln(parts)
-    println("====")
-    */
-    post[Status](s"/workflows/${version}")(new MultiPartBody(parts))
+    postAPI[Status](s"/workflows/${version}")(new MultiPartBody(parts))
   }
 
-  /*
+  def getOutputsRequest(id: String): Future[SimpleHttpResponse] = getRequest(api + s"/workflows/${version}/${id}/outputs")
 
-
-  def postWorkflowStrings(fileContent: String,
-                   workflowInputs: String,
-                   workflowOptions: String = "",
-                   workflowDependencies: Option[java.nio.ByteBuffer] = None
-                  ): Future[Status] = {
-    val parts = Map[String, BodyPart](
-      "workflowSource" -> PlainTextBody(fileContent),
-      "workflowInputs" -> AnyBody(workflowInputs)
-    )
-    val partsExtended = (workflowOptions, workflowDependencies) match {
-      case ("", None) => parts
-      case (opts, None) =>
-        parts ++ Map[String,BodyPart]("workflowOptions" -> AnyBody(opts))
-      case ("", deps) =>
-        parts ++ Map[String,BodyPart]("workflowDependencies" -> AnyBody(deps))
-      case (opts, deps) =>
-        parts ++ Map[String,BodyPart](
-          "workflowOptions" -> AnyBody.apply(workflowOptions),
-          "workflowDependencies" -> AnyBody.apply(workflowDependencies)
-        )
-    }
-    post[Status](s"/workflows/${version}")(new MultiPartBody(partsExtended ))
-  }
-  */
-
-  def getOutputsRequest(id: String): Future[SimpleHttpResponse] = getRequest(s"/workflows/${version}/${id}/outputs")
-
-  def getOutputs(id: String): Future[Outputs] = get[Outputs](s"/workflows/${version}/${id}/outputs")
+  def getOutputs(id: String): Future[Outputs] = getAPI[Outputs](s"/workflows/${version}/${id}/outputs")
 
   protected def queryString(status: WorkflowStatus = WorkflowStatus.Undefined) = status match {
-    case WorkflowStatus.Undefined => s"/workflows/${version}/query"
-    case status: WorkflowStatus =>  s"/workflows/${version}/query?status=${status.entryName}"
+    case WorkflowStatus.Undefined => api + s"/workflows/${version}/query"
+    case status: WorkflowStatus =>  api + s"/workflows/${version}/query?status=${status.entryName}"
   }
 
   def getQueryRequest(status: WorkflowStatus = WorkflowStatus.Undefined): Future[SimpleHttpResponse] =
-    getRequest(queryString(status))
+    getRequest(api + queryString(status))
 
   def getQuery(status: WorkflowStatus = WorkflowStatus.Undefined) = {
     val url = queryString(status)
@@ -181,26 +158,30 @@ trait CromwellClientShared {
 
   def mapQuery[T](status: WorkflowStatus = WorkflowStatus.Undefined)(fun: QueryResult => Future[T]): Future[List[T]] = {
     val url = queryString(status)
-    val results = get[QueryResults](url)
+    val results: Future[QueryResults] = get[QueryResults](url)
     results.flatMap(r=>Future.sequence(r.results.map(fun)))
   }
 
   def getAllOutputs(status: WorkflowStatus = WorkflowStatus.Undefined): Future[List[Outputs]] =
-    mapQuery(status)(r=>this.getOutputs(r.id))
+    {
+      mapQuery(status)(r=>this.getOutputs(r.id))
+    }
 
   //def getAllSucceeded: Future[QueryResults] = getQuery(WorkflowStatus.Succeeded)
 
-  def getLogsRequest(id: String): Future[SimpleHttpResponse] = getRequest(s"/workflows/${version}/${id}/logs")
+  def getLogsRequest(id: String): Future[SimpleHttpResponse] = getRequest(api + s"/workflows/${version}/${id}/logs")
 
-  def getLogs(id: String): Future[Logs] = get[Logs](s"/workflows/${version}/${id}/logs")
+  def getLogs(id: String): Future[Logs] = getAPI[Logs](s"/workflows/${version}/${id}/logs")
 
   def getAllLogs(status: WorkflowStatus = WorkflowStatus.Undefined): Future[List[Logs]] = mapQuery(status)(r=>getLogs(r.id))
 
-  def getBackends: Future[Backends] =  get[Backends](s"/workflows/${version}/backends")
+  def getBackends: Future[Backends] =  getAPI[Backends](s"/workflows/${version}/backends")
 
-  def getMetadataRequest(id: String): Future[SimpleHttpResponse] = getRequest(s"/workflows/${version}/${id}/metadata")
+  def getMetadataRequest(id: String): Future[SimpleHttpResponse] = getRequest(api + s"/workflows/${version}/${id}/metadata")
 
-  def getMetadata(id: String): Future[Metadata] = get[Metadata](s"/workflows/${version}/${id}/metadata")
+  def getMetadata(id: String): Future[Metadata] = getAPI[Metadata](s"/workflows/${version}/${id}/metadata")
+
+  def getAllMetadata(status: WorkflowStatus = WorkflowStatus.Undefined) =  mapQuery(status)(r=>getMetadata(r.id))
 
 }
 

@@ -12,7 +12,7 @@ object WebServer extends HttpApp {
 
 
   lazy val webjarsPrefix = "lib"
-  lazy val resourcePrefix = "resources"
+  lazy val resourcePrefix = "public"
 
   def mystyles =    path("styles" / "mystyles.css"){
     complete  {
@@ -24,7 +24,7 @@ object WebServer extends HttpApp {
   }
 
 
-  def webjars =pathPrefix(webjarsPrefix ~ Slash)  {  getFromResourceDirectory(webjarsPrefix)  }
+  def webjars = pathPrefix(webjarsPrefix ~ Slash)  {  getFromResourceDirectory(webjarsPrefix)  }
 
   def defaultPage: Option[Html] = {
    Some(html.cromwell())

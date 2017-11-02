@@ -1,14 +1,11 @@
-package comp.bio.aging.cromwell.client
-import java.time.{LocalDateTime, LocalTime, ZonedDateTime}
+package group.research.aging.cromwell.client
 
-import scala.concurrent.{Await, Future}
-import scala.concurrent.duration._
-import fr.hmil.roshttp.body.Implicits._
-import fr.hmil.roshttp.body.JSONBody._
-import fr.hmil.roshttp.body.MultiPartBody
-import fr.hmil.roshttp.body.PlainTextBody
+import java.time.ZonedDateTime
+
 import io.circe._
 import io.circe.generic.JsonCodec
+
+import scala.concurrent.duration._
 
 
 trait CromwellResponse
@@ -46,8 +43,6 @@ object CallOutput {
 object QueryResult{
   import cats.syntax.either._
   // import cats.syntax.either._
-
-  import java.time.Instant
   // import java.time.Instant
 
   implicit val encodeInstant: Encoder[ZonedDateTime] = Encoder.encodeString.contramap[ZonedDateTime](_.toString)
