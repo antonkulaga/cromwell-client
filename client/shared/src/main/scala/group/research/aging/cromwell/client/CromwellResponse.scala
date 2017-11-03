@@ -1,6 +1,7 @@
 package group.research.aging.cromwell.client
 
-import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
+import java.time.{LocalDate, ZonedDateTime}
 
 import io.circe._
 import io.circe.generic.JsonCodec
@@ -34,24 +35,39 @@ object CallOutput {
     }
   }
 
+}
+
+case class Inputs(values: Map[String, String]) extends CromwellResponse
+
+object Inputs {
+  import io.circe.syntax._
+  implicit val encode: Encoder[Inputs] = new Encoder[Inputs] {
+    final def apply(a: Inputs): Json = a.values.asJson
+  }
+
+  implicit val decode: Decoder[Inputs] = new Decoder[Inputs] {
+    final def apply(c: HCursor): Decoder.Result[Inputs] = c.focus match{
+      case None => Left(DecodingFailure("Cannot extract call output!", c.history))
+      case Some(json) => Right(Inputs(json.asObject.map(o=>o.toMap.mapValues(v=>v.toString())).get))
+    }
+  }
 
 }
 
 @JsonCodec case class Outputs(outputs: Map[String,  CallOutput], id: String) extends WorkflowResponse
 
 
-object QueryResult{
+trait WithDateTime {
   import cats.syntax.either._
   // import cats.syntax.either._
   // import java.time.Instant
-
   implicit val encodeInstant: Encoder[ZonedDateTime] = Encoder.encodeString.contramap[ZonedDateTime](_.toString)
-  // encodeInstant: io.circe.Encoder[java.time.Instant] = io.circe.Encoder$$anon$11@62b49832
-
   implicit val decodeInstant: Decoder[ZonedDateTime] = Decoder.decodeString.emap { str =>
     Either.catchNonFatal(ZonedDateTime.parse(str)).leftMap(t => "ZonedDateTime")
   }
 }
+
+object QueryResult extends WithDateTime
 
 @JsonCodec case class QueryResult(id: String, status: String, start: ZonedDateTime, end: ZonedDateTime) extends WorkflowResponse
 {
@@ -72,17 +88,26 @@ object QueryResult{
 
 @JsonCodec case class WorkflowFailure(message: String, causedBy: List[WorkflowFailure] = Nil) extends CromwellResponse
 
-@JsonCodec case class Metadata(workflowName: String,
-                               submittedFiles: SubmittedFiles,
+
+
+object Metadata extends WithDateTime
+
+@JsonCodec case class Metadata(
+                               workflowName: String,
                                workflowRoot: String,
                                id: String,
-                               inputs: Map[String, String],
                                submission: String,
                                status: String,
+                               start: ZonedDateTime,//String,
+                               end: ZonedDateTime, //String, //ISO_INSTANT
+                               inputs: Inputs,
                                failures: List[WorkflowFailure],
-                               end: String,
-                               start: String
+                               submittedFiles: SubmittedFiles,
                               ) extends WorkflowResponse
+{
+
+  //protected def parse(text: String): LocalDate = LocalDate.parse(text, DateTimeFormatter.ISO_INSTANT)
+}
 
 
 /**

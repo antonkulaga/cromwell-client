@@ -11,7 +11,7 @@ lazy val commonSettings = Seq(
 
 	scalaVersion :=  "2.12.4",
 
-	version := "0.0.7",
+	version := "0.0.8",
 
 	unmanagedClasspath in Compile ++= (unmanagedResources in Compile).value,
 
@@ -71,7 +71,7 @@ lazy val  cromwellClient = crossProject
 			"fr.hmil" %%% "roshttp" % "2.0.2",
 			"com.beachape" %% "enumeratum" % "1.5.12",
 			"com.lihaoyi" %%% "pprint" % "0.5.3",
-			"com.pepegar" %%% "hammock-circe" % hammockVersion
+			//"com.pepegar" %%% "hammock-circe" % hammockVersion
     ),
 		libraryDependencies ++= Seq(
 			"io.circe" %%% "circe-core",
@@ -90,8 +90,11 @@ lazy val  cromwellClient = crossProject
     )
   )
   .jsSettings(
-		jsEnv := new org.scalajs.jsenv.jsdomnodejs.JSDOMNodeJSEnv
-  )
+		jsEnv := new org.scalajs.jsenv.jsdomnodejs.JSDOMNodeJSEnv,
+		libraryDependencies ++= Seq(
+			"org.scala-js" %%% "scalajs-java-time" % "0.2.2"
+		)
+	)
 
 lazy val cromwellClientJVM = cromwellClient.jvm
 
@@ -125,7 +128,7 @@ lazy val cromwellWeb = crossProject
 		libraryDependencies ++= Seq(
 			"com.typesafe.akka" %% "akka-http" % "10.0.10",
 			"com.vmunier" %% "scalajs-scripts" % "1.1.1",
-			"com.pepegar" %% "hammock-akka-http" % hammockVersion
+			//"com.pepegar" %% "hammock-akka-http" % hammockVersion
 		),
 		pipelineStages in Assets := Seq(scalaJSPipeline),
 		compile in Compile := ((compile in Compile) dependsOn scalaJSPipeline).value,
@@ -146,7 +149,7 @@ mainClass in Compile := (mainClass in webJVM in Compile).value
 
 (fullClasspath in Runtime) += (packageBin in webJVM in Assets).value
 
-libraryDependencies += "com.lihaoyi" % "ammonite" % "1.0.3" % "test" cross CrossVersion.full
+libraryDependencies += "com.lihaoyi" % "ammonite" % "1.0.3" % Test cross CrossVersion.full
 
 sourceGenerators in Test += Def.task {
 	val file = (sourceManaged in Test).value / "amm.scala"

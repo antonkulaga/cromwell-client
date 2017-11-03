@@ -1,0 +1,120 @@
+{
+  "workflowName": "assembly_trinity",
+  "submittedFiles": {
+    "workflow": "workflow assembly_trinity {\n\n\n  String max_memory\n  Int threads\n  File alignment\n\n  call trinity_guided_assembly {\n      input:\n        aligment_bam = alignment,\n        cores = threads,\n        max_memory = max_memory\n  }\n\n}\n\ntask trinity_guided_assembly {\n\n    File aligment_bam\n    Int cores\n    String max_memory\n    Int max_intron = 350000\n\n    command {\n        Trinity --genome_guided_bam ${aligment_bam} \\\n                  --max_memory ${max_memory} \\\n                  --genome_guided_max_intron ${max_intron} \\\n                  --bflyCalculateCPU \\\n                  --CPU ${cores}\n    }\n\n    runtime {\n        docker: \"trinityrnaseq/trinityrnaseq@sha256:9f607b309e9c2d3457775ad21a54179e51cafbc76d4f1af97ca8ef218b128637\"\n    }\n}\n\ntask trinity_assembly {\n\n    File reads_1\n    File reads_2\n    Int cores\n    String max_memory\n\n    command {\n        Trinity --seqType fq  \\\n         --left ${reads_1} \\\n         --right ${reads_2}  \\\n         --max_memory ${max_memory} \\\n         --CPU ${cores}\n    }\n\n    runtime {\n        docker: \"trinityrnaseq/trinityrnaseq@sha256:9f607b309e9c2d3457775ad21a54179e51cafbc76d4f1af97ca8ef218b128637\"\n    }\n}",
+    "workflowType": "WDL",
+    "options": "{\n\n}",
+    "inputs": "{\"assembly_trinity.alignment\":\"/pipelines/results/graywhale/transcriptome/graywhale_merged.bam\",\"assembly_trinity.max_memory\":\"248G\",\"assembly_trinity.threads\":30}",
+    "labels": "{}"
+  },
+  "calls": {
+    "assembly_trinity.trinity_guided_assembly": [
+      {
+        "retryableFailure": false,
+        "executionStatus": "Failed",
+        "stdout": "/pipelines/cromwell_1/cromwell-executions/assembly_trinity/b57ad2a7-9c18-4c2e-b0e1-5f8db018ad56/call-trinity_guided_assembly/execution/stdout",
+        "backendStatus": "Done",
+        "shardIndex": -1,
+        "runtimeAttributes": {
+          "docker": "trinityrnaseq/trinityrnaseq@sha256:9f607b309e9c2d3457775ad21a54179e51cafbc76d4f1af97ca8ef218b128637",
+          "failOnStderr": "false",
+          "continueOnReturnCode": "0"
+        },
+        "callCaching": {
+          "allowResultReuse": false,
+          "effectiveCallCachingMode": "ReadAndWriteCache",
+          "hit": false,
+          "result": "Cache Miss"
+        },
+        "inputs": {
+          "cores": 30,
+          "aligment_bam": "/pipelines/results/graywhale/transcriptome/graywhale_merged.bam",
+          "max_memory": "248G",
+          "max_intron": 350000
+        },
+        "returnCode": -1,
+        "failures": [
+          {
+            "causedBy": [],
+            "message": "Job assembly_trinity.trinity_guided_assembly:NA:1 exited with return code -1 which has not been declared as a valid return code. See 'continueOnReturnCode' runtime attribute for more details."
+          }
+        ],
+        "jobId": "5211",
+        "backend": "Local",
+        "end": "2017-10-26T19:45:38.335Z",
+        "stderr": "/pipelines/cromwell_1/cromwell-executions/assembly_trinity/b57ad2a7-9c18-4c2e-b0e1-5f8db018ad56/call-trinity_guided_assembly/execution/stderr",
+        "callRoot": "/pipelines/cromwell_1/cromwell-executions/assembly_trinity/b57ad2a7-9c18-4c2e-b0e1-5f8db018ad56/call-trinity_guided_assembly",
+        "attempt": 1,
+        "executionEvents": [
+          {
+            "startTime": "2017-10-26T19:45:37.683Z",
+            "description": "CheckingJobStore",
+            "endTime": "2017-10-26T19:45:37.713Z"
+          },
+          {
+            "startTime": "2017-10-26T19:45:37.677Z",
+            "description": "RequestingExecutionToken",
+            "endTime": "2017-10-26T19:45:37.683Z"
+          },
+          {
+            "startTime": "2017-10-26T19:45:37.668Z",
+            "description": "Pending",
+            "endTime": "2017-10-26T19:45:37.677Z"
+          },
+          {
+            "startTime": "2017-10-26T19:45:37.713Z",
+            "description": "CheckingCacheEntryExistence",
+            "endTime": "2017-10-26T19:45:37.734Z"
+          },
+          {
+            "startTime": "2017-10-26T19:45:37.804Z",
+            "description": "CheckingCallCache",
+            "endTime": "2017-10-26T19:45:37.873Z"
+          },
+          {
+            "startTime": "2017-10-26T19:45:37.873Z",
+            "description": "RunningJob",
+            "endTime": "2017-10-26T19:45:37.980Z"
+          },
+          {
+            "startTime": "2017-10-26T19:45:37.734Z",
+            "description": "WaitingForOutputStore",
+            "endTime": "2017-10-26T19:45:37.740Z"
+          },
+          {
+            "startTime": "2017-10-26T19:45:37.980Z",
+            "description": "UpdatingJobStore",
+            "endTime": "2017-10-26T19:45:38.336Z"
+          },
+          {
+            "startTime": "2017-10-26T19:45:37.740Z",
+            "description": "PreparingJob",
+            "endTime": "2017-10-26T19:45:37.804Z"
+          }
+        ],
+        "start": "2017-10-26T19:45:37.655Z"
+      }
+    ]
+  },
+  "outputs": {},
+  "workflowRoot": "/pipelines/cromwell_1/cromwell-executions/assembly_trinity/b57ad2a7-9c18-4c2e-b0e1-5f8db018ad56",
+  "id": "b57ad2a7-9c18-4c2e-b0e1-5f8db018ad56",
+  "inputs": {
+    "assembly_trinity.max_memory": "248G",
+    "assembly_trinity.alignment": "/pipelines/results/graywhale/transcriptome/graywhale_merged.bam",
+    "assembly_trinity.threads": 30
+  },
+  "labels": {
+    "cromwell-workflow-id": "cromwell-b57ad2a7-9c18-4c2e-b0e1-5f8db018ad56"
+  },
+  "submission": "2017-10-26T18:17:19.734Z",
+  "status": "Failed",
+  "failures": [
+    {
+      "causedBy": [],
+      "message": "Job assembly_trinity.trinity_guided_assembly:NA:1 exited with return code -1 which has not been declared as a valid return code. See 'continueOnReturnCode' runtime attribute for more details."
+    }
+  ],
+  "end": "2017-10-26T19:45:38.372Z",
+  "start": "2017-10-26T19:45:35.205Z"
+}

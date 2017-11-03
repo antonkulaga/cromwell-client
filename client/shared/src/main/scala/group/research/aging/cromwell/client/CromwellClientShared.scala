@@ -56,11 +56,20 @@ trait CromwellClientShared {
     request.send()
   }
 
-  def get[T](subpath: String)(implicit decoder: Decoder[T]): Future[T] = {
-    getRequest(subpath).flatMap{ res=>
+  def getRequestAPI(subpath: String): Future[SimpleHttpResponse] = {
+    val request = HttpRequest(base + api + subpath)
+    request.send()
+  }
+
+  protected def get[T](request: Future[SimpleHttpResponse])(implicit decoder: Decoder[T]): Future[T] = {
+    request.flatMap{ res=>
       val result = parse(res.body).right.flatMap(json=>json.as[T](decoder))
       eitherErrorToFuture(result)
     }
+  }
+
+  def get[T](subpath: String)(implicit decoder: Decoder[T]): Future[T] = {
+    get[T](getRequest(subpath))(decoder)
   }
 
   def getAPI[T](subpath: String)(implicit decoder: Decoder[T]): Future[T] = {
@@ -163,15 +172,13 @@ trait CromwellClientShared {
   }
 
   def getAllOutputs(status: WorkflowStatus = WorkflowStatus.Undefined): Future[List[Outputs]] =
-    {
       mapQuery(status)(r=>this.getOutputs(r.id))
-    }
 
   //def getAllSucceeded: Future[QueryResults] = getQuery(WorkflowStatus.Succeeded)
 
   def getLogsRequest(id: String): Future[SimpleHttpResponse] = getRequest(api + s"/workflows/${version}/${id}/logs")
 
-  def getLogs(id: String): Future[Logs] = getAPI[Logs](s"/workflows/${version}/${id}/logs")
+  def getLogs(id: String): Future[Logs] = get[Logs](getLogsRequest(id))
 
   def getAllLogs(status: WorkflowStatus = WorkflowStatus.Undefined): Future[List[Logs]] = mapQuery(status)(r=>getLogs(r.id))
 
@@ -179,7 +186,7 @@ trait CromwellClientShared {
 
   def getMetadataRequest(id: String): Future[SimpleHttpResponse] = getRequest(api + s"/workflows/${version}/${id}/metadata")
 
-  def getMetadata(id: String): Future[Metadata] = getAPI[Metadata](s"/workflows/${version}/${id}/metadata")
+  def getMetadata(id: String): Future[Metadata] = get[Metadata](getMetadataRequest(id))
 
   def getAllMetadata(status: WorkflowStatus = WorkflowStatus.Undefined) =  mapQuery(status)(r=>getMetadata(r.id))
 
