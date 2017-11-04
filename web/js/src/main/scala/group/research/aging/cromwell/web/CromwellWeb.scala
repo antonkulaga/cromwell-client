@@ -1,37 +1,118 @@
 package group.research.aging.cromwell.web
 
-import group.research.aging.CromwellClient
-import org.scalajs.dom
+import group.research.aging.cromwel.client.CromwellClient
+import group.research.aging.cromwell.client.{Metadata, QueryResults}
+import org.querki.jquery._
 
-import scala.scalajs.js
+import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
+import scala.util.{Failure, Success}
 
 object CromwellWeb extends scala.App {
 
     import mhtml._
-    import scala.xml.Node
     import org.scalajs.dom
 
+    lazy val table: JQuery = $("workflows")
 
-    val url = Var("")
+    val updateEach = Var(5) //seconds
 
-    val client = new CromwellClient(s"${url.getOrElse("http://agingkills.westeurope.cloudapp.azure.com:8000")}/api", "v1")
+    //val url = Var("http://agingkills.westeurope.cloudapp.azure.com")
 
-    val count: Var[Int] = Var(0)
+    var client = new CromwellClient("http://agingkills.westeurope.cloudapp.azure.com", "v1")
 
+    val queryResults = Var(QueryResults.empty)
 
-    val doge: Node =
-        <img style="width: 100px;" src="http://doge2048.com/meta/doge-600.png"/>
+    def query(): Unit = {
+      client.getQuery().onComplete{
+        case Success(results) => queryResults := results
+        case Failure(th) => dom.console.error(th.getMessage)
+      }
+    }
 
-    val rxDoges: Rx[Seq[Node]] =
-      count.map(i => Seq.fill(i)(doge))
+    val allMetadata = Var(List.empty[Metadata])
 
-    val component = // ← look, you can even use fancy names!
-      <div>
-        <button onclick={ () => count.update(_ + 1) }>Click Me!</button>
-        { count.map(i => if (i <= 0) <div></div> else <h2>WOW!!!</h2>) }
-        { count.map(i => if (i <= 2) <div></div> else <h2>MUCH REACTIVE!!!</h2>) }
-        { count.map(i => if (i <= 5) <div></div> else <h2>SUCH BINDING!!!</h2>) }
-        { rxDoges }
+    def updateClick() = {
+      //if(client.base != url.now) client = new CromwellClient("http://agingkills.westeurope.cloudapp.azure.com", "v1")
+      metadataUpdate()
+    }
+
+    def metadataUpdate(): Unit = {
+
+      client.getAllMetadata().onComplete{
+        case Success(results) =>
+          allMetadata := results
+          //table.tablesort()
+        case Failure(th) => dom.console.error(th.getMessage)
+      }
+    }
+  """
+    |  workflowName: String,
+    |                                workflowRoot: String,
+    |                                id: String,
+    |                                submission: String,
+    |                                status: String,
+    |                                start: String,
+    |                                end: String, //ISO_INSTANT
+    |                                inputs: Inputs,
+    |                                failures: List[WorkflowFailure],
+    |                                submittedFiles: SubmittedFiles,
+    |
+  """.stripMargin
+
+    val component =
+      <div class="ui teal segment">
+        <div class="ui equal width grid">
+          <div class="column"><div class="ui input"></div></div>
+          <div class="column"><button onclick={ () => this.updateClick()}>Update</button></div>
+        </div>
+              <table id="workflows" class="ui blue sortable table">
+                <thead>
+                  <tr>
+                    <th>workflow</th>
+                    <th>status</th>
+                    <th>duration</th>
+                    <th>failures</th>
+                    <th>inputs</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {
+                  allMetadata.map(meta=>meta.map(r=>
+                  <tr>
+                    <td>
+                      {r.workflowName} <br></br>{r.id}
+                    </td>
+                    <td>{r.status}</td>
+                    <td>{r.start} - {r.end}</td>
+                    <td>{
+                      r.failures.map( f=>
+                        <div class="ui middle aligned divided list">
+                          <div class="item">
+                              <div class="content">
+                                <a class="header">{f.message}</a>
+                                {f.causedBy.mkString}
+                              </div>
+                          </div>
+                        </div>
+                      )
+                      }</td>
+                    <td>{
+                      r.inputs.values.toList.map(kv=>
+                      <div class="ui middle aligned divided list">
+                        <div class="item">
+                          <div class="content">
+                            <a class="header">{kv._1 + " = " + kv._2}</a></div>
+                        </div>
+                      </div>
+                      )
+                      }</td>
+                  </tr>
+
+                  )
+                    )
+                  }
+                </tbody>
+              </table>
       </div>
 
     val div = dom.document.getElementById("cromwell")

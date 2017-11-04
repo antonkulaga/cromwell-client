@@ -1,7 +1,6 @@
 package group.research.aging.cromwell.client
 
-import java.time.format.DateTimeFormatter
-import java.time.{LocalDate, ZonedDateTime}
+//import java.time.ZonedDateTime
 
 import io.circe._
 import io.circe.generic.JsonCodec
@@ -54,29 +53,39 @@ object Inputs {
 
 }
 
+
+object QueryResults {
+  lazy val empty = QueryResults(Nil)
+}
+
+@JsonCodec case class QueryResults(results: List[QueryResult]) extends CromwellResponse
+
+@JsonCodec case class QueryResult(id: String, status: String, start: String, end: String) extends WorkflowResponse
+
+object Metadata
+
+@JsonCodec case class Metadata(
+                                workflowName: String,
+                                workflowRoot: String,
+                                id: String,
+                                submission: String,
+                                status: String,
+                                start: String,
+                                end: String, //ISO_INSTANT
+                                inputs: Inputs,
+                                failures: List[WorkflowFailure],
+                                submittedFiles: SubmittedFiles,
+                              ) extends WorkflowResponse
+{
+
+  //protected def parse(text: String): LocalDate = LocalDate.parse(text, DateTimeFormatter.ISO_INSTANT)
+}
+
 @JsonCodec case class Outputs(outputs: Map[String,  CallOutput], id: String) extends WorkflowResponse
 
 
-trait WithDateTime {
-  import cats.syntax.either._
-  // import cats.syntax.either._
-  // import java.time.Instant
-  implicit val encodeInstant: Encoder[ZonedDateTime] = Encoder.encodeString.contramap[ZonedDateTime](_.toString)
-  implicit val decodeInstant: Decoder[ZonedDateTime] = Decoder.decodeString.emap { str =>
-    Either.catchNonFatal(ZonedDateTime.parse(str)).leftMap(t => "ZonedDateTime")
-  }
-}
-
-object QueryResult extends WithDateTime
-
-@JsonCodec case class QueryResult(id: String, status: String, start: ZonedDateTime, end: ZonedDateTime) extends WorkflowResponse
-{
-  lazy val duration: FiniteDuration = FiniteDuration(java.time.Duration.between(start.toInstant, end.toInstant).toMillis, MILLISECONDS)
-}
-
 @JsonCodec case class Status(id: String, status: String) extends WorkflowResponse
 
-@JsonCodec case class QueryResults(results: List[QueryResult]) extends CromwellResponse
 
 @JsonCodec case class Logs(calls: Map[String, List[LogCall]], id: String) extends WorkflowResponse
 
@@ -87,27 +96,6 @@ object QueryResult extends WithDateTime
 @JsonCodec case class SubmittedFiles(inputs: String, workflow: String, options: String) extends CromwellResponse
 
 @JsonCodec case class WorkflowFailure(message: String, causedBy: List[WorkflowFailure] = Nil) extends CromwellResponse
-
-
-
-object Metadata extends WithDateTime
-
-@JsonCodec case class Metadata(
-                               workflowName: String,
-                               workflowRoot: String,
-                               id: String,
-                               submission: String,
-                               status: String,
-                               start: ZonedDateTime,//String,
-                               end: ZonedDateTime, //String, //ISO_INSTANT
-                               inputs: Inputs,
-                               failures: List[WorkflowFailure],
-                               submittedFiles: SubmittedFiles,
-                              ) extends WorkflowResponse
-{
-
-  //protected def parse(text: String): LocalDate = LocalDate.parse(text, DateTimeFormatter.ISO_INSTANT)
-}
 
 
 /**

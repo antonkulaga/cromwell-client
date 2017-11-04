@@ -25,6 +25,7 @@ object Tester extends App {
   //pprint.pprintln(client.waitFor(client.getMetadata(id)))
   pprint.pprintln(client.waitFor(client.getAllMetadata()))
 
+
   //pprint.pprintln(client.waitFor(client.getQuery()))
   //pprint.pprintln(client.waitFor(client.getAllMetadata()))
 

@@ -69,7 +69,7 @@ lazy val  cromwellClient = crossProject
 
 		libraryDependencies ++= Seq(
 			"fr.hmil" %%% "roshttp" % "2.0.2",
-			"com.beachape" %% "enumeratum" % "1.5.12",
+			"com.beachape" %%% "enumeratum" % "1.5.12",
 			"com.lihaoyi" %%% "pprint" % "0.5.3",
 			//"com.pepegar" %%% "hammock-circe" % hammockVersion
     ),
@@ -92,7 +92,8 @@ lazy val  cromwellClient = crossProject
   .jsSettings(
 		jsEnv := new org.scalajs.jsenv.jsdomnodejs.JSDOMNodeJSEnv,
 		libraryDependencies ++= Seq(
-			"org.scala-js" %%% "scalajs-java-time" % "0.2.2"
+			"org.scala-js" %%% "scalajs-java-time" % "0.2.2",
+			"org.querki" %%% "jquery-facade" % "1.2"
 		)
 	)
 
