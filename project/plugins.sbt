@@ -11,3 +11,5 @@ addSbtPlugin("org.scala-js" % "sbt-scalajs" % "0.6.20")
 addSbtPlugin("com.typesafe.sbt" % "sbt-twirl" % "1.3.13")
 
 addSbtPlugin("io.spray" % "sbt-revolver" % "0.9.1") //live refresh
+
+addSbtPlugin("com.typesafe.sbt" % "sbt-native-packager" % "1.3.2")

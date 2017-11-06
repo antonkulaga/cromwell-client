@@ -131,12 +131,18 @@ lazy val cromwellWeb = crossProject
 			"com.vmunier" %% "scalajs-scripts" % "1.1.1",
 			//"com.pepegar" %% "hammock-akka-http" % hammockVersion
 		),
+		(managedClasspath in Runtime) += (packageBin in Assets).value,
 		pipelineStages in Assets := Seq(scalaJSPipeline),
-		compile in Compile := ((compile in Compile) dependsOn scalaJSPipeline).value,
+		compile in Compile := ((compile in Compile) dependsOn scalaJSProd).value,
 		(emitSourceMaps in fullOptJS) := true,
-		fork in run := true
+		fork in run := true,
+		maintainer in Docker := "Anton Kulaga <antonkulaga@gmail.com>",
+		dockerExposedPorts := Seq(8080),
+		dockerRepository := Some("quay.io/comp-bio-aging"),
 	)
-	.jvmConfigure(p=>p.enablePlugins(SbtWeb, SbtTwirl))
+	.jvmConfigure(p=>
+		p.enablePlugins(SbtWeb, SbtTwirl, JavaAppPackaging, DockerPlugin)
+	)
 	.dependsOn(cromwellClient)
 
 lazy val webJS = cromwellWeb.js

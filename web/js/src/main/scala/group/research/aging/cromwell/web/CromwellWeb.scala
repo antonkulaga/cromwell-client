@@ -31,7 +31,7 @@ object CromwellWeb extends scala.App {
 
     val allMetadata = Var(List.empty[Metadata])
 
-    def updateClick() = {
+    def updateClick(): Unit = {
       //if(client.base != url.now) client = new CromwellClient("http://agingkills.westeurope.cloudapp.azure.com", "v1")
       metadataUpdate()
     }
@@ -86,26 +86,28 @@ object CromwellWeb extends scala.App {
                     <td>{r.start} - {r.end}</td>
                     <td>{
                       r.failures.map( f=>
-                        <div class="ui middle aligned divided list">
-                          <div class="item">
-                              <div class="content">
-                                <a class="header">{f.message}</a>
-                                {f.causedBy.mkString}
-                              </div>
+                        <div class="ui negative message">
+                          <div class="header">
+                            {f.message}
                           </div>
+                          <p> {f.causedBy.mkString}
+                          </p>
                         </div>
                       )
                       }</td>
-                    <td>{
-                      r.inputs.values.toList.map(kv=>
-                      <div class="ui middle aligned divided list">
-                        <div class="item">
-                          <div class="content">
-                            <a class="header">{kv._1 + " = " + kv._2}</a></div>
-                        </div>
+                    <td>
+                      <div class="ui info message">
+                        <ul class="list">
+                        {
+                          r.inputs.values.toList.map(kv=>
+                            <li>
+                              { kv._1 + " = " + kv._2 }
+                            </li>
+                          )
+                        }
+                        </ul>
                       </div>
-                      )
-                      }</td>
+                    </td>
                   </tr>
 
                   )
