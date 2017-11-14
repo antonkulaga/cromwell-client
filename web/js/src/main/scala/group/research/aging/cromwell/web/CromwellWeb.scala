@@ -87,25 +87,22 @@ object CromwellWeb extends scala.App {
                     <td>{
                       r.failures.map( f=>
                         <div class="ui negative message">
-                          <div class="header">
                             {f.message}
-                          </div>
-                          <p> {f.causedBy.mkString}
-                          </p>
+                          <p> {f.causedBy.mkString}</p>
                         </div>
                       )
                       }</td>
                     <td>
                       <div class="ui info message">
-                        <ul class="list">
-                        {
+                        <div class="ui list">
+                          {
                           r.inputs.values.toList.map(kv=>
-                            <li>
+                            <div class="item">
                               { kv._1 + " = " + kv._2 }
-                            </li>
-                          )
-                        }
-                        </ul>
+                            </div>
+                            )
+                          }
+                        </div>
                       </div>
                     </td>
                   </tr>

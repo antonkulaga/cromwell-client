@@ -26,7 +26,7 @@ lazy val commonSettings = Seq(
 	resolvers += "Broad Artifactory Snapshots" at "https://artifactory.broadinstitute.org/artifactory/libs-snapshot/",
 
 	addCompilerPlugin(
-		"org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.full
+		"org.scalamacros" % "paradise" % "2.1.1" cross CrossVersion.full
 	),
 
 	bintrayRepository := "main",
@@ -54,7 +54,7 @@ lazy val semanticUI = "2.2.10"
 
 lazy val webcomponents = "1.0.1"
 
-lazy val jquery = "3.1.1"
+lazy val jquery = "3.2.1"
 
 lazy val  cromwellClient = crossProject
   .crossType(CrossType.Full)
@@ -82,7 +82,7 @@ lazy val  cromwellClient = crossProject
 	.disablePlugins(RevolverPlugin)
   .jvmSettings(
     libraryDependencies ++= Seq(
-			"com.github.pathikrit" %% "better-files" % "2.17.1",
+			"com.github.pathikrit" %% "better-files" % "3.2.0",
 			"io.circe" %%% "circe-java8" % circeVersion,
 			"org.webjars" % "Semantic-UI" %  semanticUI,
 			"org.webjars" % "jquery" % jquery,
@@ -113,18 +113,17 @@ lazy val cromwellWeb = crossProject
 		name := "cromwell-web",
 
 		libraryDependencies  ++= Seq(
-			"com.github.japgolly.scalacss" % "core_2.12" % "0.5.3"
+			"com.github.japgolly.scalacss" % "core_2.12" % "0.5.4"
 		)
 	)
-	.disablePlugins(RevolverPlugin)
 	.jsSettings(
 		libraryDependencies ++= Seq(
-			"in.nvilla" %%% "monadic-html" % "0.3.2"
+			"in.nvilla" %%% "monadic-html" % "0.4.0-RC1"
 		),
 		jsEnv := new org.scalajs.jsenv.jsdomnodejs.JSDOMNodeJSEnv,
 		scalaJSUseMainModuleInitializer := true
 	)
-	.jsConfigure(p=>p.enablePlugins(ScalaJSWeb))
+	.jsConfigure(p=>p.enablePlugins(ScalaJSWeb).disablePlugins(RevolverPlugin))
 	.jvmSettings(
 		libraryDependencies ++= Seq(
 			"com.typesafe.akka" %% "akka-http" % "10.0.10",
@@ -132,8 +131,8 @@ lazy val cromwellWeb = crossProject
 			//"com.pepegar" %% "hammock-akka-http" % hammockVersion
 		),
 		(managedClasspath in Runtime) += (packageBin in Assets).value,
-		pipelineStages in Assets := Seq(scalaJSPipeline),
-		compile in Compile := ((compile in Compile) dependsOn scalaJSProd).value,
+		pipelineStages in Assets := Seq(scalaJSProd),
+		//compile in Compile := ((compile in Compile) dependsOn scalaJSProd).value,
 		(emitSourceMaps in fullOptJS) := true,
 		fork in run := true,
 		maintainer in Docker := "Anton Kulaga <antonkulaga@gmail.com>",
