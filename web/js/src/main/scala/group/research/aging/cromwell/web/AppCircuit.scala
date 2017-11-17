@@ -16,12 +16,27 @@ object AppCircuit extends Circuit[AppModel] {
   // provides initial model to the Circuit
   override def initialModel = AppModel(CromwellClient.localhost, Nil)
 
+  val clientRequests = new ActionHandler(zoomTo(_.client)) {
+    override protected def handle = {
+      case Commands.GetMetadata(status)=>
+        effectOnly(Effect(value.getAllMetadata(status).map(md=>Results.UpdatedMetadata(md))))
+
+      case Commands.ChangeClient(url) if value.base != url =>
+        dom.window.localStorage.setItem(Commands.LoadLastUrl.key, url)
+        updated(CromwellClient(url))
+
+      case Commands.LoadLastUrl =>
+        Option(dom.window.localStorage.getItem(Commands.LoadLastUrl.key)).fold(
+          noChange)( url=> updated(CromwellClient(url)))
+    }
+  }
+
   val requests = new ActionHandler(zoomTo(_.client)) {
     override protected def handle = {
       case Commands.GetMetadata(status)=>
         effectOnly(Effect(value.getAllMetadata(status).map(md=>Results.UpdatedMetadata(md))))
 
-      case Commands.ChangeClient(url) =>
+      case Commands.ChangeClient(url) if value.base != url =>
         dom.window.localStorage.setItem(Commands.LoadLastUrl.key, url)
         updated(CromwellClient(url))
 
@@ -38,5 +53,5 @@ object AppCircuit extends Circuit[AppModel] {
     }
   }
 
-  override protected def actionHandler = composeHandlers(requests, metadataHandler)
+  override protected def actionHandler = composeHandlers(clientRequests, requests, metadataHandler)
 }

@@ -5,6 +5,8 @@ import group.research.aging.cromwell.client.{CromwellClient, Outputs}
 import scala.concurrent.Future
 
 object Tester extends App {
+
+
   //val host: String = "pipelines1.westeurope.cloudapp.azure.com"
   val host: String = "agingkills.westeurope.cloudapp.azure.com"
   val port: Int = 8000

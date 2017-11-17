@@ -17,11 +17,15 @@ import scala.util.{Failure, Success}
 import mhtml._
 import cats._
 import cats.implicits._
+import diode.Dispatcher
 
-class UploaderView {
+import scala.xml.Elem
 
-  val component =
-    <table id="workflows" class="ui blue sortable table">
+
+class RunnerView(dispatcher: Dispatcher) {
+
+  val component: Elem =
+    <table id="runs" class="ui blue table">
       <thead>
         <tr>
           <th>workflow WDL</th>
@@ -32,23 +36,20 @@ class UploaderView {
       </thead>
       <tbody>
         <tr>
-          <input id ="wdl" name="wdl" type="file" />
-        </tr>
-        <tr>
-          <input id="inputs" name="inputs" type="file" />
-        </tr>
-        <tr>
-          <input id="options" name="options" type="file" />
-        </tr>
-        <tr>
-          <button class="ui primary button">Run</button>
-        </tr>
-
+          <td>
+            <input id ="wdl" name="wdl" type="file" />
+          </td>
+          <td>
+            <input id="inputs" name="inputs" type="file" />
+          </td>
+          <td>
+            <input id="options" name="options" type="file" />
+          </td>
+          <td>
+            <button class="ui primary button" onclick = { (()=> dispatcher.dispatch(Commands.Run("", "", "")))   }>Run</button>
+          </td>
+          </tr>
       </tbody>
 
     </table>
-
-    <div class="ui segment">
-
-    </div>
 }

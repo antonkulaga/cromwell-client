@@ -27,4 +27,8 @@ object MyStyles extends StyleSheet.Standalone {
     //backgroundColor(bindingGreen)
     //backgroundColor(bindingGreen)
     )
+
+  "#url" - (
+    minWidth(330 px)
+  )
 }

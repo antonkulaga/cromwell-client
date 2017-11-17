@@ -7,10 +7,6 @@ import scala.scalajs.js
 
 class Workflows( initialMetadata: List[Metadata])
 {
-  val interval = Var(200)
-
-  interval.map(i=>js.timers.setInterval(i))
-
   val allMetadata: Var[List[Metadata]]  = Var(initialMetadata)
 
 
@@ -33,12 +29,14 @@ class Workflows( initialMetadata: List[Metadata])
     |
   """.stripMargin
 
-  val component = <table id="workflows" class="ui blue sortable table">
+  val component = <table id="workflows" class="ui small blue sortable table">
     <thead>
       <tr>
         <th>workflow</th>
         <th>status</th>
-        <th>duration</th>
+        <th>dates</th>
+        <th>start</th>
+        <th>end</th>
         <th>failures</th>
         <th>inputs</th>
       </tr>
@@ -51,7 +49,7 @@ class Workflows( initialMetadata: List[Metadata])
             {r.workflowName} <br></br>{r.id}
           </td>
           <td>{r.status}</td>
-          <td>{r.start} - {r.end}</td>
+          <td>{r.startDate}</td>
           <td>{
             r.failures.map( f=>
               <div class="ui negative message">

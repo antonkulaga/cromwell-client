@@ -13,6 +13,7 @@ object Commands{
 
   case class GetMetadata(status: WorkflowStatus = WorkflowStatus.Undefined) extends Action
   case class ChangeClient(newURL: String) extends Action
+  case class Run(wdl: String, options: String, input: String) extends Action
   case object LoadLastUrl extends LoadKey("lastURL")
 
   abstract class LoadKey(val key: String) extends Action

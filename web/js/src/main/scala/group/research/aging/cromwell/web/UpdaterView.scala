@@ -1,15 +1,11 @@
 package group.research.aging.cromwell.web
 
 import cats.implicits._
-import diode.{Dispatcher, Effect, ModelR, ModelRO}
-import group.research.aging.cromwel.client.CromwellClient
-import group.research.aging.cromwell.client.{Metadata, QueryResults}
+import diode.{Dispatcher, ModelRO}
+import group.research.aging.cromwell.client.QueryResults
 import mhtml._
-import org.scalajs.dom
 
-import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 import scala.scalajs.js
-import scala.util.{Failure, Success}
 
 class UpdaterView(dispatch: Dispatcher) {
 
@@ -21,8 +17,6 @@ class UpdaterView(dispatch: Dispatcher) {
 
   protected var url = Var(defURL)
 
-  
-
 
   val autoUpdate = Var(0)
 
@@ -33,13 +27,14 @@ class UpdaterView(dispatch: Dispatcher) {
 
   protected def handler(event: js.Dynamic): Unit = {
     val str = event.target.value.asInstanceOf[String]
-    url := (if(str=="") defURL else str)
+    url := str
   }
 
   val queryResults = Var(QueryResults.empty)
 
   def updateClick(): Unit = {
     //if(client.base != url.now) client = new CromwellClient("http://agingkills.westeurope.cloudapp.azure.com", "v1")
+    dispatch(Commands.ChangeClient(url.now))
     dispatch.dispatch(Commands.GetMetadata())
   }
 
@@ -47,13 +42,13 @@ class UpdaterView(dispatch: Dispatcher) {
   val component =
     <div class="ui menu">
       <div class="item">
-
-        <input class="ui input" type="text"
-               placeholder="Enter cromwell URL..."
-               oninput={ handler _ }/>
+        <div class="ui fluid action input">
+          <input id="url" type="text" placeholder="Enter cromwell URL..."  oninput={ handler _ } value={ url.dropRepeats } />
+            <div class="ui primary button" onclick={ () => this.updateClick()}>Update</div>
+        </div>
       </div>
+      <!--
       <div class="item">
-        <div class="ui primary button" onclick={ () => this.updateClick()}>Update</div>
       </div>
       <div class="item">
         <div class="ui right labeled input">
@@ -67,5 +62,6 @@ class UpdaterView(dispatch: Dispatcher) {
           </div>
         </div>
       </div>
+      -->
     </div>
 }

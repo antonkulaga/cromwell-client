@@ -78,6 +78,15 @@ object Metadata
                               ) extends WorkflowResponse
 {
 
+  lazy val startDate = start.substring(0, Math.max(0, start.indexOf("T")))
+  lazy val endDate = if(end=="") "" else end.substring(0, Math.max(0, end.indexOf("T")))
+
+  lazy val startTime = start.substring(start.indexOf("T")+1, start.lastIndexOf("."))
+
+  lazy val endTime = if(end=="") "" else end.substring(end.indexOf("T")+1, end.lastIndexOf("."))
+
+  lazy val dates = if(endDate==startDate || endDate=="") startDate else s"${startDate}-${endDate}"
+
   //protected def parse(text: String): LocalDate = LocalDate.parse(text, DateTimeFormatter.ISO_INSTANT)
 }
 
