@@ -1,8 +1,23 @@
 package group.research.aging.cromwell.web
+import diode.{Dispatcher, ModelRO}
 import group.research.aging.cromwell.client.Metadata
 import mhtml.Var
 
-class Workflows(allMetadata: Var[List[Metadata]]) {
+import scala.scalajs.js
+
+class Workflows( initialMetadata: List[Metadata])
+{
+  val interval = Var(200)
+
+  interval.map(i=>js.timers.setInterval(i))
+
+  val allMetadata: Var[List[Metadata]]  = Var(initialMetadata)
+
+
+  def onUpdate( reader: ModelRO[List[Metadata]]): Unit = {
+    allMetadata := reader.value
+  }
+
 
   """
     |  workflowName: String,

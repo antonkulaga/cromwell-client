@@ -11,25 +11,30 @@ import mhtml._
 import cats._
 import cats.implicits._
 
+
 object CromwellWeb extends scala.App {
 
-    import mhtml._
-    import org.scalajs.dom
+  import mhtml._
+  import org.scalajs.dom
 
-    lazy val table: JQuery = $("workflows")
+  lazy val table: JQuery = $("workflows")
 
-    val allMetadata: Var[List[Metadata]] = Var(List.empty[Metadata])
+  val updater = new UpdaterView(AppCircuit)
+  val workflows = new Workflows(AppCircuit.zoom(_.metadata).value)
+  val uploader = new UploaderView
 
-  val updater = new Updater(allMetadata)
-  val workflows = new Workflows(allMetadata)
+  AppCircuit.subscribe(AppCircuit.zoom(_.metadata))(workflows.onUpdate)
+  AppCircuit.subscribe(AppCircuit.zoom(_.client.base))(updater.)
 
-    val component =
-      <div class="ui teal segment">
-        {  updater.component  }
-        {  workflows.component }
-      </div>
 
-    val div = dom.document.getElementById("cromwell")
-    mount(div, component)
+
+  val component =
+    <div class="ui teal segment">
+      {  updater.component  }
+      {  workflows.component }
+    </div>
+
+  val div = dom.document.getElementById("cromwell")
+  mount(div, component)
 
 }

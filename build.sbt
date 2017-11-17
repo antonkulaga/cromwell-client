@@ -101,6 +101,7 @@ lazy val cromwellClientJVM = cromwellClient.jvm
 
 lazy val cromwellClientJS = cromwellClient.js
 
+lazy val akkaHttp = "10.0.10"
 
 lazy val cromwellWeb = crossProject
 	.crossType(CrossType.Full)
@@ -118,7 +119,8 @@ lazy val cromwellWeb = crossProject
 	)
 	.jsSettings(
 		libraryDependencies ++= Seq(
-			"in.nvilla" %%% "monadic-html" % "0.4.0-RC1"
+			"in.nvilla" %%% "monadic-html" % "0.4.0-RC1",
+			"io.suzaku" %%% "diode" % "1.1.2"
 		),
 		jsEnv := new org.scalajs.jsenv.jsdomnodejs.JSDOMNodeJSEnv,
 		scalaJSUseMainModuleInitializer := true
@@ -126,7 +128,8 @@ lazy val cromwellWeb = crossProject
 	.jsConfigure(p=>p.enablePlugins(ScalaJSWeb).disablePlugins(RevolverPlugin))
 	.jvmSettings(
 		libraryDependencies ++= Seq(
-			"com.typesafe.akka" %% "akka-http" % "10.0.10",
+			"com.typesafe.akka" %% "akka-http" % akkaHttp,
+			"com.typesafe.akka" %% "akka-http-xml" % akkaHttp,
 			"com.vmunier" %% "scalajs-scripts" % "1.1.1",
 			//"com.pepegar" %% "hammock-akka-http" % hammockVersion
 		),
@@ -148,8 +151,6 @@ lazy val webJS = cromwellWeb.js
 lazy val webJVM = cromwellWeb.jvm.settings(
 	scalaJSProjects := Seq(webJS)
 )
-
-dependsOn(webJVM)
 
 mainClass in Compile := (mainClass in webJVM in Compile).value
 
