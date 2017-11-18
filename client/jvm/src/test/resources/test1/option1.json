@@ -1,0 +1,5 @@
+{
+  "write_to_cache": true,
+  "read_from_cache": true,
+  "final_workflow_outputs_dir": "/home/antonkulaga/outputs"
+}

@@ -71,7 +71,7 @@ lazy val  cromwellClient = crossProject
 			"fr.hmil" %%% "roshttp" % "2.0.2",
 			"com.beachape" %%% "enumeratum" % "1.5.12",
 			"com.lihaoyi" %%% "pprint" % "0.5.3",
-			//"com.pepegar" %%% "hammock-circe" % hammockVersion
+			"com.pepegar" %%% "hammock-circe" % hammockVersion
     ),
 		libraryDependencies ++= Seq(
 			"io.circe" %%% "circe-core",
