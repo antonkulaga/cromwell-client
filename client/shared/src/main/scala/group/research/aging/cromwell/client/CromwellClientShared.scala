@@ -5,6 +5,7 @@ import fr.hmil.roshttp.body.JSONBody.JSONObject
 import fr.hmil.roshttp.body._
 import fr.hmil.roshttp.response.SimpleHttpResponse
 import fr.hmil.roshttp.{AnyBody, HttpRequest}
+import hammock.free.InterpTrans
 import io.circe._
 import io.circe.parser._
 import monix.execution.Scheduler.Implicits.global
@@ -47,35 +48,6 @@ trait CromwellClientShared {
     }
   }
 
-  def waitFor[T](fut: Future[T])(implicit atMost: FiniteDuration = 10 seconds): T = {
-    Await.result(fut, atMost)
-  }
-
-  def getRequest(subpath: String): Future[SimpleHttpResponse] = {
-    val request = HttpRequest(base + subpath)
-    request.send()
-  }
-
-  def getRequestAPI(subpath: String): Future[SimpleHttpResponse] = {
-    val request = HttpRequest(base + api + subpath)
-    request.send()
-  }
-
-  protected def get[T](request: Future[SimpleHttpResponse])(implicit decoder: Decoder[T]): Future[T] = {
-    request.flatMap{ res=>
-      val result = parse(res.body).right.flatMap(json=>json.as[T](decoder))
-      eitherErrorToFuture(result)
-    }
-  }
-
-  def get[T](subpath: String)(implicit decoder: Decoder[T]): Future[T] = {
-    get[T](getRequest(subpath))(decoder)
-  }
-
-  def getAPI[T](subpath: String)(implicit decoder: Decoder[T]): Future[T] = {
-    get[T](api + subpath)(decoder)
-  }
-
   def postRequest(subpath: String)(multipart: MultiPartBody): Future[SimpleHttpResponse] = {
     val request = HttpRequest(base + subpath)
     request.post(multipart)
@@ -91,9 +63,25 @@ trait CromwellClientShared {
   def postAPI[T](subpath: String)(multipart: MultiPartBody)(implicit decoder: Decoder[T]): Future[T] =
     post[T](api + subpath)(multipart)(decoder)
 
-  def getStats: Future[Stats] = get[Stats](s"/engine/${version}/stats")
 
-  def getVersion: Future[Version] = get[Version](s"/engine/${version}/version")
+  import cats._
+  import cats.implicits._
+  import cats.effect.IO
+  import io.circe._
+  import io.circe.generic.auto._
+  import hammock._
+  import hammock.circe.implicits._
+
+  implicit protected def getInterpreter: InterpTrans[IO]
+
+  def getIO(subpath: String, headers: Map[String, String]): IO[HttpResponse] =
+    Hammock.request(Method.GET, Uri.unsafeParse(base + subpath), headers).exec[IO]
+
+  def getAPI(subpath: String, headers: Map[String, String] = Map.empty): IO[HttpResponse] = getIO(api + subpath, headers)
+
+  def getStats = getIO(s"/engine/${version}/stats", Map.empty).as[Stats]
+
+  def getVersion = getIO(s"/engine/${version}/version", Map.empty).as[Version]
 
   /**
     * 400
@@ -105,7 +93,59 @@ trait CromwellClientShared {
     * 500
     * Internal Error
     */
-  def abort(id: String) =  getAPI[Status](s"/workflows/${version}/${id}/abort")
+  def abort(id: String): IO[group.research.aging.cromwell.client.StatusInfo] =  getAPI(s"/workflows/${version}/${id}/abort").as[group.research.aging.cromwell.client.StatusInfo]
+
+  def getOutputs(id: String): IO[Outputs] = getAPI(s"/workflows/${version}/${id}/outputs").as[Outputs]
+
+  protected def queryString(status: WorkflowStatus = WorkflowStatus.AnyStatus): String = status match {
+    case WorkflowStatus.AnyStatus => s"/workflows/${version}/query"
+    case status: WorkflowStatus =>   s"/workflows/${version}/query?status=${status.entryName}"
+  }
+
+  def getQuery(status: WorkflowStatus = WorkflowStatus.AnyStatus): IO[QueryResults] = {
+    val url = queryString(status)
+    getAPI(url).as[QueryResults]
+  }
+
+  def getAllOutputs(status: WorkflowStatus = WorkflowStatus.AnyStatus): IO[List[Outputs]] =
+    getQuery(status).flatMap(q=>
+      q.results.map(r=>this.getOutputs(r.id)).sequence
+    )
+
+  def getLogs(id: String) = getAPI(s"/workflows/${version}/${id}/logs").as[Logs]
+
+  def getAllLogs(status: WorkflowStatus = WorkflowStatus.AnyStatus) = getQuery(status).flatMap(q=>
+    q.results.map(r=>this.getLogs(r.id)).sequence
+  )
+
+  def getBackends = getAPI(s"/workflows/${version}/backends").as[Backends]
+
+  def getMetadata(id: String)= getAPI(s"/workflows/${version}/${id}/metadata").as[Metadata]
+
+  def getAllMetadata(status: WorkflowStatus = WorkflowStatus.AnyStatus) = getQuery(status).flatMap(q=>
+    q.results.map(r=>this.getMetadata(r.id)).sequence
+  )
+
+  /*
+  def postIO[A: Codec[A]](subpath: String, headers: Map[String, String], value: A): IO[HttpResponse] =
+    Hammock.request[A](Method.POST, Uri.unsafeParse(base + subpath), headers, Some(value)).exec[IO]
+
+  def postAPI[A: Codec[A]](subpath: String, headers: Map[String, String], value: A): IO[HttpResponse] = postIO(api + subpath, headers, value)
+*/
+    /*
+  def postWorkflow2(fileContent: String,
+                   workflowInputs: Option[String] = None,
+                   workflowOptions: Option[String] = None
+                  ) = {
+    val params = ("workflowSource" -> fileContent) ::
+      workflowInputs.fold(List.empty[(String, String)])(part => List("workflowInputs" -> part)) ++
+        workflowOptions.fold(List.empty[(String, String)])(part => List("workflowOptions" -> part))
+
+    //postAPI(s"/workflows/${version}")(new MultiPartBody(parts))
+    postAPI(s"/workflows/${version}", Map.empty, params)
+  }
+  */
+
 
   /**
     * 400
@@ -122,21 +162,21 @@ trait CromwellClientShared {
                    workflowInputs: Option[JSONObject] = None,
                    workflowOptions: Option[JSONObject] = None,
                    workflowDependencies: Option[java.nio.ByteBuffer] = None
-                  ): Future[Status] = {
+                  ): Future[group.research.aging.cromwell.client.StatusInfo] = {
     val params: List[(String, BodyPart)] =
       ("workflowSource" -> PlainTextBody(fileContent)) ::
         workflowInputs.fold(List.empty[(String, BodyPart)])(part  => List("workflowInputs" -> part)) ++
         workflowOptions.fold(List.empty[(String, BodyPart)])(part  => List("workflowOptions" -> part)) ++
         workflowDependencies.fold(List.empty[(String, BodyPart)])(part  => List("workflowDependencies" -> ByteBufferBody(part)))
     val parts = Map[String, BodyPart](params:_*)
-    postAPI[Status](s"/workflows/${version}")(new MultiPartBody(parts))
+    postAPI[group.research.aging.cromwell.client.StatusInfo](s"/workflows/${version}")(new MultiPartBody(parts))
   }
 
   def postWorkflowStrings(fileContent: String,
                           workflowInputs: String,
                           workflowOptions: String,
                           workflowDependencies: Option[java.nio.ByteBuffer] = None
-                  ): Future[Status] = {
+                  ): Future[group.research.aging.cromwell.client.StatusInfo] = {
     val inputs: List[(String, BodyPart)] = if(workflowInputs == "") Nil else
       List(("workflowInputs" , AnyBody(workflowInputs)))
     val options: List[(String, BodyPart)] = if(workflowOptions == "") Nil else
@@ -145,50 +185,9 @@ trait CromwellClientShared {
       workflowDependencies.fold(List.empty[(String, BodyPart)])(part  => List("workflowDependencies" -> ByteBufferBody(part)))
     val params = ("workflowSource" , PlainTextBody(fileContent)) :: inputs ++ options ++ deps
     val parts = Map[String, BodyPart](params:_*)
-    postAPI[Status](s"/workflows/${version}")(new MultiPartBody(parts))
+    postAPI[group.research.aging.cromwell.client.StatusInfo](s"/workflows/${version}")(new MultiPartBody(parts))
   }
 
-  def getOutputsRequest(id: String): Future[SimpleHttpResponse] = getRequest(api + s"/workflows/${version}/${id}/outputs")
-
-  def getOutputs(id: String): Future[Outputs] = getAPI[Outputs](s"/workflows/${version}/${id}/outputs")
-
-  protected def queryString(status: WorkflowStatus = WorkflowStatus.Undefined) = status match {
-    case WorkflowStatus.Undefined => api + s"/workflows/${version}/query"
-    case status: WorkflowStatus =>  api + s"/workflows/${version}/query?status=${status.entryName}"
-  }
-
-  def getQueryRequest(status: WorkflowStatus = WorkflowStatus.Undefined): Future[SimpleHttpResponse] =
-    getRequest(api + queryString(status))
-
-  def getQuery(status: WorkflowStatus = WorkflowStatus.Undefined) = {
-    val url = queryString(status)
-    get[QueryResults](url)
-  }
-
-  def mapQuery[T](status: WorkflowStatus = WorkflowStatus.Undefined)(fun: QueryResult => Future[T]): Future[List[T]] = {
-    val url = queryString(status)
-    val results: Future[QueryResults] = get[QueryResults](url)
-    results.flatMap(r=>Future.sequence(r.results.map(fun)))
-  }
-
-  def getAllOutputs(status: WorkflowStatus = WorkflowStatus.Undefined): Future[List[Outputs]] =
-      mapQuery(status)(r=>this.getOutputs(r.id))
-
-  //def getAllSucceeded: Future[QueryResults] = getQuery(WorkflowStatus.Succeeded)
-
-  def getLogsRequest(id: String): Future[SimpleHttpResponse] = getRequest(api + s"/workflows/${version}/${id}/logs")
-
-  def getLogs(id: String): Future[Logs] = get[Logs](getLogsRequest(id))
-
-  def getAllLogs(status: WorkflowStatus = WorkflowStatus.Undefined): Future[List[Logs]] = mapQuery(status)(r=>getLogs(r.id))
-
-  def getBackends: Future[Backends] =  getAPI[Backends](s"/workflows/${version}/backends")
-
-  def getMetadataRequest(id: String): Future[SimpleHttpResponse] = getRequest(api + s"/workflows/${version}/${id}/metadata")
-
-  def getMetadata(id: String): Future[Metadata] = get[Metadata](getMetadataRequest(id))
-
-  def getAllMetadata(status: WorkflowStatus = WorkflowStatus.Undefined) =  mapQuery(status)(r=>getMetadata(r.id))
 
 }
 
@@ -217,5 +216,5 @@ object WorkflowStatus extends Enum[WorkflowStatus] {
 
   case object Aborted extends WorkflowStatus
 
-  case object Undefined extends WorkflowStatus
+  case object AnyStatus extends WorkflowStatus
 }

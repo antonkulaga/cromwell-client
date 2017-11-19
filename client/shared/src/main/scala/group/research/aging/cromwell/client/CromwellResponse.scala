@@ -92,9 +92,7 @@ object Metadata
 
 @JsonCodec case class Outputs(outputs: Map[String,  CallOutput], id: String) extends WorkflowResponse
 
-
-@JsonCodec case class Status(id: String, status: String) extends WorkflowResponse
-
+@JsonCodec case class StatusInfo(id: String, status: String) extends WorkflowResponse
 
 @JsonCodec case class Logs(calls: Map[String, List[LogCall]], id: String) extends WorkflowResponse
 

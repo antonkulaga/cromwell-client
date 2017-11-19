@@ -2,7 +2,7 @@ package group.research.aging.cromwell.web
 
 import diode.Action
 import group.research.aging.cromwel.client.CromwellClient
-import group.research.aging.cromwell.client.{Metadata, Status, WorkflowStatus}
+import group.research.aging.cromwell.client.{Metadata, StatusInfo, WorkflowStatus}
 
 object Results {
   case class UpdatedMetadata(metadata: List[Metadata]) extends Action
@@ -11,7 +11,7 @@ object Results {
 
 object Commands{
 
-  case class GetMetadata(status: WorkflowStatus = WorkflowStatus.Undefined) extends Action
+  case class GetMetadata(status: WorkflowStatus = WorkflowStatus.AnyStatus) extends Action
   case class ChangeClient(newURL: String) extends Action
   case class Run(wdl: String, options: String, input: String) extends Action
   case object LoadLastUrl extends LoadKey("lastURL")

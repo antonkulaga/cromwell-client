@@ -3,7 +3,7 @@ package group.research.aging.cromwell
 import group.research.aging.cromwell.client.{CromwellClient, Outputs}
 
 import scala.concurrent.Future
-
+/*
 object Tester extends App {
 
 
@@ -33,3 +33,4 @@ object Tester extends App {
 
 
 }
+*/

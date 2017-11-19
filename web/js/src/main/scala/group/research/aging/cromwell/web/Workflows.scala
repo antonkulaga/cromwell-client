@@ -49,7 +49,9 @@ class Workflows( initialMetadata: List[Metadata])
             {r.workflowName} <br></br>{r.id}
           </td>
           <td>{r.status}</td>
-          <td>{r.startDate}</td>
+          <td>{r.dates}</td>
+          <td>{r.startTime}</td>
+          <td>{r.endTime}</td>
           <td>{
             r.failures.map( f=>
               <div class="ui negative message">

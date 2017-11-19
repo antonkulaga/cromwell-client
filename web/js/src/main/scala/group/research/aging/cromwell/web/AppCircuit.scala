@@ -16,10 +16,10 @@ object AppCircuit extends Circuit[AppModel] {
   // provides initial model to the Circuit
   override def initialModel = AppModel(CromwellClient.localhost, Nil)
 
-  val clientRequests = new ActionHandler(zoomTo(_.client)) {
+  private val clientRequests = new ActionHandler(zoomTo(_.client)) {
     override protected def handle = {
       case Commands.GetMetadata(status)=>
-        effectOnly(Effect(value.getAllMetadata(status).map(md=>Results.UpdatedMetadata(md))))
+        effectOnly(Effect(value.getAllMetadata(status).map(md=>Results.UpdatedMetadata(md)).unsafeToFuture()))
 
       case Commands.ChangeClient(url) if value.base != url =>
         dom.window.localStorage.setItem(Commands.LoadLastUrl.key, url)
@@ -31,10 +31,10 @@ object AppCircuit extends Circuit[AppModel] {
     }
   }
 
-  val requests = new ActionHandler(zoomTo(_.client)) {
+  private val requests = new ActionHandler(zoomTo(_.client)) {
     override protected def handle = {
       case Commands.GetMetadata(status)=>
-        effectOnly(Effect(value.getAllMetadata(status).map(md=>Results.UpdatedMetadata(md))))
+        effectOnly(Effect(value.getAllMetadata(status).map(md=>Results.UpdatedMetadata(md)).unsafeToFuture()))
 
       case Commands.ChangeClient(url) if value.base != url =>
         dom.window.localStorage.setItem(Commands.LoadLastUrl.key, url)
@@ -46,7 +46,7 @@ object AppCircuit extends Circuit[AppModel] {
     }
   }
 
-  val metadataHandler = new ActionHandler(zoomTo(_.metadata)){
+  private val metadataHandler = new ActionHandler(zoomTo(_.metadata)){
     override protected def handle =
     {
       case  Results.UpdatedMetadata(data) => updated(data)

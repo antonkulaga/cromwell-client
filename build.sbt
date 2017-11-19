@@ -1,5 +1,5 @@
 import org.scalajs.sbtplugin.ScalaJSPlugin.autoImport._
-import sbt.Keys.{javaOptions, javacOptions, resolvers, scalacOptions}
+import sbt.Keys.{javaOptions, javacOptions, resolvers, scalacOptions, sourceGenerators}
 import sbt._
 
 name := "cromwell-client-parent"
@@ -24,6 +24,14 @@ lazy val commonSettings = Seq(
 	resolvers += "Broad Artifactory Releases" at "https://artifactory.broadinstitute.org/artifactory/libs-release/",
 
 	resolvers += "Broad Artifactory Snapshots" at "https://artifactory.broadinstitute.org/artifactory/libs-snapshot/",
+
+	libraryDependencies += "com.lihaoyi" % "ammonite" % "1.0.3" % Test cross CrossVersion.full,
+
+	sourceGenerators in Test += Def.task {
+		val file = (sourceManaged in Test).value / "amm.scala"
+		IO.write(file, """object amm extends App { ammonite.Main().run() }""")
+		Seq(file)
+	}.taskValue,
 
 	addCompilerPlugin(
 		"org.scalamacros" % "paradise" % "2.1.1" cross CrossVersion.full
@@ -134,7 +142,8 @@ lazy val cromwellWeb = crossProject
 			//"com.pepegar" %% "hammock-akka-http" % hammockVersion
 		),
 		(managedClasspath in Runtime) += (packageBin in Assets).value,
-		pipelineStages in Assets := Seq(scalaJSProd),
+		//pipelineStages in Assets := Seq(scalaJSProd),
+		pipelineStages in Assets := Seq(scalaJSDev), //to make compilation faster
 		//compile in Compile := ((compile in Compile) dependsOn scalaJSProd).value,
 		(emitSourceMaps in fullOptJS) := true,
 		fork in run := true,
@@ -155,11 +164,3 @@ lazy val webJVM = cromwellWeb.jvm.settings(
 mainClass in Compile := (mainClass in webJVM in Compile).value
 
 (fullClasspath in Runtime) += (packageBin in webJVM in Assets).value
-
-libraryDependencies += "com.lihaoyi" % "ammonite" % "1.0.3" % Test cross CrossVersion.full
-
-sourceGenerators in Test += Def.task {
-	val file = (sourceManaged in Test).value / "amm.scala"
-	IO.write(file, """object amm extends App { ammonite.Main().run() }""")
-	Seq(file)
-}.taskValue
