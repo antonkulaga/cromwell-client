@@ -1,17 +1,19 @@
 package group.research.aging.cromwell.web
 import diode.{Dispatcher, ModelRO}
-import group.research.aging.cromwell.client.Metadata
+import group.research.aging.cromwell.client.{Metadata, WorkflowFailure}
 import mhtml.Var
 
 import scala.scalajs.js
+import scala.xml.Elem
 
 class Workflows( initialMetadata: List[Metadata])
 {
   val allMetadata: Var[List[Metadata]]  = Var(initialMetadata)
 
+  var desc = true
 
   def onUpdate( reader: ModelRO[List[Metadata]]): Unit = {
-    allMetadata := reader.value
+    allMetadata := (if(desc) reader.value.reverse else reader.value)
   }
 
 
@@ -29,7 +31,7 @@ class Workflows( initialMetadata: List[Metadata])
     |
   """.stripMargin
 
-  val component = <table id="workflows" class="ui small blue sortable table">
+  val component: Elem = <table id="workflows" class="ui small blue table">
     <thead>
       <tr>
         <th>workflow</th>
@@ -46,14 +48,14 @@ class Workflows( initialMetadata: List[Metadata])
       allMetadata.map(meta=>meta.map(r=>
         <tr>
           <td>
-            {r.workflowName} <br></br>{r.id}
+            {r.workflowName.getOrElse("NO NAME")} <br></br>{r.id}
           </td>
           <td>{r.status}</td>
           <td>{r.dates}</td>
           <td>{r.startTime}</td>
           <td>{r.endTime}</td>
           <td>{
-            r.failures.map( f=>
+            r.failures.getOrElse(List.empty[WorkflowFailure]).map(f=>
               <div class="ui negative message">
                 {f.message}
                 <p> {f.causedBy.mkString}</p>

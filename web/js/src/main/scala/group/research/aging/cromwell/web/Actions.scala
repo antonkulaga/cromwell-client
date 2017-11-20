@@ -4,7 +4,15 @@ import diode.Action
 import group.research.aging.cromwel.client.CromwellClient
 import group.research.aging.cromwell.client.{Metadata, StatusInfo, WorkflowStatus}
 
+object Messages {
+  class Error(errorMessage: String) extends Action
+  case class ExplainedError(message: String, errorMessage: String) extends Error(errorMessage)
+  case class Errors(errors: List[ExplainedError]) extends Action
+
+}
+
 object Results {
+  case class UpdatedStatus(info: StatusInfo) extends Action
   case class UpdatedMetadata(metadata: List[Metadata]) extends Action
   case class UpdatedClient(client: CromwellClient) extends Action
 }

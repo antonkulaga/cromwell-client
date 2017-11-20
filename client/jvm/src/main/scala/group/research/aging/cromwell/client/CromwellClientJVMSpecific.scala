@@ -31,12 +31,12 @@ trait CromwellClientJVMSpecific {
     file.zip()
   }
 
-  def postWorkflowFiles(file: File,
+  def postWorkflowFiles(workflow: File,
                         workflowInputs: File,
                         workflowOptions: Option[File] = None,
                         wdlDependencies: Option[File] = None): Future[StatusInfo] ={
     self.postWorkflowStrings(
-      file.lines.mkString("\n"),
+      workflow.lines.mkString("\n"),
       workflowInputs,
       workflowOptions,
       wdlDependencies.map(f=>ByteBuffer.wrap(zipFolder(f).loadBytes))

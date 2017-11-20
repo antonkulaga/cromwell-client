@@ -62,30 +62,33 @@ object QueryResults {
 
 @JsonCodec case class QueryResult(id: String, status: String, start: String, end: String) extends WorkflowResponse
 
+
+//implicit val config: Configuration = Configuration.default.withSnakeCaseKeys
+// config: io.circe.generic.extras.Configuration = Configuration(io.circe.generic.extras.Configuration$$$Lambda$2037/501381773@195cef0e,false,None)
+
 object Metadata
 
 @JsonCodec case class Metadata(
-                                workflowName: String,
-                                workflowRoot: String,
                                 id: String,
                                 submission: String,
                                 status: String,
-                                start: String,
-                                end: String, //ISO_INSTANT
+                                start: Option[String],
+                                end: Option[String],
                                 inputs: Inputs,
-                                failures: List[WorkflowFailure],
+                                failures: Option[List[WorkflowFailure]] = None,
                                 submittedFiles: SubmittedFiles,
+                                workflowName: Option[String] = None,
+                                workflowRoot: Option[String] = None
                               ) extends WorkflowResponse
 {
 
-  lazy val startDate = start.substring(0, Math.max(0, start.indexOf("T")))
-  lazy val endDate = if(end=="") "" else end.substring(0, Math.max(0, end.indexOf("T")))
+  lazy val startDate: String = start.map(s=>s.substring(0, Math.max(0, s.indexOf("T")))).getOrElse("")
+  lazy val endDate: String = end.fold("")(e=>e.substring(0, Math.max(0, e.indexOf("T"))))
 
-  lazy val startTime = start.substring(start.indexOf("T")+1, start.lastIndexOf("."))
+  lazy val startTime: String = start.map(s=>s.substring(s.indexOf("T")+1, s.lastIndexOf("."))).getOrElse("")
+  lazy val endTime: String = end.fold("")(e=> e.substring(e.indexOf("T")+1, e.lastIndexOf(".")))
 
-  lazy val endTime = if(end=="") "" else end.substring(end.indexOf("T")+1, end.lastIndexOf("."))
-
-  lazy val dates = if(endDate==startDate || endDate=="") startDate else s"${startDate}-${endDate}"
+  lazy val dates: String = if(endDate==startDate || endDate=="") startDate else s"${startDate}-${endDate}"
 
   //protected def parse(text: String): LocalDate = LocalDate.parse(text, DateTimeFormatter.ISO_INSTANT)
 }
@@ -94,7 +97,7 @@ object Metadata
 
 @JsonCodec case class StatusInfo(id: String, status: String) extends WorkflowResponse
 
-@JsonCodec case class Logs(calls: Map[String, List[LogCall]], id: String) extends WorkflowResponse
+@JsonCodec case class Logs(calls: Option[Map[String, List[LogCall]]], id: String) extends WorkflowResponse
 
 @JsonCodec case class LogCall(stderr: String, stdout: String, attempt: Int, shardIndex: Int) extends CromwellResponse
 

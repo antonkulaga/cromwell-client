@@ -11,7 +11,7 @@ lazy val commonSettings = Seq(
 
 	scalaVersion :=  "2.12.4",
 
-	version := "0.0.8",
+	version := "0.0.9",
 
 	unmanagedClasspath in Compile ++= (unmanagedResources in Compile).value,
 
@@ -33,9 +33,9 @@ lazy val commonSettings = Seq(
 		Seq(file)
 	}.taskValue,
 
-	addCompilerPlugin(
-		"org.scalamacros" % "paradise" % "2.1.1" cross CrossVersion.full
-	),
+	addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.1" cross CrossVersion.full),
+
+	addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.4"),
 
 	bintrayRepository := "main",
 
@@ -54,8 +54,6 @@ lazy val commonSettings = Seq(
 
 commonSettings
 
-lazy val circeVersion = "0.8.0"
-
 lazy val hammockVersion = "0.7.0"
 
 lazy val semanticUI = "2.2.10"
@@ -63,6 +61,8 @@ lazy val semanticUI = "2.2.10"
 lazy val webcomponents = "1.0.1"
 
 lazy val jquery = "3.2.1"
+
+lazy val cats = "1.0.0-MF"
 
 lazy val  cromwellClient = crossProject
   .crossType(CrossType.Full)
@@ -79,19 +79,16 @@ lazy val  cromwellClient = crossProject
 			"fr.hmil" %%% "roshttp" % "2.0.2",
 			"com.beachape" %%% "enumeratum" % "1.5.12",
 			"com.lihaoyi" %%% "pprint" % "0.5.3",
+			"org.typelevel" %%% "cats-core"        % cats,
+			"org.typelevel" %%% "cats-free"        % cats,
+			"org.typelevel" %%% "cats-effect" % "0.4",
 			"com.pepegar" %%% "hammock-circe" % hammockVersion
-    ),
-		libraryDependencies ++= Seq(
-			"io.circe" %%% "circe-core",
-			"io.circe" %%% "circe-generic",
-			"io.circe" %%% "circe-parser"
-		).map(_ % circeVersion)
+    )
 	)
 	.disablePlugins(RevolverPlugin)
   .jvmSettings(
     libraryDependencies ++= Seq(
 			"com.github.pathikrit" %% "better-files" % "3.2.0",
-			"io.circe" %%% "circe-java8" % circeVersion,
 			"org.webjars" % "Semantic-UI" %  semanticUI,
 			"org.webjars" % "jquery" % jquery,
 			"org.webjars" % "webcomponentsjs" % webcomponents

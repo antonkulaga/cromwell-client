@@ -16,10 +16,6 @@ class BasicRunner(
 
   lazy val workflowFile = File(if (workflow.startsWith("/")) workflow else s"${sourcePath}/${workflow}")
 
-  def stats: Stats = client.waitFor(client.getStats)
-
-  def outputs: Seq[Outputs] = client.waitFor(client.getAllOutputs())
-
   def getInputFile(input: String): File = File(if (input.startsWith("/")) input else s"${sourcePath}/inputs/${input}")
 
   def getSubs(subs: String): Option[File] = if (subs=="") None else {
@@ -33,17 +29,16 @@ class BasicRunner(
   }
 
   def run(input: String, options: String = "", subs: String = ""): Unit = {
-    val status = client.waitFor(
+    val status =
       client.postWorkflowFiles(
         workflowFile,
         getInputFile(input),
         getOptions(options),
         getSubs(subs)
-      )
     )
-    println(status)
-    println("------")
-    pprint.pprintln(outputs)
+    //println(status)
+    //println("------")
+    //pprint.pprintln(outputs)
   }
 
 }

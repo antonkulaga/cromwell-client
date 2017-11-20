@@ -12,5 +12,7 @@ trait CromwellClientJSspecific
   self: CromwellClientShared =>
 
   implicit override protected def getInterpreter: Interpreter[IO] = Interpreter[IO]
+  //implicit override protected def getInterpreter: InterpreterFixed[IO] = InterpreterFixed[IO]
 
 }
+

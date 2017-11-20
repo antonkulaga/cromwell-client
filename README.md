@@ -66,7 +66,9 @@ reStart
 ```
 It is also published as a Docker container. You can run it as:
 ```bash
-docker run -p 8080 quay.io/comp-bio-aging/cromwell-web
+docker run -p 8080:8080 quay.io/comp-bio-aging/cromwell-web
 ```
+
+![Screenshot](/screenshot.jpg?raw=true "CromwellWeb screenshot")
 
 _Note_: most of the calls are done via AJAX, so you may need to configure allow-origin header for cromwell.

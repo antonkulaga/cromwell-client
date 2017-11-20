@@ -120,7 +120,7 @@ trait CromwellClientShared {
 
   def getBackends = getAPI(s"/workflows/${version}/backends").as[Backends]
 
-  def getMetadata(id: String)= getAPI(s"/workflows/${version}/${id}/metadata").as[Metadata]
+  def getMetadata(id: String, v: String = "v2")= getAPI(s"/workflows/${v}/${id}/metadata").as[Metadata]
 
   def getAllMetadata(status: WorkflowStatus = WorkflowStatus.AnyStatus) = getQuery(status).flatMap(q=>
     q.results.map(r=>this.getMetadata(r.id)).sequence

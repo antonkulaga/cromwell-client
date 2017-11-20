@@ -20,20 +20,23 @@ object CromwellWeb extends scala.App {
   lazy val table: JQuery = $("workflows")
 
   AppCircuit.addProcessor(new LoggingProcessor[AppModel]())
-  val updater = new UpdaterView(AppCircuit)
+  val updater = new RunnerView(AppCircuit)
   val workflows = new Workflows(AppCircuit.zoom(_.metadata).value)
-  val runner = new RunnerView(AppCircuit)
+  val errors = new ErrorsView(AppCircuit)
 
   AppCircuit.subscribe(AppCircuit.zoom(_.metadata))(workflows.onUpdate)
- // AppCircuit.subscribe(AppCircuit.zoom(_.client.base))(updater.)
+  AppCircuit.subscribe(AppCircuit.zoom(_.errors))(errors.onUpdate)
+  // AppCircuit.subscribe(AppCircuit.zoom(_.client.base))(updater.)
 
 
 
   val component =
     <div class="ui teal segment">
-      {  updater.component  }
+      {  updater.runner  }
+      {  updater.updater  }
+      {  errors.component }
       {  workflows.component }
-      {  runner.component }
+
     </div>
 
   val div = dom.document.getElementById("cromwell")
