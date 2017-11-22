@@ -60,7 +60,7 @@ object QueryResults {
 
 @JsonCodec case class QueryResults(results: List[QueryResult]) extends CromwellResponse
 
-@JsonCodec case class QueryResult(id: String, status: String, start: String, end: String) extends WorkflowResponse
+@JsonCodec case class QueryResult(id: String, status: String, start: Option[String] = None, end: Option[String] = None) extends WorkflowResponse
 
 
 //implicit val config: Configuration = Configuration.default.withSnakeCaseKeys
@@ -78,7 +78,8 @@ object Metadata
                                 failures: Option[List[WorkflowFailure]] = None,
                                 submittedFiles: SubmittedFiles,
                                 workflowName: Option[String] = None,
-                                workflowRoot: Option[String] = None
+                                workflowRoot: Option[String] = None,
+                                calls: Option[Map[String, List[LogCall]]] = None
                               ) extends WorkflowResponse
 {
 
@@ -106,36 +107,3 @@ object Metadata
 @JsonCodec case class SubmittedFiles(inputs: String, workflow: String, options: String) extends CromwellResponse
 
 @JsonCodec case class WorkflowFailure(message: String, causedBy: List[WorkflowFailure] = Nil) extends CromwellResponse
-
-
-/**
-  *
-  *
-  *   "workflowName": "wf",
-  "submittedFiles": {
-    "inputs": "{\"wf.hello.pattern\":\"^[a-z]+$\",\"wf.hello.in\":\"/home/antonkulaga/Documents/test.txt\"}",
-    "workflow": "task hello {\n  String pattern\n  File in\n\n  command {\n    echo 'hello ${pattern} world ${in}!'\n  }\n\n  output {\n    Array[String] matches = read_lines(stdout())\n  }\n}\n\nworkflow wf {\n  call hello\n}",
-    "options": "{\n\n}"
-  },
-  "calls": {
-
-  },
-  "outputs": {
-
-  },
-  "workflowRoot": "/home/antonkulaga/Soft/cromwell-executions/wf/f9ed8341-4a16-4fd2-a5b6-71946d0e325c",
-  "id": "f9ed8341-4a16-4fd2-a5b6-71946d0e325c",
-  "inputs": {
-    "wf.hello.in": "/home/antonkulaga/Documents/test.txt",
-    "wf.hello.pattern": "^[a-z]+$"
-  },
-  "submission": "2017-02-25T03:45:03.205+02:00",
-  "status": "Failed",
-  "failures": [{
-    "message": "/home/antonkulaga/Soft/cromwell-executions/wf/f9ed8341-4a16-4fd2-a5b6-71946d0e325c"
-  }],
-  "end": "2017-02-25T03:45:04.402+02:00",
-  "start": "2017-02-25T03:45:03.374+02:00"
-  *
-  *
-  */

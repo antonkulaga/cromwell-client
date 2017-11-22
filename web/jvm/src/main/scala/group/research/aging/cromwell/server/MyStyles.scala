@@ -23,9 +23,11 @@ object MyStyles extends StyleSheet.Standalone {
     )
 
   "#main" - (
-    margin(20 px)
-    //backgroundColor(bindingGreen)
-    //backgroundColor(bindingGreen)
+    overflowX.scroll,
+  )
+
+  "#cromwell" - (
+    margin(20 px),
     )
 
   "#url" - (

@@ -11,7 +11,7 @@ lazy val commonSettings = Seq(
 
 	scalaVersion :=  "2.12.4",
 
-	version := "0.0.9",
+	version := "0.0.10",
 
 	unmanagedClasspath in Compile ++= (unmanagedResources in Compile).value,
 

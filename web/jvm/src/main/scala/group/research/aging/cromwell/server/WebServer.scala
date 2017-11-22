@@ -27,7 +27,7 @@ object WebServer extends HttpApp {
   def webjars = pathPrefix(webjarsPrefix ~ Slash)  {  getFromResourceDirectory(webjarsPrefix)  }
 
   def defaultPage: Option[Html] = {
-   Some(html.cromwell())
+   None
   }
 
 

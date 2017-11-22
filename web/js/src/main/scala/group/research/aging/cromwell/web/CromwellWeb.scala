@@ -21,25 +21,23 @@ object CromwellWeb extends scala.App {
 
   AppCircuit.addProcessor(new LoggingProcessor[AppModel]())
   val updater = new RunnerView(AppCircuit)
-  val workflows = new Workflows(AppCircuit.zoom(_.metadata).value)
+  val workflows = new Workflows(AppCircuit.zoom(_.metadata).value, Var(AppCircuit.zoom(_.client.base).value))
   val errors = new ErrorsView(AppCircuit)
 
-  AppCircuit.subscribe(AppCircuit.zoom(_.metadata))(workflows.onUpdate)
+  AppCircuit.subscribe(AppCircuit.zoom(_.metadata))(workflows.onMetadataUpdate)
+  AppCircuit.subscribe(AppCircuit.zoom(_.client.base))(workflows.onHostUpdate)
   AppCircuit.subscribe(AppCircuit.zoom(_.errors))(errors.onUpdate)
-  // AppCircuit.subscribe(AppCircuit.zoom(_.client.base))(updater.)
-
 
 
   val component =
-    <div class="ui teal segment">
+    <div id="cromwell">
       {  updater.runner  }
       {  updater.updater  }
       {  errors.component }
       {  workflows.component }
-
     </div>
 
-  val div = dom.document.getElementById("cromwell")
+  val div = dom.document.getElementById("main")
   mount(div, component)
 
 }
