@@ -54,7 +54,7 @@ lazy val commonSettings = Seq(
 
 commonSettings
 
-lazy val hammockVersion = "0.7.0"
+lazy val hammockVersion = "0.7.1"
 
 lazy val semanticUI = "2.2.10"
 
@@ -62,7 +62,7 @@ lazy val webcomponents = "1.0.1"
 
 lazy val jquery = "3.2.1"
 
-lazy val cats = "1.0.0-MF"
+lazy val cats = "1.0.0-RC1"
 
 lazy val  cromwellClient = crossProject
   .crossType(CrossType.Full)
@@ -81,7 +81,7 @@ lazy val  cromwellClient = crossProject
 			"com.lihaoyi" %%% "pprint" % "0.5.3",
 			"org.typelevel" %%% "cats-core"        % cats,
 			"org.typelevel" %%% "cats-free"        % cats,
-			"org.typelevel" %%% "cats-effect" % "0.4",
+			"org.typelevel" %%% "cats-effect" % "0.5",
 			"com.pepegar" %%% "hammock-circe" % hammockVersion
     )
 	)

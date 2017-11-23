@@ -71,4 +71,33 @@ docker run -p 8080:8080 quay.io/comp-bio-aging/cromwell-web:0.0.10
 
 ![Screenshot](/screenshot.jpg?raw=true "CromwellWeb screenshot")
 
-_Note_: most of the calls are done via AJAX, so you may need to configure allow-origin header for cromwell.
+Cross-Origin policy and stdout/stderr configuration
+---------------------------------------------------
+
+To save time I implemented all requests in CromwellWeb UI as AJAX calls, that is why there can be Cross-Origin requests problems.
+The fastest way to overcome them is to install [nginx](http://nginx.org/en/linux_packages.html#stable]) and configure reverse-proxy.
+Here is an example of nginx configuration that parks Cromwell to http://localhost:8888, fixes SameOrigin error and provides access to workflow files.
+There we assume that cromwell-executions are located at /home/username/scripts/cromwell-executions folder and that we run Cromwell from localhost.
+```
+server {
+        server_name localhost;
+        listen 8888;
+                
+        location / {
+                proxy_pass http://127.0.0.1:8000;
+                proxy_http_version 1.1;
+                proxy_set_header Upgrade $http_upgrade;
+                proxy_set_header Connection "upgrade";
+		        add_header 'Access-Control-Allow-Origin' '*';
+	            add_header 'Access-Control-Allow-Credentials' 'true';
+                add_header 'Access-Control-Allow-Methods' 'GET, POST, PUT, OPTIONS';
+        }
+
+        location /home/username/scripts/cromwell-executions/ {
+		    autoindex on;
+		    alias /home/username/scripts/cromwell-executions/;
+        }
+
+}
+
+```

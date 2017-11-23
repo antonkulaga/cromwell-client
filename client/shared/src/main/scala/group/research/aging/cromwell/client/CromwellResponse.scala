@@ -100,10 +100,12 @@ object Metadata
 
 @JsonCodec case class Logs(calls: Option[Map[String, List[LogCall]]], id: String) extends WorkflowResponse
 
-@JsonCodec case class LogCall(stderr: String, stdout: String, attempt: Int, shardIndex: Int) extends CromwellResponse
+@JsonCodec case class LogCall(executionStatus: String, stderr: String, stdout: String, attempt: Int, shardIndex: Int, callCaching: CallCaching) extends CromwellResponse
 
 @JsonCodec case class Backends(supportedBackends: List[String], defaultBackend: String) extends CromwellResponse
 
 @JsonCodec case class SubmittedFiles(inputs: String, workflow: String, options: String) extends CromwellResponse
 
 @JsonCodec case class WorkflowFailure(message: String, causedBy: List[WorkflowFailure] = Nil) extends CromwellResponse
+
+@JsonCodec case class CallCaching(allowResultReuse: Boolean, effectiveCallCachingMode: String, hit: Boolean, result: String)

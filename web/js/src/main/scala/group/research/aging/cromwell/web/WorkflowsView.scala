@@ -6,7 +6,7 @@ import mhtml.{Rx, Var}
 import scala.scalajs.js
 import scala.xml.Elem
 
-class Workflows( initialMetadata: List[Metadata], host: Var[String])
+class WorkflowsView(initialMetadata: List[Metadata], host: Var[String])
 {
   val allMetadata: Var[List[Metadata]]  = Var(initialMetadata)
 
@@ -51,18 +51,18 @@ class Workflows( initialMetadata: List[Metadata], host: Var[String])
     </tbody>
   </table>
 
-  def statusClass(r: Metadata) = r.status.toLowerCase match {
-    case "succeeded" => "positive"
+  def statusClass(str: String) = str.toLowerCase match {
+    case "succeeded" | "done" => "positive"
     case "failed" => "negative"
     case _ => "warning"
   }
 
   def metadataRow(r: Metadata) =
         <tr>
-          <td class={statusClass(r)}>
+          <td class={statusClass(r.status)}>
             <strong>{r.workflowName.getOrElse("NO NAME")}</strong> <br></br>{r.id}
           </td>
-          <td class={statusClass(r)}>{r.status}</td>
+          <td class={statusClass(r.status)}>{r.status}</td>
           <td>{r.dates}</td>
           <td>{r.startTime}</td>
           <td>{r.endTime}</td>
@@ -78,8 +78,10 @@ class Workflows( initialMetadata: List[Metadata], host: Var[String])
       <thead>
         <tr>
           <th>name</th>
+          <th>status</th>
           <th>stdout</th>
           <th>stderr</th>
+          <th>cache</th>
           <th>shard</th>
         </tr>
       </thead>
@@ -94,8 +96,10 @@ class Workflows( initialMetadata: List[Metadata], host: Var[String])
       calls.map(c=>
         <tr>
           <td>{name}</td>
+          <td class={statusClass(c.executionStatus)}>{c.executionStatus}</td>
           <td><a href={fileHost.map(h=> h + c.stdout)}>{c.stdout}</a></td>
           <td><a href={fileHost.map(h=> h + c.stderr)}>{c.stderr}</a></td>
+          <td>{c.callCaching.result}</td>
           <td>{c.shardIndex}</td>
         </tr>
       )

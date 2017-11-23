@@ -21,7 +21,7 @@ object CromwellWeb extends scala.App {
 
   AppCircuit.addProcessor(new LoggingProcessor[AppModel]())
   val updater = new RunnerView(AppCircuit)
-  val workflows = new Workflows(AppCircuit.zoom(_.metadata).value, Var(AppCircuit.zoom(_.client.base).value))
+  val workflows = new WorkflowsView(AppCircuit.zoom(_.metadata).value, Var(AppCircuit.zoom(_.client.base).value))
   val errors = new ErrorsView(AppCircuit)
 
   AppCircuit.subscribe(AppCircuit.zoom(_.metadata))(workflows.onMetadataUpdate)
