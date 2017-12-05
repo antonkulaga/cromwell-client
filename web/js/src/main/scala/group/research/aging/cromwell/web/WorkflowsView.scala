@@ -58,7 +58,7 @@ class WorkflowsView(initialMetadata: List[Metadata], host: Var[String])
   }
 
   def metadataRow(r: Metadata) =
-        <tr>
+        <tr class={statusClass(r.status)}>
           <td class={statusClass(r.status)}>
             <strong>{r.workflowName.getOrElse("NO NAME")}</strong> <br></br>{r.id}
           </td>
