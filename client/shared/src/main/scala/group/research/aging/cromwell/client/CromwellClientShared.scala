@@ -26,7 +26,7 @@ trait CromwellClientShared {
       |{
       | "write_to_cache": true,
       | "read_from_cache": true,
-      | "final_workflow_outputs_dir": "${output}",
+      | "final_workflow_CallOutputs_dir": "${output}",
       | ${if(log!="") s""" "final_workflow_log_dir": "${log}", """ else ""}
       | ${if (call_log != "") s""" "final_call_logs_dir": "${call_log}", """ else ""}
       |}
@@ -98,7 +98,7 @@ trait CromwellClientShared {
     */
   def abort(id: String): IO[group.research.aging.cromwell.client.StatusInfo] =  getAPI(s"/workflows/${version}/${id}/abort").as[group.research.aging.cromwell.client.StatusInfo]
 
-  def getOutputs(id: String): IO[Outputs] = getAPI(s"/workflows/${version}/${id}/outputs").as[Outputs]
+  def getCallOutputs(id: String): IO[CallOutputs] = getAPI(s"/workflows/${version}/${id}/CallOutputs").as[CallOutputs]
 
   protected def queryString(status: WorkflowStatus = WorkflowStatus.AnyStatus): String = status match {
     case WorkflowStatus.AnyStatus => s"/workflows/${version}/query"
@@ -110,9 +110,9 @@ trait CromwellClientShared {
     getAPI(url).as[QueryResults]
   }
 
-  def getAllOutputs(status: WorkflowStatus = WorkflowStatus.AnyStatus): IO[List[Outputs]] =
+  def getAllCallOutputs(status: WorkflowStatus = WorkflowStatus.AnyStatus): IO[List[CallOutputs]] =
     getQuery(status).flatMap(q=>
-      q.results.map(r=>this.getOutputs(r.id)).sequence
+      q.results.map(r=>this.getCallOutputs(r.id)).sequence
     )
 
 

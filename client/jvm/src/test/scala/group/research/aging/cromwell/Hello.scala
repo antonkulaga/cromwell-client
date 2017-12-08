@@ -26,15 +26,15 @@ object Hello extends App {
   println("==================")
   */
   //pprint.pprintln(client.getAllLogs().unsafeRunSync())
+
   for {
     r <- client.getQuery().unsafeRunSync().results
   } {
     println(client.getAPI(s"/workflows/${client.version}/${r.id}/logs").unsafeRunSync().content)
     val l = client.getLogs(r.id).unsafeRunSync()
     println("=============")
-
   }
 
-  //pprint.pprintln(client.getAllMetadata().unsafeRunSync())
+  pprint.pprintln(client.getAllMetadata().unsafeRunSync())
 
 }

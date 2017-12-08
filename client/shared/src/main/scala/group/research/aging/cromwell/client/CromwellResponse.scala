@@ -36,19 +36,28 @@ object CallOutput {
 
 }
 
+case class WorkflowOutputs(values: Map[String, String]) extends CromwellResponse
+
+object WorkflowOutputs {
+  import io.circe.syntax._
+  implicit val encode: Encoder[WorkflowOutputs] = (a: WorkflowOutputs) => a.values.asJson
+
+  implicit val decode: Decoder[WorkflowOutputs] = (c: HCursor) => c.focus match {
+    case None => Left(DecodingFailure("Cannot extract workflow output!", c.history))
+    case Some(json) => Right(WorkflowOutputs(json.asObject.map(o => o.toMap.mapValues(v => v.toString())).get))
+  }
+
+}
+
 case class Inputs(values: Map[String, String]) extends CromwellResponse
 
 object Inputs {
   import io.circe.syntax._
-  implicit val encode: Encoder[Inputs] = new Encoder[Inputs] {
-    final def apply(a: Inputs): Json = a.values.asJson
-  }
+  implicit val encode: Encoder[Inputs] = (a: Inputs) => a.values.asJson
 
-  implicit val decode: Decoder[Inputs] = new Decoder[Inputs] {
-    final def apply(c: HCursor): Decoder.Result[Inputs] = c.focus match{
-      case None => Left(DecodingFailure("Cannot extract call output!", c.history))
-      case Some(json) => Right(Inputs(json.asObject.map(o=>o.toMap.mapValues(v=>v.toString())).get))
-    }
+  implicit val decode: Decoder[Inputs] = (c: HCursor) => c.focus match {
+    case None => Left(DecodingFailure("Cannot extract input!", c.history))
+    case Some(json) => Right(Inputs(json.asObject.map(o => o.toMap.mapValues(v => v.toString())).get))
   }
 
 }
@@ -75,6 +84,7 @@ object Metadata
                                 start: Option[String],
                                 end: Option[String],
                                 inputs: Inputs,
+                                outputs: WorkflowOutputs,
                                 failures: Option[List[WorkflowFailure]] = None,
                                 submittedFiles: SubmittedFiles,
                                 workflowName: Option[String] = None,
@@ -94,13 +104,16 @@ object Metadata
   //protected def parse(text: String): LocalDate = LocalDate.parse(text, DateTimeFormatter.ISO_INSTANT)
 }
 
-@JsonCodec case class Outputs(outputs: Map[String,  CallOutput], id: String) extends WorkflowResponse
+//@JsonCodec case class WorkflowOutputs(outputs: Map[String, String]) extends CromwellResponse
+
+@JsonCodec case class CallOutputs(outputs: Map[String,  CallOutput], id: String) extends WorkflowResponse
 
 @JsonCodec case class StatusInfo(id: String, status: String) extends WorkflowResponse
 
 @JsonCodec case class Logs(id: String, calls: Option[Map[String, List[LogCall]]] = None) extends WorkflowResponse
 
-@JsonCodec case class LogCall(callRoot: String, stderr: String, stdout: String, attempt: Int, shardIndex: Int,
+@JsonCodec case class LogCall(stderr: String, stdout: String, attempt: Int, shardIndex: Int,
+                              callRoot: Option[String] = None,
                               executionStatus: Option[String] = None,
                               callCaching: Option[CallCaching] = None) extends CromwellResponse
 

@@ -12,7 +12,7 @@ class WorkflowsView(initialMetadata: List[Metadata], host: Var[String])
 
   var desc = true
 
-  def timingURL(base: String, id: String) = base + s"/api/workflows/v1/${id}/timing"
+  def timingURL(base: String, id: String): String = base + s"/api/workflows/v1/${id}/timing"
 
 
   def onMetadataUpdate(reader: ModelRO[List[Metadata]]): Unit = {
@@ -40,13 +40,12 @@ class WorkflowsView(initialMetadata: List[Metadata], host: Var[String])
   val component: Elem = <table id="workflows" class="ui small blue striped celled table">
     <thead>
       <tr>
-        <th>workflow</th>
+        <th>name/id</th>
         <th>status</th>
-        <th>dates</th>
         <th>start</th>
         <th>end</th>
-        <th>inputs</th>
-        <th>failures and calls</th>
+        <th>workflow</th>
+        <th>calls and failures</th>
       </tr>
     </thead>
     <tbody>
@@ -66,15 +65,58 @@ class WorkflowsView(initialMetadata: List[Metadata], host: Var[String])
             <strong>{r.workflowName.getOrElse("NO NAME")}</strong> <br></br>{r.id}
           </td>
           <td class={statusClass(r.status)}>{r.status}</td>
-          <td>{r.dates}</td>
           <td><a href={host.map(h=> timingURL(h, r.id))} target ="_blank">{r.startTime}</a></td>
           <td><a href={host.map(h=> timingURL(h, r.id))} target ="_blank">{r.endTime}</a></td>
-          <td>{rowInputs(r)}</td>
+          <td>
+            {generalInfo(r)}
+            {rowInputs(r)}
+            {rowOutputs(r)}
+          </td>
           <td>
             {rowFailures(r)}
             {rowCallsTable(r)}
           </td>
         </tr>
+
+  def generalInfo(r: Metadata): Elem = <table id="workflows" class="ui small padded striped celled table">
+    <tbody>
+      <tr>
+        <th>id</th><td >{r.id}</td>
+        <th>date</th><td>{r.dates}</td>
+      </tr>
+      <tr>
+        <th >root</th><td colspan="3"><a href={host.map(h=> h + r.workflowRoot.getOrElse(""))}  target ="_blank">{r.workflowRoot.getOrElse("")}</a></td>
+      </tr>
+    </tbody>
+  </table>
+
+  def rowInputs(r: Metadata): Elem =
+    <div class="ui info message">
+      <div class="header">Inputs:</div>
+      <div class="ui list">
+        {
+        r.inputs.values.toList.map(kv=>
+          <div class="item">
+            { kv._1 + " = " + kv._2 }
+          </div>
+        )
+        }
+      </div>
+    </div>
+
+  def rowOutputs(r: Metadata): Elem = if(r.outputs.values.isEmpty) <br/> else
+    <div class="ui positive message">
+      <div class="header">Outputs:</div>
+      <div class="ui list">
+        {
+        r.outputs.values.toList.map(kv=>
+          <div class="item">
+            { kv._1 + " = " + kv._2 }
+          </div>
+        )
+        }
+      </div>
+    </div>
 
   def rowCallsTable(r: Metadata): Elem = if(r.calls.isDefined && r.calls.get.nonEmpty)
     <table class="ui small collapsing table">
@@ -100,8 +142,8 @@ class WorkflowsView(initialMetadata: List[Metadata], host: Var[String])
         <tr>
           <td><a href={fileHost.map(h=> h + c.callRoot)} target="_blank">{name}</a></td>
           <td class={statusClass(c.executionStatus.getOrElse(""))}>{c.executionStatus}</td>
-          <td><a href={fileHost.map(h=> h + c.stdout)}>{c.stdout}</a></td>
-          <td><a href={fileHost.map(h=> h + c.stderr)}>{c.stderr}</a></td>
+          <td><a href={fileHost.map(h=> h + c.stdout)}  target ="_blank">{c.stdout}</a></td>
+          <td><a href={fileHost.map(h=> h + c.stderr)} target ="_blank">{c.stderr}</a></td>
           <td>{c.callCaching.fold("")(r=>r.result)}</td>
           <td>{c.shardIndex}</td>
         </tr>
@@ -112,19 +154,6 @@ class WorkflowsView(initialMetadata: List[Metadata], host: Var[String])
       {f.message}
       <p> {f.causedBy.mkString}</p>
     </div>)
-
-  def rowInputs(r: Metadata): Elem =
-      <div class="ui info message">
-        <div class="ui list">
-          {
-          r.inputs.values.toList.map(kv=>
-            <div class="item">
-              { kv._1 + " = " + kv._2 }
-            </div>
-          )
-          }
-        </div>
-      </div>
 
 
 }
