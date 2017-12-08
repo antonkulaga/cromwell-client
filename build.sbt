@@ -11,7 +11,7 @@ lazy val commonSettings = Seq(
 
 	scalaVersion :=  "2.12.4",
 
-	version := "0.0.10",
+	version := "0.0.11",
 
 	unmanagedClasspath in Compile ++= (unmanagedResources in Compile).value,
 
@@ -35,7 +35,7 @@ lazy val commonSettings = Seq(
 
 	addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.1" cross CrossVersion.full),
 
-	addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.4"),
+	addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.5"),
 
 	bintrayRepository := "main",
 
@@ -88,7 +88,7 @@ lazy val  cromwellClient = crossProject
 	.disablePlugins(RevolverPlugin)
   .jvmSettings(
     libraryDependencies ++= Seq(
-			"com.github.pathikrit" %% "better-files" % "3.2.0",
+			"com.github.pathikrit" %% "better-files" % "3.4.0",
 			"org.webjars" % "Semantic-UI" %  semanticUI,
 			"org.webjars" % "jquery" % jquery,
 			"org.webjars" % "webcomponentsjs" % webcomponents
@@ -97,7 +97,7 @@ lazy val  cromwellClient = crossProject
   .jsSettings(
 		jsEnv := new org.scalajs.jsenv.jsdomnodejs.JSDOMNodeJSEnv,
 		libraryDependencies ++= Seq(
-			"org.scala-js" %%% "scalajs-java-time" % "0.2.2",
+			"org.scala-js" %%% "scalajs-java-time" % "0.2.3",
 			"org.querki" %%% "jquery-facade" % "1.2"
 		)
 	)
@@ -106,7 +106,7 @@ lazy val cromwellClientJVM = cromwellClient.jvm
 
 lazy val cromwellClientJS = cromwellClient.js
 
-lazy val akkaHttp = "10.0.10"
+lazy val akkaHttp = "10.0.11"
 
 lazy val cromwellWeb = crossProject
 	.crossType(CrossType.Full)

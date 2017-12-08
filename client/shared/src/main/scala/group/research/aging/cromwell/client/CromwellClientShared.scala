@@ -83,6 +83,9 @@ trait CromwellClientShared {
 
   def getVersion = getIO(s"/engine/${version}/version", Map.empty).as[Version]
 
+  def getEngineStatus = getIO(s"/engine/${version}/status", Map.empty)//.as[EngineStatus]
+
+
   /**
     * 400
     * Malformed Workflow ID
@@ -112,6 +115,7 @@ trait CromwellClientShared {
       q.results.map(r=>this.getOutputs(r.id)).sequence
     )
 
+
   def getLogs(id: String) = getAPI(s"/workflows/${version}/${id}/logs").as[Logs]
 
   def getAllLogs(status: WorkflowStatus = WorkflowStatus.AnyStatus) = getQuery(status).flatMap(q=>
@@ -120,7 +124,7 @@ trait CromwellClientShared {
 
   def getBackends = getAPI(s"/workflows/${version}/backends").as[Backends]
 
-  def getMetadata(id: String, v: String = "v2")= getAPI(s"/workflows/${v}/${id}/metadata").as[Metadata]
+  def getMetadata(id: String, v: String = "v2", expandSubWorkflows: Boolean = true)= getAPI(s"/workflows/${v}/${id}/metadata?expandSubWorkflows=${expandSubWorkflows}").as[Metadata]
 
   def getAllMetadata(status: WorkflowStatus = WorkflowStatus.AnyStatus) = getQuery(status).flatMap(q=>
     q.results.map(r=>this.getMetadata(r.id)).sequence

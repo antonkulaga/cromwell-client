@@ -12,6 +12,9 @@ class WorkflowsView(initialMetadata: List[Metadata], host: Var[String])
 
   var desc = true
 
+  def timingURL(base: String, id: String) = base + s"/api/workflows/v1/${id}/timing"
+
+
   def onMetadataUpdate(reader: ModelRO[List[Metadata]]): Unit = {
     allMetadata := (if(desc) reader.value.reverse else reader.value)
   }
@@ -53,7 +56,7 @@ class WorkflowsView(initialMetadata: List[Metadata], host: Var[String])
 
   def statusClass(str: String) = str.toLowerCase match {
     case "succeeded" | "done" => "positive"
-    case "failed" => "negative"
+    case "failed" | "aborted" => "negative"
     case _ => "warning"
   }
 
@@ -64,8 +67,8 @@ class WorkflowsView(initialMetadata: List[Metadata], host: Var[String])
           </td>
           <td class={statusClass(r.status)}>{r.status}</td>
           <td>{r.dates}</td>
-          <td>{r.startTime}</td>
-          <td>{r.endTime}</td>
+          <td><a href={host.map(h=> timingURL(h, r.id))} target ="_blank">{r.startTime}</a></td>
+          <td><a href={host.map(h=> timingURL(h, r.id))} target ="_blank">{r.endTime}</a></td>
           <td>{rowInputs(r)}</td>
           <td>
             {rowFailures(r)}
@@ -95,11 +98,11 @@ class WorkflowsView(initialMetadata: List[Metadata], host: Var[String])
   def callRow(name: String, calls: List[LogCall], fileHost: Rx[String]): List[Elem] =
       calls.map(c=>
         <tr>
-          <td>{name}</td>
-          <td class={statusClass(c.executionStatus)}>{c.executionStatus}</td>
+          <td><a href={fileHost.map(h=> h + c.callRoot)} target="_blank">{name}</a></td>
+          <td class={statusClass(c.executionStatus.getOrElse(""))}>{c.executionStatus}</td>
           <td><a href={fileHost.map(h=> h + c.stdout)}>{c.stdout}</a></td>
           <td><a href={fileHost.map(h=> h + c.stderr)}>{c.stderr}</a></td>
-          <td>{c.callCaching.result}</td>
+          <td>{c.callCaching.fold("")(r=>r.result)}</td>
           <td>{c.shardIndex}</td>
         </tr>
       )
