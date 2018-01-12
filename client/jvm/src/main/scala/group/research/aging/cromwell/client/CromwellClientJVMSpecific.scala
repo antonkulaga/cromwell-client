@@ -5,7 +5,7 @@ import java.nio.ByteBuffer
 
 import better.files._
 import cats.effect.IO
-import hammock.jvm.free.Interpreter
+import hammock.jvm.Interpreter
 
 import scala.concurrent.Future
 

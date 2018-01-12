@@ -5,7 +5,6 @@ import cats.free.Free
 import diode.{ActionHandler, Circuit, Effect, EffectSingle}
 import group.research.aging.cromwel.client.CromwellClient
 import group.research.aging.cromwell.client.Metadata
-import hammock.free.algebra
 import hammock.{Hammock, HttpResponse, Method, Uri}
 import org.scalajs.dom
 
@@ -26,6 +25,11 @@ object AppCircuit extends Circuit[AppModel] {
     override protected def handle = {
 
       case Commands.GetMetadata(status)=>
+
+        println("test================")
+        println(value.getQuery(status).unsafeRunSync())
+        //println(value.getAllMetadata(status).unsafeRunSync())
+
         effectOnly(Effect(value.getAllMetadata(status).map{md=>
           Results.UpdatedMetadata(md)
         }.unsafeToFuture().recover{

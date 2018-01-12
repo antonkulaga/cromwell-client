@@ -140,11 +140,11 @@ class WorkflowsView(initialMetadata: List[Metadata], host: Var[String])
   def callRow(name: String, calls: List[LogCall], fileHost: Rx[String]): List[Elem] =
       calls.map(c=>
         <tr>
-          <td><a href={fileHost.map(h=> h + c.callRoot)} target="_blank">{name}</a></td>
+          <td><a href={fileHost.map(h=> h + c.callRoot.getOrElse(""))} target="_blank">{name}</a></td>
           <td class={statusClass(c.executionStatus.getOrElse(""))}>{c.executionStatus}</td>
-          <td><a href={fileHost.map(h=> h + c.stdout)}  target ="_blank">{c.stdout}</a></td>
-          <td><a href={fileHost.map(h=> h + c.stderr)} target ="_blank">{c.stderr}</a></td>
-          <td>{c.callCaching.fold("")(r=>r.result)}</td>
+          <td><a href={fileHost.map(h=> h + c.stdout.getOrElse(""))}  target ="_blank">{c.stdout}</a></td>
+          <td><a href={fileHost.map(h=> h + c.stderr.getOrElse(""))} target ="_blank">{c.stderr}</a></td>
+          <td>{c.callCaching.fold("")(r=>r.result.getOrElse(""))}</td>
           <td>{c.shardIndex}</td>
         </tr>
       )

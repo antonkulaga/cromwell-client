@@ -11,7 +11,7 @@ lazy val commonSettings = Seq(
 
 	scalaVersion :=  "2.12.4",
 
-	version := "0.0.11",
+	version := "0.0.12",
 
 	unmanagedClasspath in Compile ++= (unmanagedResources in Compile).value,
 
@@ -54,15 +54,13 @@ lazy val commonSettings = Seq(
 
 commonSettings
 
-lazy val hammockVersion = "0.7.1"
+lazy val hammockVersion = "0.8.1"
 
 lazy val semanticUI = "2.2.10"
 
 lazy val webcomponents = "1.0.1"
 
 lazy val jquery = "3.2.1"
-
-lazy val cats = "1.0.0-RC1"
 
 lazy val  cromwellClient = crossProject
   .crossType(CrossType.Full)
@@ -72,16 +70,15 @@ lazy val  cromwellClient = crossProject
     fork in run := true,
 
     parallelExecution in Test := false,
-    
+
     name := "cromwell-client",
 
 		libraryDependencies ++= Seq(
-			"fr.hmil" %%% "roshttp" % "2.0.2",
+			"fr.hmil" %%% "roshttp" % "2.1.0",
 			"com.beachape" %%% "enumeratum" % "1.5.12",
 			"com.lihaoyi" %%% "pprint" % "0.5.3",
-			"org.typelevel" %%% "cats-core"        % cats,
-			"org.typelevel" %%% "cats-free"        % cats,
-			"org.typelevel" %%% "cats-effect" % "0.5",
+			"org.typelevel" %%% "cats-core"      % "1.0.1",
+			"org.typelevel" %%% "cats-effect"     % "0.8",
 			"com.pepegar" %%% "hammock-circe" % hammockVersion
     )
 	)
@@ -125,7 +122,7 @@ lazy val cromwellWeb = crossProject
 	.jsSettings(
 		libraryDependencies ++= Seq(
 			"in.nvilla" %%% "monadic-html" % "0.4.0-RC1",
-			"io.suzaku" %%% "diode" % "1.1.2"
+			"io.suzaku" %%% "diode" % "1.1.3"
 		),
 		jsEnv := new org.scalajs.jsenv.jsdomnodejs.JSDOMNodeJSEnv,
 		scalaJSUseMainModuleInitializer := true
@@ -147,8 +144,7 @@ lazy val cromwellWeb = crossProject
 		maintainer in Docker := "Anton Kulaga <antonkulaga@gmail.com>",
 		dockerExposedPorts := Seq(8080),
 		dockerRepository := Some("quay.io/comp-bio-aging"),
-	)
-	.jvmConfigure(p=>
+	).jvmConfigure(p=>
 		p.enablePlugins(SbtWeb, SbtTwirl, JavaAppPackaging, DockerPlugin)
 	)
 	.dependsOn(cromwellClient)

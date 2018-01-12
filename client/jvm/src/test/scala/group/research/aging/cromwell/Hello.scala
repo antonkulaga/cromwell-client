@@ -2,11 +2,15 @@ package group.research.aging.cromwell
 
 import better.files.File
 import cats.effect.IO
-import group.research.aging.cromwell.client.{CromwellClient, Metadata}
+import group.research.aging.cromwell.client.{CallOutputs, CromwellClient, Metadata, WorkflowStatus}
+import hammock.jvm.Interpreter
 
 import scala.concurrent.Future
 
 object Hello extends App {
+
+  implicit val getInterpreter: Interpreter[IO] = Interpreter[IO]
+
 
   val host: String = "agingkills.westeurope.cloudapp.azure.com"
   val port: Int = 8000
@@ -16,25 +20,41 @@ object Hello extends App {
   val base = "/home/antonkulaga/cromwell-client/client/jvm/src/test/resources/test1"
   //client.postWorkflowFiles(File(base + "/hello.wdl"), File(base + "/input1.json"), Some(File(base + "/option1.json")))
 
-/*
-  pprint.pprintln(client.getQuery().unsafeRunSync())
-  println("==================")
-  pprint.pprintln(client.getAllOutputs().unsafeRunSync())
+  val q = client.getQuery().unsafeRunSync()
+  pprint.pprintln(q.results)
+  for( r <- q.results) {
+    pprint.pprintln(client.getCallOutputs(r.id).unsafeRunSync())
+    val url = client.base + client.api + s"/workflows/${client.version}/${r.id}/outputs"
+    println(url)
+    println(client.get(client.api + s"/workflows/${client.version}/${r.id}/outputs", Map.empty).exec[IO].unsafeRunSync())
+  }
+
+
+
+  //pprint.pprintln(client.getQuery().unsafeRunSync())
+  //println("==================")
+
+
+  //pprint.pprintln(client.getAllCallOutputs().unsafeRunSync())
+
+  /*
   println("==================")
   pprint.pprintln(client.getAllMetadata().unsafeRunSync())
   pprint.pprintln(client.getAllLogs().unsafeRunSync())
   println("==================")
-  */
+*/
   //pprint.pprintln(client.getAllLogs().unsafeRunSync())
 
+
+  /*
   for {
     r <- client.getQuery().unsafeRunSync().results
   } {
-    println(client.getAPI(s"/workflows/${client.version}/${r.id}/logs").unsafeRunSync().content)
+    println(client.get(s"/workflows/${client.version}/${r.id}/logs", Map.empty).exec[IO].unsafeRunSync().entity)
     val l = client.getLogs(r.id).unsafeRunSync()
     println("=============")
   }
+  */
 
-  pprint.pprintln(client.getAllMetadata().unsafeRunSync())
-
+//  pprint.pprintln(client.getAllMetadata().unsafeRunSync())
 }

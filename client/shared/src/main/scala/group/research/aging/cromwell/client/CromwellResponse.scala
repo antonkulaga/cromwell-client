@@ -112,7 +112,7 @@ object Metadata
 
 @JsonCodec case class Logs(id: String, calls: Option[Map[String, List[LogCall]]] = None) extends WorkflowResponse
 
-@JsonCodec case class LogCall(stderr: String, stdout: String, attempt: Int, shardIndex: Int,
+@JsonCodec case class LogCall(stderr: Option[String] , stdout: Option[String], attempt: Int, shardIndex: Int,
                               callRoot: Option[String] = None,
                               executionStatus: Option[String] = None,
                               callCaching: Option[CallCaching] = None) extends CromwellResponse
@@ -123,4 +123,4 @@ object Metadata
 
 @JsonCodec case class WorkflowFailure(message: String, causedBy: List[WorkflowFailure] = Nil) extends CromwellResponse
 
-@JsonCodec case class CallCaching(allowResultReuse: Boolean, effectiveCallCachingMode: String, hit: Boolean, result: String)
+@JsonCodec case class CallCaching(allowResultReuse: Boolean, effectiveCallCachingMode: String, hit: Option[Boolean] = None, result: Option[String] = None)
