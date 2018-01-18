@@ -54,7 +54,7 @@ lazy val commonSettings = Seq(
 
 commonSettings
 
-lazy val hammockVersion = "0.8.1"
+lazy val hammockVersion = "0.8.2"
 
 lazy val semanticUI = "2.2.10"
 
@@ -116,7 +116,7 @@ lazy val cromwellWeb = crossProject
 		name := "cromwell-web",
 
 		libraryDependencies  ++= Seq(
-			"com.github.japgolly.scalacss" % "core_2.12" % "0.5.4"
+			"com.github.japgolly.scalacss" % "core_2.12" % "0.5.5"
 		)
 	)
 	.jsSettings(

@@ -1,15 +1,11 @@
 package group.research.aging.cromwell.web
 
-import scala.concurrent.duration._
-import cats.free.Free
-import diode.{ActionHandler, Circuit, Effect, EffectSingle}
+import diode.{ActionHandler, Circuit, Effect}
 import group.research.aging.cromwel.client.CromwellClient
 import group.research.aging.cromwell.client.Metadata
-import hammock.{Hammock, HttpResponse, Method, Uri}
 import org.scalajs.dom
 
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
-import scala.util.{Failure, Success}
 
 case class AppModel(
                      client: CromwellClient,
@@ -25,11 +21,6 @@ object AppCircuit extends Circuit[AppModel] {
     override protected def handle = {
 
       case Commands.GetMetadata(status)=>
-
-        println("test================")
-        println(value.getQuery(status).unsafeRunSync())
-        //println(value.getAllMetadata(status).unsafeRunSync())
-
         effectOnly(Effect(value.getAllMetadata(status).map{md=>
           Results.UpdatedMetadata(md)
         }.unsafeToFuture().recover{
