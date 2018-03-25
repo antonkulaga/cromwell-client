@@ -14,7 +14,7 @@ Adding to dependencies
 add the following to you build.sbt
 
 resolvers += sbt.Resolver.bintrayRepo("comp-bio-aging", "main")
-libraryDependencies += "comp.bio.aging" %%% "cromwell-client" % "0.0.11"
+libraryDependencies += "comp.bio.aging" %%% "cromwell-client" % "0.0.13"
 
 Usage
 -----
@@ -66,7 +66,7 @@ reStart
 ```
 It is also published as a Docker container. You can run it as:
 ```bash
-docker run -p 8080:8080 quay.io/comp-bio-aging/cromwell-web:0.0.11
+docker run -p 8080:8080 quay.io/comp-bio-aging/cromwell-web:0.0.13
 ```
 
 ![Screenshot](/screenshot.jpg?raw=true "CromwellWeb screenshot")

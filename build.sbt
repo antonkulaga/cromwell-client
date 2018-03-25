@@ -9,9 +9,9 @@ lazy val commonSettings = Seq(
 
 	organization := "group.research.aging",
 
-	scalaVersion :=  "2.12.4",
+	scalaVersion :=  "2.12.5",
 
-	version := "0.0.12",
+	version := "0.0.13",
 
 	unmanagedClasspath in Compile ++= (unmanagedResources in Compile).value,
 
@@ -25,17 +25,19 @@ lazy val commonSettings = Seq(
 
 	resolvers += "Broad Artifactory Snapshots" at "https://artifactory.broadinstitute.org/artifactory/libs-snapshot/",
 
-	libraryDependencies += "com.lihaoyi" % "ammonite" % "1.0.3" % Test cross CrossVersion.full,
+	/*
+	libraryDependencies += "com.lihaoyi" % "ammonite" % "1.0.5" % Test cross CrossVersion.full,
 
 	sourceGenerators in Test += Def.task {
 		val file = (sourceManaged in Test).value / "amm.scala"
 		IO.write(file, """object amm extends App { ammonite.Main().run() }""")
 		Seq(file)
 	}.taskValue,
+	*/
 
 	addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.1" cross CrossVersion.full),
 
-	addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.5"),
+	addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.6"),
 
 	bintrayRepository := "main",
 
@@ -54,13 +56,13 @@ lazy val commonSettings = Seq(
 
 commonSettings
 
-lazy val hammockVersion = "0.8.2"
+lazy val hammockVersion = "0.8.3-SNAP"
 
 lazy val semanticUI = "2.2.10"
 
 lazy val webcomponents = "1.0.1"
 
-lazy val jquery = "3.2.1"
+lazy val jquery = "3.3.1"
 
 lazy val  cromwellClient = crossProject
   .crossType(CrossType.Full)
@@ -75,10 +77,10 @@ lazy val  cromwellClient = crossProject
 
 		libraryDependencies ++= Seq(
 			"fr.hmil" %%% "roshttp" % "2.1.0",
-			"com.beachape" %%% "enumeratum" % "1.5.12",
+			"com.beachape" %%% "enumeratum" % "1.5.13",
 			"com.lihaoyi" %%% "pprint" % "0.5.3",
-			"org.typelevel" %%% "cats-core"      % "1.0.1",
-			"org.typelevel" %%% "cats-effect"     % "0.8",
+			"org.typelevel" %%% "cats-core"      % "1.1.0",
+			"org.typelevel" %%% "cats-effect"     % "0.10",
 			"com.pepegar" %%% "hammock-circe" % hammockVersion
     )
 	)
@@ -103,7 +105,8 @@ lazy val cromwellClientJVM = cromwellClient.jvm
 
 lazy val cromwellClientJS = cromwellClient.js
 
-lazy val akkaHttp = "10.0.11"
+lazy val akka = "2.5.11"
+lazy val akkaHttp = "10.1.0"
 
 lazy val cromwellWeb = crossProject
 	.crossType(CrossType.Full)
@@ -130,6 +133,7 @@ lazy val cromwellWeb = crossProject
 	.jsConfigure(p=>p.enablePlugins(ScalaJSWeb).disablePlugins(RevolverPlugin))
 	.jvmSettings(
 		libraryDependencies ++= Seq(
+			"com.typesafe.akka" %% "akka-stream" % akka,
 			"com.typesafe.akka" %% "akka-http" % akkaHttp,
 			"com.typesafe.akka" %% "akka-http-xml" % akkaHttp,
 			"com.vmunier" %% "scalajs-scripts" % "1.1.1",

@@ -3,7 +3,6 @@ package group.research.aging.cromwell.server
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.HttpApp
 import akka.http.scaladsl.server.Route
-import html._
 import play.twirl.api.Html
 import scalacss.DevDefaults._
 
@@ -32,7 +31,6 @@ object WebServer extends HttpApp {
 
 
   def index =  pathSingleSlash{ctx=>
-    ctx.materializer.executionContext
     ctx.complete {
       HttpResponse(  entity = HttpEntity(MediaTypes.`text/html`.withCharset(HttpCharsets.`UTF-8`), html.index(defaultPage).body  ))
     }
