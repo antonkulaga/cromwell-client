@@ -56,9 +56,9 @@ lazy val commonSettings = Seq(
 
 commonSettings
 
-lazy val hammockVersion = "0.8.3-SNAP"
+lazy val hammockVersion = "0.8.3"
 
-lazy val semanticUI = "2.2.10"
+lazy val semanticUI = "2.3.1"
 
 lazy val webcomponents = "1.0.1"
 
@@ -96,7 +96,7 @@ lazy val  cromwellClient = crossProject
   .jsSettings(
 		jsEnv := new org.scalajs.jsenv.jsdomnodejs.JSDOMNodeJSEnv,
 		libraryDependencies ++= Seq(
-			"org.scala-js" %%% "scalajs-java-time" % "0.2.3",
+			"org.scala-js" %%% "scalajs-java-time" % "0.2.4",
 			"org.querki" %%% "jquery-facade" % "1.2"
 		)
 	)

@@ -9,11 +9,10 @@ import scalacss.DevDefaults._
 // Server definition
 object WebServer extends HttpApp {
 
-
   lazy val webjarsPrefix = "lib"
   lazy val resourcePrefix = "public"
 
-  def mystyles =    path("styles" / "mystyles.css"){
+  def mystyles =  path("styles" / "mystyles.css"){
     complete  {
       HttpResponse(  entity = HttpEntity(MediaTypes.`text/css`.withCharset(HttpCharsets.`UTF-8`),  MyStyles.render   ))   }
   }
