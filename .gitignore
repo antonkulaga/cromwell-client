@@ -33,3 +33,5 @@ tags
 
 #MAC OS specific
 .DS_Store
+
+scripts/services/cromwell-executions/*

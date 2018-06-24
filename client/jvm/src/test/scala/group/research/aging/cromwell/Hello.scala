@@ -1,28 +1,31 @@
 package group.research.aging.cromwell
 
-import better.files.File
 import cats.effect.IO
-import group.research.aging.cromwell.client.{CallOutputs, CromwellClient, Metadata, WorkflowStatus}
+import group.research.aging.cromwell.client.CromwellClient
 import hammock.jvm.Interpreter
-
-import scala.concurrent.Future
 
 object Hello extends App {
 
   implicit val getInterpreter: Interpreter[IO] = Interpreter[IO]
 
+  //val host: String = "agingkills.westeurope.cloudapp.azure.com"
 
-  val host: String = "agingkills.westeurope.cloudapp.azure.com"
+  val host: String = "localhost"
+
   val port: Int = 8000
   lazy val url = s"http://${host}:${port}"
+
   lazy val client = new CromwellClient(url, "v1")
   //lazy val client: CromwellClient = new CromwellClient("http://localhost:80", "v1")
+
   val base = "/home/antonkulaga/cromwell-client/client/jvm/src/test/resources/test1"
   //client.postWorkflowFiles(File(base + "/hello.wdl"), File(base + "/input1.json"), Some(File(base + "/option1.json")))
 
   val q = client.getQuery().unsafeRunSync()
+
   pprint.pprintln(q.results)
-  for( r <- q.results) {
+
+  for(r <- q.results) {
     pprint.pprintln(client.getCallOutputs(r.id).unsafeRunSync())
     val url = client.base + client.api + s"/workflows/${client.version}/${r.id}/outputs"
     println(url)

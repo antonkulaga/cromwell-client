@@ -2,7 +2,7 @@ package group.research.aging.cromwell.web
 
 import diode.Action
 import group.research.aging.cromwel.client.CromwellClient
-import group.research.aging.cromwell.client.{Metadata, StatusInfo, WorkflowStatus}
+import group.research.aging.cromwell.client.{CromwellClientLike, Metadata, StatusInfo, WorkflowStatus}
 
 object Messages {
   class Error(errorMessage: String) extends Action
@@ -14,7 +14,7 @@ object Messages {
 object Results {
   case class UpdatedStatus(info: StatusInfo) extends Action
   case class UpdatedMetadata(metadata: List[Metadata]) extends Action
-  case class UpdatedClient(client: CromwellClient) extends Action
+  case class UpdatedClient(client: CromwellClientLike) extends Action
 }
 
 object Commands{

@@ -2,13 +2,13 @@ package group.research.aging.cromwell.web
 
 import diode.{ActionHandler, Circuit, Effect}
 import group.research.aging.cromwel.client.CromwellClient
-import group.research.aging.cromwell.client.Metadata
+import group.research.aging.cromwell.client.{CromwellClientLike, Metadata}
 import org.scalajs.dom
 
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 
 case class AppModel(
-                     client: CromwellClient,
+                     client: CromwellClientLike,
                      metadata: List[Metadata],
                      errors: List[Messages.ExplainedError] = Nil
                    )
@@ -37,18 +37,18 @@ object AppCircuit extends Circuit[AppModel] {
 
       case Commands.LoadLastUrl =>
         Option(dom.window.localStorage.getItem(Commands.LoadLastUrl.key)).fold(
-          noChange)( url=> updated(CromwellClient(url)))
+          noChange)(url=> updated(CromwellClient(url)))
 
       case Commands.Run(wdl, input, options) =>
         effectOnly(
           Effect(value.postWorkflowStrings(wdl, input, options).map(md=>Results.UpdatedStatus(md))
             .recover{
-              case th=>
+              case th =>
                 Messages.Errors(Messages.ExplainedError(s"running workflow at ${value.base} failed", th.getMessage)::Nil)
             }
           ) >>
             Effect(value.getAllMetadata().map(md=>Results.UpdatedMetadata(md)).unsafeToFuture().recover{
-              case th=>
+              case th =>
                 Messages.Errors(Messages.ExplainedError(s"getting information from the server failed ${value.base}", th.getMessage)::Nil)
             })
         )

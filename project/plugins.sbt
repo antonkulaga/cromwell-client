@@ -14,4 +14,4 @@ addSbtPlugin("io.spray" % "sbt-revolver" % "0.9.1") //live refresh
 
 addSbtPlugin("com.typesafe.sbt" % "sbt-native-packager" % "1.3.3")
 
-addSbtPlugin("org.portable-scala" % "sbt-scalajs-crossproject"      % "0.4.0")
+addSbtPlugin("org.portable-scala" % "sbt-scalajs-crossproject" % "0.4.0")

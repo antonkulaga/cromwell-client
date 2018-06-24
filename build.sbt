@@ -12,7 +12,7 @@ lazy val commonSettings = Seq(
 
 	scalaVersion :=  "2.12.6",
 
-	version := "0.0.14",
+	version := "0.0.15",
 
 	unmanagedClasspath in Compile ++= (unmanagedResources in Compile).value,
 
@@ -106,8 +106,8 @@ lazy val cromwellClientJVM = cromwellClient.jvm
 
 lazy val cromwellClientJS = cromwellClient.js
 
-lazy val akka = "2.5.12"
-lazy val akkaHttp = "10.1.1"
+lazy val akka = "2.5.13"
+lazy val akkaHttp = "10.1.3"
 
 lazy val cromwellWeb = crossProject(JSPlatform, JVMPlatform)
 	.crossType(CrossType.Full)
@@ -138,6 +138,7 @@ lazy val cromwellWeb = crossProject(JSPlatform, JVMPlatform)
 			"com.typesafe.akka" %% "akka-http" % akkaHttp,
 			"com.typesafe.akka" %% "akka-http-xml" % akkaHttp,
 			"com.vmunier" %% "scalajs-scripts" % "1.1.2",
+      "de.heikoseeberger" %% "akka-http-circe" % "1.21.0"
 			//"com.pepegar" %% "hammock-akka-http" % hammockVersion
 		),
 		(managedClasspath in Runtime) += (packageBin in Assets).value,
