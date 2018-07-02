@@ -14,7 +14,7 @@ trait Measurable {
     fun()
     val end = new js.Date().getTime()
     val time: Number = end - start
-    (name,time)
+    (name, time)
   }
 
   def alertedMeasure(name: String)(fun: () => Unit): Unit = {

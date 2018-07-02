@@ -24,8 +24,8 @@ object AppCircuit extends Circuit[AppModel] {
         effectOnly(Effect(value.getAllMetadata(status).map{md=>
           Results.UpdatedMetadata(md)
         }.unsafeToFuture().recover{
-          case th=>
-            Messages.Errors(Messages.ExplainedError(s"getting information from the server failed ${value.base}", th.getMessage)::Nil)
+          case th =>
+            Messages.Errors(Messages.ExplainedError(s"getting information from the server failed ${value.base}", Option(th.getMessage).getOrElse(""))::Nil)
         })
         )
 
@@ -44,12 +44,12 @@ object AppCircuit extends Circuit[AppModel] {
           Effect(value.postWorkflowStrings(wdl, input, options).map(md=>Results.UpdatedStatus(md))
             .recover{
               case th =>
-                Messages.Errors(Messages.ExplainedError(s"running workflow at ${value.base} failed", th.getMessage)::Nil)
+                Messages.Errors(Messages.ExplainedError(s"running workflow at ${value.base} failed", Option(th.getMessage).getOrElse(""))::Nil)
             }
           ) >>
             Effect(value.getAllMetadata().map(md=>Results.UpdatedMetadata(md)).unsafeToFuture().recover{
               case th =>
-                Messages.Errors(Messages.ExplainedError(s"getting information from the server failed ${value.base}", th.getMessage)::Nil)
+                Messages.Errors(Messages.ExplainedError(s"getting information from the server failed ${value.base}", Option(th.getMessage).getOrElse(""))::Nil)
             })
         )
     }

@@ -35,3 +35,4 @@ tags
 .DS_Store
 
 scripts/services/cromwell-executions/*
+scripts/services/mysql/data/*

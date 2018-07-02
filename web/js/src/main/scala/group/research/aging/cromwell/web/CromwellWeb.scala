@@ -29,6 +29,7 @@ object CromwellWeb extends scala.App {
   AppCircuit.subscribe(AppCircuit.zoom(_.errors))(errors.onUpdate)
 
 
+
   val component =
     <div id="cromwell">
       {  updater.runner  }
