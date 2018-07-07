@@ -1,5 +1,6 @@
 package group.research.aging.cromwell.server
 
+import akka.http.scaladsl.model.StatusCodes.Redirection
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.{HttpApp, Route}
 import cats.effect.IO
@@ -8,6 +9,9 @@ import play.twirl.api.Html
 import scalacss.DevDefaults._
 import io.circe.generic.auto._
 import de.heikoseeberger.akkahttpcirce._
+
+import akka.http.scaladsl.marshallers.xml.ScalaXmlSupport._
+import scala.xml.Unparsed
 
 
 // Server definition
@@ -30,14 +34,22 @@ object WebServer extends HttpApp with FailFastCirceSupport{
 
   def webjars: Route = pathPrefix(webjarsPrefix ~ Slash)  {  getFromResourceDirectory(webjarsPrefix)  }
 
-  def defaultPage: Option[Html] = {
-   None
-  }
 
+  def un(str: String): Unparsed = scala.xml.Unparsed(str)
 
-  def index: Route =  pathSingleSlash{ ctx=>
-    ctx.complete {
-      HttpResponse(  entity = HttpEntity(MediaTypes.`text/html`.withCharset(HttpCharsets.`UTF-8`), html.index(defaultPage).body  ))
+  def index: Route =  pathSingleSlash{ ctx=> ctx.complete {
+      <html>
+        <head title="Cromwell client UI">
+          <script type="text/javascript" src="/lib/jquery/jquery.min.js"></script>
+          <link rel="stylesheet" href="/lib/Semantic-UI/semantic.css"/>
+          <script type="text/javascript" src="/lib/Semantic-UI/semantic.js"></script>
+          <link rel="stylesheet" href="/styles/mystyles.css"/>
+        </head>
+        <body id="main">
+
+        </body>
+        <script src="/public/cromwell-web-fastopt.js" type="text/javascript"></script>
+      </html>
     }
   }
 
@@ -62,23 +74,13 @@ object WebServer extends HttpApp with FailFastCirceSupport{
     get(subpath, headers).as[T](D, M).exec[IO]
 
 
-  def redirect: Route = pathPrefix("redirect" / Remaining) {
-    url =>
-      println("REDIRECT: " + url)
-      complete{
-        get(url).as[Json].exec[IO].unsafeRunSync()
-      }
+  def redirect: Route = pathPrefix("http" / Remaining) {
+    u =>
+      val url = akka.http.scaladsl.model.Uri("http" + u)
+      redirect(url, StatusCodes.PermanentRedirect)
   }
 
 
-  def redirect2: Route = pathPrefix("redirect2" / RemainingPath) {
-    url =>
-      println("REDIRECT2: " + url)
-
-      complete(getIO[String](url.toString()).unsafeRunSync())
-  }
-
-
-  override def routes: Route = index ~ webjars ~ mystyles ~ assets ~ loadResources ~redirect ~redirect2
+  override def routes: Route = index ~ webjars ~ mystyles ~ assets ~ loadResources ~redirect
 
 }

@@ -1,20 +1,24 @@
 package group.research.aging.cromwell.web
-import diode.{Dispatcher, ModelRO}
+//import diode.{Dispatcher, ModelRO}
 import group.research.aging.cromwell.client.{LogCall, Metadata, WorkflowFailure}
-import mhtml.{Rx, Var}
+import mhtml._
 
 import scala.scalajs.js
 import scala.xml.Elem
+import cats._
+import cats.implicits._
 
-class WorkflowsView(initialMetadata: List[Metadata], host: Var[String])
+
+class WorkflowsView(allMetadata: Rx[List[Metadata]], host: Rx[String])
 {
-  val allMetadata: Var[List[Metadata]]  = Var(initialMetadata)
+  //val allMetadata: Var[List[Metadata]]  = Var(initialMetadata)
 
   var desc = true
 
   def timingURL(base: String, id: String): String = base + s"/api/workflows/v1/${id}/timing"
 
 
+  /*
   def onMetadataUpdate(reader: ModelRO[List[Metadata]]): Unit = {
     allMetadata := (if(desc) reader.value.reverse else reader.value)
   }
@@ -22,6 +26,8 @@ class WorkflowsView(initialMetadata: List[Metadata], host: Var[String])
   def onHostUpdate(reader: ModelRO[String]): Unit = {
     host := reader.value
   }
+  */
+
 
   """
     |  workflowName: String,
@@ -48,6 +54,15 @@ class WorkflowsView(initialMetadata: List[Metadata], host: Var[String])
         <th>calls and failures</th>
       </tr>
     </thead>
+    {
+      allMetadata.map{meta =>
+        if(meta.isEmpty)
+          <div class="ui info message">
+            <div class="header">No workflows in the history</div>
+          </div>
+        else <!-- -->
+      }
+    }
     <tbody>
       {allMetadata.map(meta=> meta.map(r=>metadataRow(r)))}
     </tbody>

@@ -9,7 +9,7 @@ class BasicRunner(
                    val base: String,
                    val source: String,
                    val workflow: String,
-                   val client: CromwellClientJVM
+                   val client: CromwellClient
                  ) extends scala.App {
 
   lazy val sourcePath = if (source.startsWith("/")) source else s"${base}/${source}"

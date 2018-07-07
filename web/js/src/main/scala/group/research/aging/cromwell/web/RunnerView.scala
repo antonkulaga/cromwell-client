@@ -1,7 +1,5 @@
 package group.research.aging.cromwell.web
 
-import cats.implicits._
-import diode.{Dispatcher, ModelRO}
 import group.research.aging.cromwell.client.QueryResults
 import group.research.aging.cromwell.web.utils.Uploader
 import mhtml._
@@ -11,8 +9,11 @@ import org.scalajs.dom.Event
 import scala.scalajs.js
 import scala.util.{Failure, Success}
 import scala.xml.Elem
+import cats._
+import cats.implicits._
 
-class RunnerView(dispatcher: Dispatcher) extends Uploader{
+
+class RunnerView(currenUrl: Rx[String], commands: Var[Commands.Command]) extends Uploader{
 
   var interval: js.UndefOr[js.timers.SetIntervalHandle] = js.undefined
 
@@ -20,13 +21,13 @@ class RunnerView(dispatcher: Dispatcher) extends Uploader{
 
   lazy val defURL = "http://agingkills.westeurope.cloudapp.azure.com" //"http://localhost:8000"
 
-  protected var url = Var(defURL)
-
   val wdlFile: Var[Option[String]] = Var(None)
 
   val inputs: Var[Option[String]] = Var(None)
 
   val options: Var[Option[String]] = Var(None)
+
+  val url = Var("http://agingkills.westeurope.cloudapp.azure.com") //"http://localhost:8000"
 
   val validUrl: Rx[Boolean] = url.map(u=>u.contains("http") && u.contains("://"))
 
@@ -39,34 +40,36 @@ class RunnerView(dispatcher: Dispatcher) extends Uploader{
 
   val autoUpdate = Var(0)
 
-  def onUrlUpdate(reader: ModelRO[String]): Unit = {
-    url := reader.value
-  }
+  //currenUrl.impure.run(v=>url := v)
+
 
   protected def updateHandler(event: js.Dynamic): Unit = {
     val str = event.target.value.asInstanceOf[String]
-    url := str
+    commands := Commands.UpdateURL(str)
   }
 
   val queryResults = Var(QueryResults.empty)
 
   protected def updateClick(event: Event): Unit = {
     //if(client.base != url.now) client = new CromwellClient("http://agingkills.westeurope.cloudapp.azure.com", "v1")
-    dispatcher.dispatch(Commands.ChangeClient(url.now))
-    dispatcher.dispatch(Commands.GetMetadata())
+    //dispatcher.dispatch(Commands.ChangeClient(url.now))
+    commands := Commands.ChangeClient(url.now)
+    commands := Commands.GetMetadata()
+    //dispatcher.dispatch(Commands.GetMetadata())
   }
 
   protected def localhostClick(event: Event): Unit = {
     val d = "http://localhost:8000"
-    url := d
-    dispatcher.dispatch(Commands.ChangeClient(d))
-    dispatcher.dispatch(Commands.GetMetadata())
+    //url := d
+    commands:= Commands.ChangeClient(d)
+    commands := Commands.GetMetadata()
   }
+
   protected def uploadFileHandler(v: Var[Option[String]])(event: Event): Unit = {
-      uploadHandler(event){
-        case Success((f, str)) => v := Some(str)
-        case Failure(th)=> dom.console.error(th.getMessage)
-      }
+    uploadHandler(event){
+      case Success((f, str)) => v := Some(str)
+      case Failure(th)=> dom.console.error(th.getMessage)
+    }
   }
 
   protected def runClick(event: js.Dynamic): Unit = {
@@ -75,14 +78,13 @@ class RunnerView(dispatcher: Dispatcher) extends Uploader{
       inputs.now.getOrElse(""),
       options.now.getOrElse("")
     )
-    dispatcher.dispatch(toRun)
   }
 
   def enabledIf(str: String, condition: Rx[Boolean]): Rx[String] =
     condition.map(u=>
-        if (u) {
-          str
-        } else s"$str disabled"
+      if (u) {
+        str
+      } else s"$str disabled"
     )
 
 
@@ -95,7 +97,7 @@ class RunnerView(dispatcher: Dispatcher) extends Uploader{
         <div class="ui labeled input">
           <div class="ui label">workflow wld</div>
           <input id ="wdl" onclick="this.value=null;" onchange = { uploadFileHandler(wdlFile) _ } accept=".wdl"  name="wdl" type="file" />
-          </div>
+        </div>
       </section>
       <section class="item">
         <div class="ui labeled input">
@@ -112,7 +114,7 @@ class RunnerView(dispatcher: Dispatcher) extends Uploader{
     </div>
 
   val updater: Elem =
-      <div class="ui menu">
+    <div class="ui menu">
       <section class="item">
         <div class="ui fluid action input">
           <div class={enabledIf("ui primary button", validUrl)} onclick={ updateClick _}>Update workflows</div>
