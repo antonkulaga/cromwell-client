@@ -5,7 +5,6 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.{HttpApp, Route}
 import cats.effect.IO
 import hammock.jvm.Interpreter
-import play.twirl.api.Html
 import scalacss.DevDefaults._
 import io.circe.generic.auto._
 import de.heikoseeberger.akkahttpcirce._

@@ -31,6 +31,6 @@ object MyStyles extends StyleSheet.Standalone {
     )
 
   "#url" - (
-    minWidth(330 px)
+    minWidth(280 px)
   )
 }

@@ -43,13 +43,10 @@ class WorkflowsView(allMetadata: Rx[List[Metadata]], host: Rx[String])
     |
   """.stripMargin
 
-  val component: Elem = <table id="workflows" class="ui small blue striped celled table">
+  val component: Elem =
+    <table id="workflows" class="ui small blue striped celled table">
     <thead>
       <tr>
-        <th>name/id</th>
-        <th>status</th>
-        <th>start</th>
-        <th>end</th>
         <th>workflow</th>
         <th>calls and failures</th>
       </tr>
@@ -68,20 +65,15 @@ class WorkflowsView(allMetadata: Rx[List[Metadata]], host: Rx[String])
     </tbody>
   </table>
 
-  def statusClass(str: String) = str.toLowerCase match {
+  def statusClass(str: String): String = str.toLowerCase match {
     case "succeeded" | "done" => "positive"
     case "failed" | "aborted" => "negative"
     case _ => "warning"
   }
 
-  def metadataRow(r: Metadata) =
+
+  def metadataRow(r: Metadata): Elem =
         <tr class={statusClass(r.status)}>
-          <td class={statusClass(r.status)}>
-            <strong>{r.workflowName.getOrElse("NO NAME")}</strong> <br></br>{r.id}
-          </td>
-          <td class={statusClass(r.status)}>{r.status}</td>
-          <td><a href={host.map(h=> timingURL(h, r.id))} target ="_blank">{r.startTime}</a></td>
-          <td><a href={host.map(h=> timingURL(h, r.id))} target ="_blank">{r.endTime}</a></td>
           <td>
             {generalInfo(r)}
             {rowInputs(r)}
@@ -93,17 +85,28 @@ class WorkflowsView(allMetadata: Rx[List[Metadata]], host: Rx[String])
           </td>
         </tr>
 
-  def generalInfo(r: Metadata): Elem = <table id="workflows" class="ui small padded striped celled table">
-    <tbody>
-      <tr>
-        <th>id</th><td >{r.id}</td>
-        <th>date</th><td>{r.dates}</td>
-      </tr>
-      <tr>
-        <th >root</th><td colspan="3"><a href={host.map(h=> h + r.workflowRoot.getOrElse(""))}  target ="_blank">{r.workflowRoot.getOrElse("")}</a></td>
-      </tr>
-    </tbody>
-  </table>
+
+  def generalInfo(r: Metadata): Elem =
+      <table id="workflows" class="ui small padded striped celled table">
+      <tbody>
+        <tr>
+          <th>name/id</th><td class={statusClass(r.status)}><h3>{r.workflowName.getOrElse("NO NAME")}</h3>{r.id}</td>
+          <th>status</th> <td class={statusClass(r.status)}><h3>{r.status}</h3></td>
+        </tr>
+        <tr>
+          <th>starts</th><td><h3><a href={host.map(h=> timingURL(h, r.id))} target ="_blank">{r.startTime}</a></h3></td>
+          <th>ends</th><td><h3><a href={host.map(h=> timingURL(h, r.id))} target ="_blank">{r.endTime}</a></h3></td>
+        </tr>
+
+        <tr>
+          <th>id</th><td >{r.id}</td>
+          <th>date</th><td>{r.dates}</td>
+        </tr>
+        <tr>
+          <th >root</th><td colspan="3"><a href={host.map(h=> h + r.workflowRoot.getOrElse(""))}  target ="_blank">{r.workflowRoot.getOrElse("")}</a></td>
+        </tr>
+      </tbody>
+    </table>
 
   def rowInputs(r: Metadata): Elem =
     <div class="ui info message">

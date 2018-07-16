@@ -89,33 +89,33 @@ class RunnerView(currenUrl: Rx[String], commands: Var[Commands.Command]) extends
 
 
   val runner: Elem =
-    <div class="ui menu">
-      <section class="item">
-        <button class={ enabledIf("ui primary button", validUpload) } onclick = { runClick _}>Run Workflow</button>
-      </section>
-      <section class="item">
-        <div class="ui labeled input">
-          <div class="ui label">workflow wld</div>
-          <input id ="wdl" onclick="this.value=null;" onchange = { uploadFileHandler(wdlFile) _ } accept=".wdl"  name="wdl" type="file" />
-        </div>
-      </section>
-      <section class="item">
-        <div class="ui labeled input">
-          <div class="ui label">inputs json</div>
-          <input id ="inputs" onclick="this.value=null;" onchange = { uploadFileHandler(inputs) _ } accept=".json" name="inputs" type="file" />
-        </div>
-      </section>
-      <section class="item">
-        <div class="ui labeled input">
-          <div class="ui label">options (optional)</div>
-          <input id ="options" onclick="this.value=null;"  onchange = { uploadFileHandler(options) _ } accept=".json"  name="options" type="file" />
-        </div>
-      </section>
-    </div>
+      <div class="ui equal width grid">
+        <section class="column segment">
+          <div>
+            <button class={ enabledIf("ui primary button", validUpload) } onclick = { runClick _}>Run Workflow</button>
+            <div class="ui labeled input">
+              <div class="ui label">workflow wld</div>
+              <input id ="wdl" onclick="this.value=null;" onchange = { uploadFileHandler(wdlFile) _ } accept=".wdl"  name="wdl" type="file" />
+            </div>
+          </div>
+          <!--
+          <div class="ui labeled input">
+            <div class="ui label">options (optional)</div>
+            <input id ="options" onclick="this.value=null;"  onchange = { uploadFileHandler(options) _ } accept=".json"  name="options" type="file" />
+          </div>
+          -->
+        </section>
+        <section class="column segment">
+          <div class="ui labeled input segment">
+            <div class="ui label">inputs json</div>
+            <input id ="inputs" onclick="this.value=null;" onchange = { uploadFileHandler(inputs) _ } accept=".json" name="inputs" type="file" />
+          </div>
+        </section>
+      </div>
 
   val updater: Elem =
-    <div class="ui menu">
-      <section class="item">
+    <div class="ui segment">
+      <section class="segment">
         <div class="ui fluid action input">
           <div class={enabledIf("ui primary button", validUrl)} onclick={ updateClick _}>Update workflows</div>
           <input id="url" type="text" placeholder="Enter cromwell URL..."  oninput={ updateHandler _ } value={ url.dropRepeats } />

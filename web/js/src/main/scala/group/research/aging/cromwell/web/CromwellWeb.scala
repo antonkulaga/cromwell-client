@@ -150,7 +150,6 @@ object CromwellWeb extends scala.App with Base {
     case (previous, action) =>
       error(s"no state change for ${action} with ${previous}")
       previous
-
   }
 
 
@@ -161,9 +160,15 @@ object CromwellWeb extends scala.App with Base {
 
   val component =
   <div id="cromwell">
-    {  updater.runner  }
-    {  updater.updater  }
-    {  errors.component }
+    <section class="ui grid">
+        <div class=" six wide column">
+          {  updater.updater  }
+          {  errors.component }
+        </div>
+        <div class="ten wide column">
+          {  updater.runner  }
+        </div>
+    </section>
     {  workflows.component }
   </div>
 
@@ -171,6 +176,8 @@ object CromwellWeb extends scala.App with Base {
   // (I'm really not convinced by the name)
   def reducer(previousState: State, action: Action): State = {
     debug(action)
+    pprint.PPrinter.BlackWhite.pprintln(action)
+    println("---------------------------------")
     onReduce(previousState, action)
   }
 
