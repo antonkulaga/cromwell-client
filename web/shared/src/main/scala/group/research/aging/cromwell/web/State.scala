@@ -20,4 +20,8 @@ object State{
 case class State (client: CromwellClient,
                   metadata: List[Metadata],
                   errors: List[Messages.ExplainedError] = Nil) {
+
+  lazy val sortedMetadata = metadata.sortWith{ case (a, b) =>
+    a.startDate > b.startDate || a.startDate == b.startDate && a.startTime > b.startTime
+  }
 }

@@ -119,17 +119,11 @@ object CromwellWeb extends scala.App with Base {
   //AppCircuit.addProcessor(new LoggingProcessor[AppModel]())
   val updater = new RunnerView(state.map(_.client.base), commands)
   val workflows = new WorkflowsView(
-    state.map(_.metadata),
+    state.map(_.sortedMetadata),
     state.map(_.client.base)
   )
 
   val errors = new ErrorsView(state.map(_.errors), messages)
-
-  /*
-  AppCircuit.subscribe(AppCircuit.zoom(_.metadata))(workflows.onMetadataUpdate)
-  AppCircuit.subscribe(AppCircuit.zoom(_.client.base))(workflows.onHostUpdate)
-  AppCircuit.subscribe(AppCircuit.zoom(_.errors))(errors.onUpdate)
-  */
 
 
   lazy val errorReducer: Reducer = {
