@@ -3,8 +3,10 @@ services:
   cromwell:
     image: "quay.io/comp-bio-aging/cromwell:latest"
     volumes:
-      - /pipelines/data/cromwell-executions:/cromwell-working-dir/cromwell-executions
+      - /cromwell-working-dir:/cromwell-working-dir
+      - /cromwell-working-dir/cromwell-executions:/cromwell-executions
       - /pipelines:/pipelines
+      - /var/run/docker.sock:/var/run/docker.sock
     command: ["/wait-for-it/wait-for-it.sh mysql-db:3306 -t 120 -- java -Dconfig.file=/app-config/application.conf -jar /app/cromwell.jar server"]
     links:
       - mysql-db
@@ -17,6 +19,6 @@ services:
       - MYSQL_DATABASE=cromwell_db
     volumes:
       - ./mysql/init:/docker-entrypoint-initdb.d
-      - /pipelines/data/mysql:/var/lib/mysql
+      - /data/mysql:/var/lib/mysql
     ports:
       - "3307:3306"
