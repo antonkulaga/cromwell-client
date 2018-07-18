@@ -11,8 +11,12 @@ trait EmptyAction extends Action
 object Messages {
   trait Message extends Action
   case object EmptyMessage extends Message with EmptyAction
-  class Error(errorMessage: String) extends Message
-  @JsonCodec case class ExplainedError(message: String, errorMessage: String) extends Error(errorMessage)
+  //class Error(val errorMessage: String) extends Message
+  trait Error extends Message{
+    def errorMessage: String
+  }
+  //@JsonCodec case class ExplicitError(errorMessage: String) extends Error
+  @JsonCodec case class ExplainedError(message: String, errorMessage: String) extends Error
   @JsonCodec case class Errors(errors: List[ExplainedError]) extends Message
 
 }

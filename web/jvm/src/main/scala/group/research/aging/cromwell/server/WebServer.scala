@@ -11,7 +11,7 @@ import de.heikoseeberger.akkahttpcirce._
 
 import akka.http.scaladsl.marshallers.xml.ScalaXmlSupport._
 import scala.xml.Unparsed
-
+import ch.megard.akka.http.cors.scaladsl.CorsDirectives._
 
 // Server definition
 object WebServer extends HttpApp with FailFastCirceSupport{
@@ -73,10 +73,13 @@ object WebServer extends HttpApp with FailFastCirceSupport{
     get(subpath, headers).as[T](D, M).exec[IO]
 
 
-  def redirect: Route = pathPrefix("http" / Remaining) {
-    u =>
-      val url = akka.http.scaladsl.model.Uri("http" + u)
-      redirect(url, StatusCodes.PermanentRedirect)
+  def redirect: Route = cors() {
+    pathPrefix("http" ~ Remaining) {
+      u =>
+        val url = akka.http.scaladsl.model.Uri("http" + u)
+        println("rediraction is: " + "http" + u)
+        redirect(url, StatusCodes.PermanentRedirect)
+      }
   }
 
 

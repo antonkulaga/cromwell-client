@@ -31,7 +31,8 @@ trait CromwellClientShared extends RosHttp with CromwellClientLike {
   implicit protected def getInterpreter: InterpTrans[IO]
   //implicit val interpTrans = Interpreter[IO]
 
-  def get(subpath: String, headers: Map[String, String]): Free[HttpF, HttpResponse] = Hammock.request(Method.GET, Uri.unsafeParse(base + subpath), headers)
+  def get(subpath: String, headers: Map[String, String]): Free[HttpF, HttpResponse] =
+    Hammock.request(Method.GET, Uri.unsafeParse(base + subpath), headers)
 
   //def post[T](subpath: String, headers: Map[String, String], body: T): Free[HttpF, HttpResponse] = Hammock.request(Method.POST, Uri.unsafeParse(base + subpath), headers,
   //  Some(Entity.ByteArrayEntity)

@@ -55,6 +55,10 @@ val client = CromwellClient.localhost
 val id = "548a191d-deaf-4ad8-9c9c-9083b6ecbff8"
 val outputs = client.getOutputs(id)
 ```
+Important
+---------
+If you have problems with cross-origin requests, you can push "Proxy button" that will redirect them through the server
+
 
 Cromwell-Web
 =============
@@ -66,38 +70,15 @@ reStart
 ```
 It is also published as a Docker container. You can run it as:
 ```bash
-docker run -p 8080:8080 quay.io/comp-bio-aging/cromwell-web:0.0.13
+docker run -p 8080:8080 quay.io/comp-bio-aging/cromwell-web:0.0.17
 ```
 
 ![Screenshot](/screenshot.jpg?raw=true "CromwellWeb screenshot")
 
-Cross-Origin policy and stdout/stderr configuration
----------------------------------------------------
+Scripts
+-------
 
-To save time I implemented all requests in CromwellWeb UI as AJAX calls, that is why there can be Cross-Origin requests problems.
-The fastest way to overcome them is to install [nginx](http://nginx.org/en/linux_packages.html#stable]) and configure reverse-proxy.
-Here is an example of nginx configuration that parks Cromwell to http://localhost:8888, fixes SameOrigin error and provides access to workflow files.
-There we assume that cromwell-executions are located at /home/username/scripts/cromwell-executions folder and that we run Cromwell from localhost.
-```
-server {
-        server_name localhost;
-        listen 8888;
-                
-        location / {
-                proxy_pass http://127.0.0.1:8000;
-                proxy_http_version 1.1;
-                proxy_set_header Upgrade $http_upgrade;
-                proxy_set_header Connection "upgrade";
-		        add_header 'Access-Control-Allow-Origin' '*';
-	            add_header 'Access-Control-Allow-Credentials' 'true';
-                add_header 'Access-Control-Allow-Methods' 'GET, POST, PUT, OPTIONS';
-        }
-
-        location /home/username/scripts/cromwell-executions/ {
-		    autoindex on;
-		    alias /home/username/scripts/cromwell-executions/;
-        }
-
-}
-
-```
+In scripts folder there are shell-scripts:
+* run.sh to run cromwell-web docker container
+* start-services.sh to start a docker stack with cromwell. Note: check that you have docker-swarm configured before running the script.
+* start-pipelines-services.sh - similar to start-services but configures some volumes for mysql and cromwell-executions

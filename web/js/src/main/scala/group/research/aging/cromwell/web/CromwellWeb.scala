@@ -51,18 +51,12 @@ object CromwellWeb extends scala.App with Base {
 
   lazy val commandsReducer: Reducer = {
 
-    case (previous, Commands.GetMetadata(status)) =>
-      val fut = previous.client.getAllMetadata(status).map{md=>
-        Results.UpdatedMetadata(md)
-      }.unsafeToFuture()
+    case (previous, getMetadata: Commands.GetMetadata) =>
+      val fut = previous.client.getAllMetadata(getMetadata.status).unsafeToFuture()
       fut.onComplete{
-        case Success(result)=>
-          results := result
+        case Success(me) => results :=  Results.UpdatedMetadata(me)
         case Failure(th) =>
-          messages := Messages.Errors(
-            Messages.ExplainedError(s"getting information from the server failed ${previous.client.base}",
-              Option(th.getMessage).getOrElse(""))::Nil
-          )
+          messages := Messages.Errors(Messages.ExplainedError(s"getting information from the server failed ${previous.client.base}", Option(th.getMessage).getOrElse(""))::Nil)
       }
       previous
 
@@ -87,24 +81,15 @@ object CromwellWeb extends scala.App with Base {
           messages := Messages.Errors(Messages.ExplainedError(s"running workflow at ${previous.client.base} failed", Option(th.getMessage).getOrElse(""))::Nil)
       }
       previous
-
-    case (previous, getMetadata: Commands.GetMetadata) =>
-      val fut = previous.client.getAllMetadata(getMetadata.status).unsafeToFuture()
-      fut.onComplete{
-        case Success(me) => results :=  Results.UpdatedMetadata(me)
-        case Failure(th) =>
-          messages := Messages.Errors(Messages.ExplainedError(s"getting information from the server failed ${previous.client.base}", Option(th.getMessage).getOrElse(""))::Nil)
-      }
-      previous
   }
 
   lazy val resultsReducer: Reducer = {
 
     case (previous, Results.UpdatedStatus(md)) =>
-      println("note yet sure what to do with updated status")
+      println("not yet sure what to do with updated status")
       previous
 
-    case (previous, upd: Results.UpdatedMetadata) => previous.copy(metadata = upd.metadata)
+    case (previous, upd: Results.UpdatedMetadata) => previous.copy(metadata = upd.metadata, errors = Nil)
 
   }
 
@@ -117,7 +102,7 @@ object CromwellWeb extends scala.App with Base {
 
 
   //AppCircuit.addProcessor(new LoggingProcessor[AppModel]())
-  val updater = new RunnerView(state.map(_.client.base), commands)
+  val updater = new RunnerView(commands, messages)
   val workflows = new WorkflowsView(
     state.map(_.sortedMetadata),
     state.map(_.client.base)
@@ -128,7 +113,9 @@ object CromwellWeb extends scala.App with Base {
 
   lazy val errorReducer: Reducer = {
 
-    case (previous, Messages.Errors(err)) => previous.copy(errors = err)
+    case (previous, Messages.Errors(err)) =>
+      error(err)
+      previous.copy(errors = err)
 
     case (previous, e: Messages.ExplainedError) =>
       error(e)

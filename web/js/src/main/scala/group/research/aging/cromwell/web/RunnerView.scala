@@ -1,6 +1,6 @@
 package group.research.aging.cromwell.web
 
-import group.research.aging.cromwell.client.QueryResults
+import group.research.aging.cromwell.client.{CromwellClient, QueryResults}
 import group.research.aging.cromwell.web.utils.Uploader
 import mhtml._
 import org.scalajs.dom
@@ -13,13 +13,15 @@ import cats._
 import cats.implicits._
 
 
-class RunnerView(currenUrl: Rx[String], commands: Var[Commands.Command]) extends Uploader{
+class RunnerView(commands: Var[Commands.Command], messages: Var[Messages.Message]) extends Uploader{
 
   var interval: js.UndefOr[js.timers.SetIntervalHandle] = js.undefined
 
   val counter = Var(0)
 
-  lazy val defURL = "http://agingkills.westeurope.cloudapp.azure.com" //"http://localhost:8000"
+  //lazy val defURL = "http://agingkills.westeurope.cloudapp.azure.com" //"http://localhost:8000"
+
+  def defURL: String = CromwellClient.localhost.base
 
   val wdlFile: Var[Option[String]] = Var(None)
 
@@ -27,7 +29,17 @@ class RunnerView(currenUrl: Rx[String], commands: Var[Commands.Command]) extends
 
   val options: Var[Option[String]] = Var(None)
 
-  val url = Var("http://agingkills.westeurope.cloudapp.azure.com") //"http://localhost:8000"
+  val url = Var(defURL)//Var("http://agingkills.westeurope.cloudapp.azure.com") //"http://localhost:8000"
+
+  val isDefault = url.map(_ == defURL)
+  lazy val proxy: String = {
+    val protocol = dom.window.location.protocol
+    val port = dom.window.location.port
+    val host = dom.window.location.host
+    protocol + "//" + host + "/"
+  }
+
+  def hasHost: Rx[Boolean] = url.map(_.contains(proxy))
 
   val validUrl: Rx[Boolean] = url.map(u=>u.contains("http") && u.contains("://"))
 
@@ -45,7 +57,8 @@ class RunnerView(currenUrl: Rx[String], commands: Var[Commands.Command]) extends
 
   protected def updateHandler(event: js.Dynamic): Unit = {
     val str = event.target.value.asInstanceOf[String]
-    commands := Commands.UpdateURL(str)
+    //commands := Commands.UpdateURL(str)
+    url := str
   }
 
   val queryResults = Var(QueryResults.empty)
@@ -56,6 +69,19 @@ class RunnerView(currenUrl: Rx[String], commands: Var[Commands.Command]) extends
     commands := Commands.ChangeClient(url.now)
     commands := Commands.GetMetadata()
     //dispatcher.dispatch(Commands.GetMetadata())
+  }
+
+  protected def proxyClick(event: Event): Unit = {
+    val u: String = url.now
+    if(u.contains(proxy))
+      messages := Messages.ExplainedError(s"Proxy button should not be visible if url contains host. Current URL is ${u}, host is ${proxy}" , "")
+    else {
+      val newValue = proxy  + u
+      url := newValue
+      println(newValue)
+      //commands:= Commands.ChangeClient(newValue)
+      //commands := Commands.GetMetadata()
+    }
   }
 
   protected def localhostClick(event: Event): Unit = {
@@ -73,11 +99,16 @@ class RunnerView(currenUrl: Rx[String], commands: Var[Commands.Command]) extends
   }
 
   protected def runClick(event: js.Dynamic): Unit = {
-    val toRun = Commands.Run(
-      wdlFile.now.getOrElse(""),
-      inputs.now.getOrElse(""),
-      options.now.getOrElse("")
-    )
+    wdlFile.now match {
+      case Some(wdl: String) =>
+        val toRun = Commands.Run(wdl,
+          inputs.now.getOrElse(""),
+          options.now.getOrElse("")
+        )
+        commands := toRun
+      case None => messages := Messages.ExplainedError("No WLD file uploaded!" ,"")
+    }
+
   }
 
   def enabledIf(str: String, condition: Rx[Boolean]): Rx[String] =
@@ -118,8 +149,16 @@ class RunnerView(currenUrl: Rx[String], commands: Var[Commands.Command]) extends
       <section class="segment">
         <div class="ui fluid action input">
           <div class={enabledIf("ui primary button", validUrl)} onclick={ updateClick _}>Update workflows</div>
-          <input id="url" type="text" placeholder="Enter cromwell URL..."  oninput={ updateHandler _ } value={ url.dropRepeats } />
-          <div class="ui small button" onclick={ localhostClick _ }>To default</div>
+            {url.dropRepeats.map{ u =>
+              <input id="url" type="text" placeholder="Enter cromwell URL..."  oninput={ updateHandler _ } value={ u } />
+            }
+          }
+          {hasHost.map{ case false =>
+            <div class="ui small button" onclick={ proxyClick _ }>add proxy</div>
+            case true => <!-- -->
+            }
+          }
+          <!-- <div class="ui small button" onclick={ localhostClick _ }>To default</div> -->
         </div>
       </section>
     </div>

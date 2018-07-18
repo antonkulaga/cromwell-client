@@ -4,6 +4,7 @@ services:
     image: "quay.io/comp-bio-aging/cromwell:latest"
     volumes:
       - /pipelines/data/cromwell-executions:/cromwell-working-dir/cromwell-executions
+      - /pipelines:/pipelines
     command: ["/wait-for-it/wait-for-it.sh mysql-db:3306 -t 120 -- java -Dconfig.file=/app-config/application.conf -jar /app/cromwell.jar server"]
     links:
       - mysql-db

@@ -1,6 +1,7 @@
 package object mhtml {
 
   import mhtml.Var
+  import mhtml.Rx
   import cats._
   import cats.implicits._
 
