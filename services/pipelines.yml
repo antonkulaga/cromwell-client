@@ -3,13 +3,9 @@ services:
   cromwell:
     image: "quay.io/comp-bio-aging/cromwell:latest"
     volumes:
-      - /cromwell-working-dir:/cromwell-working-dir
-      - /cromwell-working-dir/cromwell-executions:/cromwell-executions
       - /pipelines:/pipelines
       - /var/run/docker.sock:/var/run/docker.sock
     command: ["/wait-for-it/wait-for-it.sh mysql-db:3306 -t 120 -- java -Dconfig.file=/app-config/application.conf -jar /app/cromwell.jar server"]
-    links:
-      - mysql-db
     ports:
       - "8000:8000"
   mysql-db:
@@ -19,6 +15,20 @@ services:
       - MYSQL_DATABASE=cromwell_db
     volumes:
       - ./mysql/init:/docker-entrypoint-initdb.d
-      - /data/mysql:/var/lib/mysql
+      - /pipelines/data/mysql:/var/lib/mysql
     ports:
       - "3307:3306"
+  cromwell-client:
+    image: quay.io/comp-bio-aging/cromwell-web:0.0.19
+    ports:
+      - 8001:8080
+    volumes:
+         - /pipelines:/pipelines
+    deploy:
+      placement:
+        constraints:
+          - node.role == manager
+      replicas: 1
+      mode: replicated
+      restart_policy:
+        condition: on-failure

@@ -1,17 +1,26 @@
 package group.research.aging.cromwell.server
 
+import akka.actor.Status.Success
 import akka.http.scaladsl.model.StatusCodes.Redirection
 import akka.http.scaladsl.model._
-import akka.http.scaladsl.server.{HttpApp, Route}
+import akka.http.scaladsl.server.{HttpApp, Route, RouteResult}
 import cats.effect.IO
 import hammock.jvm.Interpreter
 import scalacss.DevDefaults._
 import io.circe.generic.auto._
 import de.heikoseeberger.akkahttpcirce._
-
 import akka.http.scaladsl.marshallers.xml.ScalaXmlSupport._
+import akka.http.scaladsl.{Http, HttpExt, model}
+import akka.http.scaladsl.model.Uri.Authority
+import akka.http.scaladsl.model.headers.{Host, HttpOriginRange, RawHeader}
+
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.xml.Unparsed
 import ch.megard.akka.http.cors.scaladsl.CorsDirectives._
+import ch.megard.akka.http.cors.scaladsl.model.HttpHeaderRange
+import ch.megard.akka.http.cors.scaladsl.settings.CorsSettings
+
+import scala.concurrent.Future
 
 // Server definition
 object WebServer extends HttpApp with FailFastCirceSupport{
@@ -59,6 +68,27 @@ object WebServer extends HttpApp with FailFastCirceSupport{
       getFromResource("public/" + file)
     }
   }
+  implicit lazy val http: HttpExt = Http(this.systemReference.get())
+
+  def proxy(request: HttpRequest, url: model.Uri): Future[RouteResult] = {
+    println("url to send is: " + url.toString())
+    val proxyRequest = HttpRequest(uri = url,
+      headers = Nil,
+      entity = request.entity,
+      method = request.method)
+    http.singleRequest(proxyRequest).map{ p=>
+      val r  = p.addHeader(headers.`Access-Control-Allow-Origin`.*)
+      RouteResult.Complete(r)
+    }
+  }
+  def redirect: Route =  {
+    pathPrefix("http" ~ Remaining) {
+      u => ctx =>
+        val uri  = model.Uri("http" + u)
+        proxy(ctx.request, uri)
+        //redirect(url, StatusCodes.TemporaryRedirect)
+      }
+  }
 
   import cats.effect.IO
   import cats.free.Free
@@ -73,16 +103,6 @@ object WebServer extends HttpApp with FailFastCirceSupport{
     get(subpath, headers).as[T](D, M).exec[IO]
 
 
-  def redirect: Route = cors() {
-    pathPrefix("http" ~ Remaining) {
-      u =>
-        val url = akka.http.scaladsl.model.Uri("http" + u)
-        println("rediraction is: " + "http" + u)
-        redirect(url, StatusCodes.PermanentRedirect)
-      }
-  }
-
-
-  override def routes: Route = index ~ webjars ~ mystyles ~ assets ~ loadResources ~redirect
+  override def routes: Route = cors(){index ~ webjars ~ mystyles ~ assets ~ loadResources ~redirect}
 
 }

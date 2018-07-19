@@ -34,5 +34,6 @@ tags
 #MAC OS specific
 .DS_Store
 
-scripts/services/cromwell-executions/*
-scripts/services/mysql/data/*
+services/data/cromwell-executions/*
+services/data/cromwell-workflow-logs/*
+services/data/mysql/*

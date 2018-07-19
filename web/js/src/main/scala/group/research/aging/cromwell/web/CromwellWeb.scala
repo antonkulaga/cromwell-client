@@ -56,7 +56,8 @@ object CromwellWeb extends scala.App with Base {
       fut.onComplete{
         case Success(me) => results :=  Results.UpdatedMetadata(me)
         case Failure(th) =>
-          messages := Messages.Errors(Messages.ExplainedError(s"getting information from the server failed ${previous.client.base}", Option(th.getMessage).getOrElse(""))::Nil)
+          messages :=
+            Messages.Errors(Messages.ExplainedError(s"getting information from the server failed ${previous.client.base}", Option(th.getMessage).getOrElse(""))::Nil)
       }
       previous
 
@@ -102,7 +103,7 @@ object CromwellWeb extends scala.App with Base {
 
 
   //AppCircuit.addProcessor(new LoggingProcessor[AppModel]())
-  val updater = new RunnerView(commands, messages)
+  val updater = new RunnerView(commands, messages, state.map(_.client.base))
   val workflows = new WorkflowsView(
     state.map(_.sortedMetadata),
     state.map(_.client.base)

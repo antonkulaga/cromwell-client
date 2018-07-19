@@ -70,15 +70,16 @@ reStart
 ```
 It is also published as a Docker container. You can run it as:
 ```bash
-docker run -p 8080:8080 quay.io/comp-bio-aging/cromwell-web:0.0.17
+docker run -p 8080:8080 quay.io/comp-bio-aging/cromwell-web:0.0.19
 ```
 
 ![Screenshot](/screenshot.jpg?raw=true "CromwellWeb screenshot")
 
-Scripts
--------
-
-In scripts folder there are shell-scripts:
-* run.sh to run cromwell-web docker container
-* start-services.sh to start a docker stack with cromwell. Note: check that you have docker-swarm configured before running the script.
-* start-pipelines-services.sh - similar to start-services but configures some volumes for mysql and cromwell-executions
+Services
+--------
+You can start cromwell, mysql and cromwell-client altogether by starting a docker stack:
+```bash
+cd services
+stack deploy -c docker-compose.yml cromwell
+```
+Make sure that you have docker swarm initialized on the machine before deploying the stack

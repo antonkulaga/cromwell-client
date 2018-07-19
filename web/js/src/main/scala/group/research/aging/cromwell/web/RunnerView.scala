@@ -13,7 +13,8 @@ import cats._
 import cats.implicits._
 
 
-class RunnerView(commands: Var[Commands.Command], messages: Var[Messages.Message]) extends Uploader{
+class RunnerView(commands: Var[Commands.Command], messages: Var[Messages.Message], currentUrl: Rx[String]) extends Uploader{
+
 
   var interval: js.UndefOr[js.timers.SetIntervalHandle] = js.undefined
 
@@ -21,7 +22,7 @@ class RunnerView(commands: Var[Commands.Command], messages: Var[Messages.Message
 
   //lazy val defURL = "http://agingkills.westeurope.cloudapp.azure.com" //"http://localhost:8000"
 
-  def defURL: String = CromwellClient.localhost.base
+  //def defURL: String = CromwellClient.localhost.base
 
   val wdlFile: Var[Option[String]] = Var(None)
 
@@ -29,12 +30,17 @@ class RunnerView(commands: Var[Commands.Command], messages: Var[Messages.Message
 
   val options: Var[Option[String]] = Var(None)
 
-  val url = Var(defURL)//Var("http://agingkills.westeurope.cloudapp.azure.com") //"http://localhost:8000"
+  val url = Var("") //Var("http://agingkills.westeurope.cloudapp.azure.com") //"http://localhost:8000"
 
-  val isDefault = url.map(_ == defURL)
+  def init() = {
+    currentUrl.impure.run{ u=>
+      url := u
+    }
+  }
+
+
   lazy val proxy: String = {
     val protocol = dom.window.location.protocol
-    val port = dom.window.location.port
     val host = dom.window.location.host
     protocol + "//" + host + "/"
   }
@@ -78,8 +84,7 @@ class RunnerView(commands: Var[Commands.Command], messages: Var[Messages.Message
     else {
       val newValue = proxy  + u
       url := newValue
-      println(newValue)
-      //commands:= Commands.ChangeClient(newValue)
+      commands:= Commands.ChangeClient(newValue)
       //commands := Commands.GetMetadata()
     }
   }
@@ -149,7 +154,7 @@ class RunnerView(commands: Var[Commands.Command], messages: Var[Messages.Message
       <section class="segment">
         <div class="ui fluid action input">
           <div class={enabledIf("ui primary button", validUrl)} onclick={ updateClick _}>Update workflows</div>
-            {url.dropRepeats.map{ u =>
+            {currentUrl.dropRepeats.map{ u =>
               <input id="url" type="text" placeholder="Enter cromwell URL..."  oninput={ updateHandler _ } value={ u } />
             }
           }
@@ -162,5 +167,8 @@ class RunnerView(commands: Var[Commands.Command], messages: Var[Messages.Message
         </div>
       </section>
     </div>
+
+  init()
+
 
 }
