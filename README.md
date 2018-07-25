@@ -2,6 +2,35 @@ This repository contains two projects:
 * _cromwell-client_ - a client library that interacts with Cromwell workflow engine from Java or browser
 * _cromwell-web _ - a simple UI for running Cromwell workflows in the browser
 
+
+Cromwell-Web
+=============
+
+Cromwell-web subproject is a simple UI for accessing cromwell REST API.
+To run it open sbt console and go to CromwellWebJVM subproject and type
+```sbtshell
+reStart
+```
+It is also published as a Docker container. You can run it as:
+```bash
+docker run -p 8080:8080 quay.io/comp-bio-aging/cromwell-web:0.0.19
+```
+
+![Screenshot](/screenshot.jpg?raw=true "CromwellWeb screenshot")
+
+Services
+--------
+You can start cromwell, mysql and cromwell-client altogether by starting a docker stack:
+```bash
+cd services
+stack deploy -c docker-compose.yml cromwell
+```
+Make sure that you have docker swarm initialized ( https://docs.docker.com/engine/reference/commandline/swarm_init/ ) on your machine before deploying the stack
+
+Overcoming Cross-Origin policies
+--------------------------------
+If you have problems with cross-origin requests, you can push "Proxy button" that will redirect them through the server
+
 cromwell-client
 ===============
 
@@ -14,7 +43,7 @@ Adding to dependencies
 add the following to you build.sbt
 ```scala
 resolvers += sbt.Resolver.bintrayRepo("comp-bio-aging", "main")
-libraryDependencies += "group.research.aging" %%% "cromwell-client" % "0.0.13"
+libraryDependencies += "group.research.aging" %%% "cromwell-client" % "0.0.19"
 ```
 Usage
 -----
@@ -55,31 +84,3 @@ val client = CromwellClient.localhost
 val id = "548a191d-deaf-4ad8-9c9c-9083b6ecbff8"
 val outputs = client.getOutputs(id)
 ```
-Important
----------
-If you have problems with cross-origin requests, you can push "Proxy button" that will redirect them through the server
-
-
-Cromwell-Web
-=============
-
-Cromwell-web subproject is a simple UI for accessing cromwell REST API.
-To run it open sbt console and go to CromwellWebJVM subproject and type
-```sbtshell
-reStart
-```
-It is also published as a Docker container. You can run it as:
-```bash
-docker run -p 8080:8080 quay.io/comp-bio-aging/cromwell-web:0.0.19
-```
-
-![Screenshot](/screenshot.jpg?raw=true "CromwellWeb screenshot")
-
-Services
---------
-You can start cromwell, mysql and cromwell-client altogether by starting a docker stack:
-```bash
-cd services
-stack deploy -c docker-compose.yml cromwell
-```
-Make sure that you have docker swarm initialized on the machine before deploying the stack
