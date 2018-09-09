@@ -59,7 +59,7 @@ commonSettings
 
 lazy val hammockVersion = "0.8.5"
 
-lazy val semanticUI = "2.3.1"
+lazy val semanticUI = "2.3.3"
 
 lazy val webcomponents = "1.0.1"
 
@@ -80,16 +80,16 @@ lazy val  cromwellClient = crossProject(JSPlatform, JVMPlatform)
 			"fr.hmil" %%% "roshttp" % "2.1.0",
 			"com.beachape" %%% "enumeratum" % "1.5.13",
 			"com.lihaoyi" %%% "pprint" % "0.5.3",
-			"org.typelevel" %%% "cats-core"      % "1.1.0",
-			"org.typelevel" %%% "cats-effect"     % "0.10.1",
+			"org.typelevel" %%% "cats-core"      % "1.3.1",
+			"org.typelevel" %%% "cats-effect"     % "1.0.0",
 			"com.pepegar" %%% "hammock-circe" % hammockVersion,
-			"org.wvlet.airframe" %%% "airframe-log" % "0.50"
+			"org.wvlet.airframe" %%% "airframe-log" % "0.64"
     )
 	)
 	.disablePlugins(RevolverPlugin)
   .jvmSettings(
     libraryDependencies ++= Seq(
-			"com.github.pathikrit" %% "better-files" % "3.5.0",
+			"com.github.pathikrit" %% "better-files" % "3.6.0",
 			"org.webjars" % "Semantic-UI" %  semanticUI,
 			"org.webjars" % "jquery" % jquery,
 			"org.webjars" % "webcomponentsjs" % webcomponents
@@ -107,8 +107,8 @@ lazy val cromwellClientJVM = cromwellClient.jvm
 
 lazy val cromwellClientJS = cromwellClient.js
 
-lazy val akka = "2.5.13"
-lazy val akkaHttp = "10.1.3"
+lazy val akka = "2.5.15"
+lazy val akkaHttp = "10.1.5"
 
 lazy val cromwellWeb = crossProject(JSPlatform, JVMPlatform)
 	.crossType(CrossType.Full)
@@ -121,12 +121,14 @@ lazy val cromwellWeb = crossProject(JSPlatform, JVMPlatform)
 		name := "cromwell-web",
 
 		libraryDependencies  ++= Seq(
-			"com.github.japgolly.scalacss" % "core_2.12" % "0.5.5"
+			"com.github.japgolly.scalacss" % "core_2.12" % "0.5.5",
+			"org.wvlet.airframe" %%% "airframe-log" % "0.64"
 		)
 	)
 	.jsSettings(
 		libraryDependencies ++= Seq(
-			"in.nvilla" %%% "monadic-html" % "0.4.0-RC1"
+			"in.nvilla" %%% "monadic-html" % "0.4.0-RC1",
+			"org.akka-js" %%% "akkajsactorstream" % "1.2.5.15"
 		),
 		jsEnv := new org.scalajs.jsenv.jsdomnodejs.JSDOMNodeJSEnv,
 		scalaJSUseMainModuleInitializer := true

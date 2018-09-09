@@ -1,17 +1,12 @@
 package group.research.aging.cromwell.web
 
-import group.research.aging.cromwell.client.{CromwellClient, Metadata, QueryResults}
+import group.research.aging.cromwell.client.CromwellClient
+import group.research.aging.cromwell.web.communication.{WebsocketClient, WebsocketMessages}
 import org.querki.jquery._
-import group.research.aging.cromwell.web
+import wvlet.log.LogLevel
 
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
-import scala.scalajs.js
-import scala.util.{Failure, Success}
-import mhtml._
-import cats._
-import cats.implicits._
-import wvlet.log
-import wvlet.log.LogLevel
+import scala.util.{Failure, Random, Success}
 
 /**
   * Main application
@@ -31,6 +26,19 @@ object CromwellWeb extends scala.App with Base {
   val results: Var[Results.ActionResult] = Var(Results.EmptyResult)
 
 
+  protected lazy val randomUser = "user" + Random.nextInt(10000)
+  val websocketClient: WebsocketClient = WebsocketClient.fromRelativeURL("ws" + "/" + randomUser)
+  val toServer: Var[WebsocketMessages.WebsocketAction] = websocketClient.toSend
+  val fromServer: Rx[Results.ServerResult] = websocketClient.messages.collect{
+    case WebsocketMessages.WebsocketAction(a) =>
+      Results.ServerResult(a)
+
+    case other=>
+      error("unexpected message from websocket!")
+      error(other)
+      Results.ServerResult(EmptyAction)
+
+  }(Results.ServerResult(EmptyAction))
   //val allActions: Rx[Action] = toLoad.merge(loaded).merge(updateUI).merge(throwError).dropRepeats //because Merge is super-buggy in monadic-html and produces a lot of redundant events
   //ugly workaround for https://github.com/OlivierBlanvillain/monadic-html/issues/98
 
@@ -40,10 +48,6 @@ object CromwellWeb extends scala.App with Base {
   protected def uglyUpdate(rxes: Rx[Action]*) = {
     for(r <- rxes) r.impure.run(v=> allActions := v)
   }
-
-  //uglyUpdate(toLoad, throwError, updateUI, loaded)
-
-  uglyUpdate(commands, messages, results)
 
 
   val state: Var[State] = Var(State.empty)
@@ -64,7 +68,9 @@ object CromwellWeb extends scala.App with Base {
     case (previous, Commands.ChangeClient(url)) =>
       if(previous.client.base != url) {
         dom.window.localStorage.setItem(Commands.LoadLastUrl.key, url)
-        previous.copy(client = CromwellClient(url))
+        previous.withEffect{() =>
+          commands := Commands.SendToServer(Commands.ChangeClient(url))
+        }.copy(client = CromwellClient(url))
       } else previous
 
     case (previous, Commands.LoadLastUrl) =>
@@ -73,15 +79,16 @@ object CromwellWeb extends scala.App with Base {
 
     case (previous, Commands.Run(wdl, input, options)) =>
 
-      val fut = previous.client
-        .postWorkflowStrings(wdl, input, options)
-      fut.onComplete{
-        case Success(upd) =>
-          commands := Commands.GetMetadata()
-        case Failure(th) =>
-          messages := Messages.Errors(Messages.ExplainedError(s"running workflow at ${previous.client.base} failed", Option(th.getMessage).getOrElse(""))::Nil)
+      previous.withEffect{() =>
+        val fut = previous.client
+          .postWorkflowStrings(wdl, input, options)
+        fut.onComplete{
+          case Success(upd) =>
+            commands := Commands.GetMetadata()
+          case Failure(th) =>
+            messages := Messages.Errors(Messages.ExplainedError(s"running workflow at ${previous.client.base} failed", Option(th.getMessage).getOrElse(""))::Nil)
+        }
       }
-      previous
   }
 
   lazy val resultsReducer: Reducer = {
@@ -164,9 +171,26 @@ object CromwellWeb extends scala.App with Base {
   }
 
 
+  protected def onAction(action: Action) = {
+    val currentState: State = state.now
+    val newState = reducer(currentState, action)
+    if(newState != currentState) {
+      val effects = newState.effects
+      state := newState.copy(effects  = Nil)
+      effects.foreach(e=> e()) //ugly workaround for effects
+    }
+  }
+
   val div = dom.document.getElementById("main")
-  mount(div, component)
 
 
+  def activate() = {
+    uglyUpdate(commands, messages, results, fromServer)
+    //workaround to avoid foldp issues
+    allActions.impure.run(onAction)
+    mount(div, component)
+  }
+
+  activate()
 
 }

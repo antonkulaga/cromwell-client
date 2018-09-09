@@ -1,4 +1,4 @@
-package group.research.aging.cromwell.runner
+package group.research.aging.cromwell.web.runner
 
 import java.io.{File => JFile}
 

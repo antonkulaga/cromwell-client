@@ -2,8 +2,9 @@ package group.research.aging.cromwell.client
 
 
 import enumeratum._
+import io.circe.generic.JsonCodec
 
-sealed trait WorkflowStatus extends EnumEntry
+@JsonCodec sealed trait WorkflowStatus extends EnumEntry
 
 object WorkflowStatus extends Enum[WorkflowStatus] {
 

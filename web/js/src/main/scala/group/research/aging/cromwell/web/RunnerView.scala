@@ -13,7 +13,11 @@ import cats._
 import cats.implicits._
 
 
-class RunnerView(commands: Var[Commands.Command], messages: Var[Messages.Message], currentUrl: Rx[String]) extends Uploader{
+class RunnerView(
+                  commands: Var[Commands.Command],
+                  messages: Var[Messages.Message],
+                  lastURL: Rx[String])
+  extends Uploader{
 
 
   var interval: js.UndefOr[js.timers.SetIntervalHandle] = js.undefined
@@ -33,7 +37,7 @@ class RunnerView(commands: Var[Commands.Command], messages: Var[Messages.Message
   val url = Var("") //Var("http://agingkills.westeurope.cloudapp.azure.com") //"http://localhost:8000"
 
   def init() = {
-    currentUrl.impure.run{ u=>
+    lastURL.impure.run{ u=>
       url := u
     }
   }
@@ -73,8 +77,8 @@ class RunnerView(commands: Var[Commands.Command], messages: Var[Messages.Message
     //if(client.base != url.now) client = new CromwellClient("http://agingkills.westeurope.cloudapp.azure.com", "v1")
     //dispatcher.dispatch(Commands.ChangeClient(url.now))
     commands := Commands.ChangeClient(url.now)
-    commands := Commands.GetMetadata()
-    //dispatcher.dispatch(Commands.GetMetadata())
+    commands := Commands.GetMetadata
+    //dispatcher.dispatch(Commands.GetMetadata)
   }
 
   protected def proxyClick(event: Event): Unit = {
@@ -85,7 +89,7 @@ class RunnerView(commands: Var[Commands.Command], messages: Var[Messages.Message
       val newValue = proxy  + u
       url := newValue
       commands:= Commands.ChangeClient(newValue)
-      //commands := Commands.GetMetadata()
+      //commands := Commands.GetMetadata
     }
   }
 
@@ -93,7 +97,7 @@ class RunnerView(commands: Var[Commands.Command], messages: Var[Messages.Message
     val d = "http://localhost:8000"
     //url := d
     commands:= Commands.ChangeClient(d)
-    commands := Commands.GetMetadata()
+    commands := Commands.GetMetadata
   }
 
   protected def uploadFileHandler(v: Var[Option[String]])(event: Event): Unit = {
@@ -154,7 +158,7 @@ class RunnerView(commands: Var[Commands.Command], messages: Var[Messages.Message
       <section class="segment">
         <div class="ui fluid action input">
           <div class={enabledIf("ui primary button", validUrl)} onclick={ updateClick _}>Update workflows</div>
-            {currentUrl.dropRepeats.map{ u =>
+            {lastURL.dropRepeats.map{ u =>
               <input id="url" type="text" placeholder="Enter cromwell URL..."  oninput={ updateHandler _ } value={ u } />
             }
           }

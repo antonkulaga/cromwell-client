@@ -19,9 +19,12 @@ object State{
 
 case class State (client: CromwellClient,
                   metadata: List[Metadata],
-                  errors: List[Messages.ExplainedError] = Nil) {
+                  errors: List[Messages.ExplainedError] = Nil,
+                  effects: List[()=>Unit] = Nil)
+{
+  def withEffect(e: ()=>Unit): State = copy(effects = effects :+ e)
 
-  lazy val sortedMetadata = metadata.sortWith{ case (a, b) =>
+  lazy val sortedMetadata: List[Metadata] = metadata.sortWith{ case (a, b) =>
     a.startDate > b.startDate || a.startDate =="" || a.startDate == b.startDate && a.startTime > b.startTime
   }
 }

@@ -1,4 +1,4 @@
-package group.research.aging.cromwell.server
+package group.research.aging.cromwell.web.server
 
 object Pages extends Pages
 trait Pages {

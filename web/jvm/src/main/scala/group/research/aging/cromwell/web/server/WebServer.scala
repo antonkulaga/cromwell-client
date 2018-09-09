@@ -1,5 +1,6 @@
-package group.research.aging.cromwell.server
+package group.research.aging.cromwell.web.server
 
+import akka.actor.ActorSystem
 import akka.actor.Status.Success
 import akka.http.scaladsl.model.StatusCodes.Redirection
 import akka.http.scaladsl.model._
@@ -19,11 +20,20 @@ import scala.xml.Unparsed
 import ch.megard.akka.http.cors.scaladsl.CorsDirectives._
 import ch.megard.akka.http.cors.scaladsl.model.HttpHeaderRange
 import ch.megard.akka.http.cors.scaladsl.settings.CorsSettings
+import group.research.aging.cromwell.web.communication.WebsocketServer
+import wvlet.log.LogFormatter.SourceCodeLogFormatter
+import wvlet.log.{LogLevel, LogSupport, Logger}
 
 import scala.concurrent.Future
 
 // Server definition
-object WebServer extends HttpApp with FailFastCirceSupport{
+object WebServer extends HttpApp with FailFastCirceSupport with LogSupport{
+
+
+
+  // Set the default log formatter
+  Logger.setDefaultFormatter(SourceCodeLogFormatter)
+  Logger.setDefaultLogLevel(LogLevel.DEBUG)
 
   lazy val webjarsPrefix = "lib"
   lazy val resourcePrefix = "public"
@@ -102,7 +112,14 @@ object WebServer extends HttpApp with FailFastCirceSupport{
   def getIO[T](subpath: String, headers: Map[String, String] = Map.empty)(implicit D: Decoder[T], M: MarshallC[HammockF]): IO[T] =
     get(subpath, headers).as[T](D, M).exec[IO]
 
+  implicit lazy val system = ActorSystem("chat")
 
-  override def routes: Route = cors(){index ~ webjars ~ mystyles ~ assets ~ loadResources ~redirect}
+
+  lazy val websocketServer = new WebsocketServer(system)
+
+
+  override def routes: Route = cors(){index~ websocketServer.route ~ webjars ~ mystyles ~ assets ~ loadResources ~redirect}
+
+
 
 }
