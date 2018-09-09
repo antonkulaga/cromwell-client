@@ -50,7 +50,7 @@ object Commands{
   case class GetMetadata(status: WorkflowStatus = WorkflowStatus.AnyStatus) extends Command
   case class ChangeClient(newURL: String) extends Command
   case class Run(wdl: String, options: String, input: String) extends Command
-  case class UpdateURL(url: String) extends Command
+  //case class UpdateURL(url: String) extends Command
 
   trait LoadKey {
     self: Command =>

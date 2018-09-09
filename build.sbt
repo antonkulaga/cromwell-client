@@ -12,7 +12,7 @@ lazy val commonSettings = Seq(
 
 	scalaVersion :=  "2.12.6",
 
-	version := "0.0.19",
+	version := "0.0.20",
 
 	unmanagedClasspath in Compile ++= (unmanagedResources in Compile).value,
 
@@ -80,8 +80,8 @@ lazy val  cromwellClient = crossProject(JSPlatform, JVMPlatform)
 			"fr.hmil" %%% "roshttp" % "2.1.0",
 			"com.beachape" %%% "enumeratum" % "1.5.13",
 			"com.lihaoyi" %%% "pprint" % "0.5.3",
-			"org.typelevel" %%% "cats-core"      % "1.3.1",
-			"org.typelevel" %%% "cats-effect"     % "1.0.0",
+			//"org.typelevel" %%% "cats-core"      % "1.3.1",
+			//"org.typelevel" %%% "cats-effect"     % "1.0.0",
 			"com.pepegar" %%% "hammock-circe" % hammockVersion,
 			"org.wvlet.airframe" %%% "airframe-log" % "0.64"
     )

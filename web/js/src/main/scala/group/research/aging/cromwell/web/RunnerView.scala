@@ -11,6 +11,8 @@ import scala.util.{Failure, Success}
 import scala.xml.Elem
 import cats._
 import cats.implicits._
+import org.scalajs.dom.html.Input
+import org.scalajs.dom.raw.EventTarget
 
 
 class RunnerView(
@@ -42,6 +44,8 @@ class RunnerView(
     }
   }
 
+  def getURL(): String = url.now
+
 
   lazy val proxy: String = {
     val protocol = dom.window.location.protocol
@@ -65,9 +69,9 @@ class RunnerView(
   //currenUrl.impure.run(v=>url := v)
 
 
-  protected def updateHandler(event: js.Dynamic): Unit = {
-    val str = event.target.value.asInstanceOf[String]
-    //commands := Commands.UpdateURL(str)
+  protected def updateHandler(event: Event): Unit = {
+    val target = event.currentTarget//.value.asInstanceOf[String]
+    val str: String = target.asInstanceOf[Input].value
     url := str
   }
 
@@ -76,8 +80,8 @@ class RunnerView(
   protected def updateClick(event: Event): Unit = {
     //if(client.base != url.now) client = new CromwellClient("http://agingkills.westeurope.cloudapp.azure.com", "v1")
     //dispatcher.dispatch(Commands.ChangeClient(url.now))
-    commands := Commands.ChangeClient(url.now)
-    commands := Commands.GetMetadata()
+    println("URL == "+getURL())
+    commands := Commands.ChangeClient(getURL())
     //dispatcher.dispatch(Commands.GetMetadata)
   }
 

@@ -54,6 +54,7 @@ object CromwellWeb extends scala.App with Base {
   lazy val commandsReducer: Reducer = {
 
     case (previous, getMetadata: Commands.GetMetadata) =>
+      commands := Commands.SendToServer(getMetadata)
       val fut = previous.client.getAllMetadata(getMetadata.status).unsafeToFuture()
       fut.onComplete{
         case Success(me) => results :=  Results.UpdatedMetadata(me)
@@ -68,18 +69,25 @@ object CromwellWeb extends scala.App with Base {
         dom.window.localStorage.setItem(Commands.LoadLastUrl.key, url)
         previous.withEffect{() =>
           commands := Commands.SendToServer(Commands.ChangeClient(url))
+          commands := Commands.GetMetadata()
         }.copy(client = CromwellClient(url))
       } else previous
 
+/*
+    case (previous, Commands.SendToServer(action)) =>
+      previous.withEffect{() =>
+        toServer := WebsocketMessages.WebsocketAction(action)
+      }
+*/
     case (previous, Commands.LoadLastUrl) =>
       Option(dom.window.localStorage.getItem(Commands.LoadLastUrl.key)).fold(
         previous)(url=>  previous.copy(client = CromwellClient(url)))
 
-    case (previous, Commands.Run(wdl, input, options)) =>
+    case (previous, run @ Commands.Run(wdl, input, options)) =>
 
       previous.withEffect{() =>
-        val fut = previous.client
-          .postWorkflowStrings(wdl, input, options)
+        toServer := WebsocketMessages.WebsocketAction(run)
+        val fut = previous.client.postWorkflowStrings(wdl, input, options)
         fut.onComplete{
           case Success(upd) =>
             commands := Commands.GetMetadata()

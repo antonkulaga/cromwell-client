@@ -20,12 +20,5 @@ object WebsocketMessages {
   object WebsocketAction {lazy val empty = WebsocketAction(EmptyAction) }
   case class WebsocketAction(action: Action) extends WebsocketMessage
 
-  /*
-  object WebsocketAction{
-    def apply(action: Action): WebsocketAction = new WebsocketAction(action.toString)
-  }
-  case class WebsocketAction(action: String) extends WebsocketMessage
-  */
-
 }
 
