@@ -28,7 +28,8 @@ object CromwellWeb extends scala.App with Base {
 
   protected lazy val randomUser = "user" + Random.nextInt(10000)
   val websocketClient: WebsocketClient = WebsocketClient.fromRelativeURL("ws" + "/" + randomUser)
-  val toServer: Var[WebsocketMessages.WebsocketAction] = websocketClient.toSend
+  val toServer: Var[WebsocketMessages.WebsocketMessage] = websocketClient.toSend
+
   val fromServer: Rx[Results.ServerResult] = websocketClient.messages.collect{
     case WebsocketMessages.WebsocketAction(a) =>
       Results.ServerResult(a)
@@ -39,9 +40,6 @@ object CromwellWeb extends scala.App with Base {
       Results.ServerResult(EmptyAction)
 
   }(Results.ServerResult(EmptyAction))
-  //val allActions: Rx[Action] = toLoad.merge(loaded).merge(updateUI).merge(throwError).dropRepeats //because Merge is super-buggy in monadic-html and produces a lot of redundant events
-  //ugly workaround for https://github.com/OlivierBlanvillain/monadic-html/issues/98
-
 
   val allActions: Var[Action] = Var(EmptyAction)
 
@@ -185,6 +183,7 @@ object CromwellWeb extends scala.App with Base {
 
 
   def activate() = {
+    //uglyUpdate(commands, messages, results)
     uglyUpdate(commands, messages, results, fromServer)
     //workaround to avoid foldp issues
     allActions.impure.run(onAction)

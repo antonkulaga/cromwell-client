@@ -19,7 +19,7 @@ case class UserActor(username: String) extends Actor with LogSupport {
     case WebsocketMessages.WsHandleDropped =>
       info("WD HANDLER DROP!")
 
-    case WebsocketMessages.WebsocketAction(null) =>
+//    case WebsocketMessages.WebsocketAction(null) =>
 
   }
 

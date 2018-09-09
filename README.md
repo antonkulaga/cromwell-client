@@ -27,10 +27,6 @@ stack deploy -c docker-compose.yml cromwell
 ```
 Make sure that you have docker swarm initialized ( https://docs.docker.com/engine/reference/commandline/swarm_init/ ) on your machine before deploying the stack
 
-Overcoming Cross-Origin policies
---------------------------------
-If you have problems with cross-origin requests, you can push "Proxy button" that will redirect them through the server
-
 cromwell-client
 ===============
 

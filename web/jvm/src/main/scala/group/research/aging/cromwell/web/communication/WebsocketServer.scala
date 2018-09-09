@@ -1,6 +1,8 @@
 package group.research.aging.cromwell.web.communication
 
+
 import akka.actor.{Actor, ActorSystem, Props}
+import group.research.aging.cromwell.web.communication._
 import akka.NotUsed
 import akka.actor.ActorRef
 import akka.http.scaladsl.model.ws.{Message, TextMessage}
@@ -9,7 +11,7 @@ import akka.http.scaladsl.server.Route
 import akka.io.Tcp.SO.KeepAlive
 import akka.stream.OverflowStrategy
 import akka.stream.scaladsl._
-import group.research.aging.cromwell.web.KeepAliveAction
+import group.research.aging.cromwell.web.{Action, KeepAliveAction}
 import io.circe.generic.auto._
 import io.circe.parser._
 import io.circe.syntax._
@@ -43,7 +45,7 @@ class WebsocketServer(system: ActorSystem) extends LogSupport{
       Flow[Message]
         .collect { case TextMessage.Strict(json) =>
           debug("Received:\n" + json)
-          decode[WebsocketMessages.WebsocketAction](json)
+          decode[WebsocketMessages.WebsocketMessage](json)
         }
         .filter(_.isRight)
         .map(_.right.get)
@@ -70,7 +72,6 @@ class WebsocketServer(system: ActorSystem) extends LogSupport{
         .keepAlive(maxIdle = 60.seconds, () =>
           TextMessage.Strict( WebsocketMessages.WebsocketAction(KeepAliveAction).asJson.noSpaces )
         )
-
     Flow.fromSinkAndSource(sink, source)
   }
 

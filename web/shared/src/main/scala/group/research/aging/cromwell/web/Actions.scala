@@ -13,6 +13,7 @@ trait EmptyAction {
 }
 
 object Messages {
+  object Message
   @JsonCodec  sealed trait Message extends Action
 
   case object EmptyMessage extends Message with EmptyAction
@@ -28,19 +29,19 @@ object Messages {
 }
 
 object Results {
+  object ActionResult
   @JsonCodec sealed trait ActionResult extends Action
   case object EmptyResult extends ActionResult with EmptyAction
   case class GeneratedSequence(sequence: String) extends ActionResult
   case class UpdatedStatus(info: StatusInfo) extends ActionResult
   case class UpdatedMetadata(metadata: List[Metadata]) extends ActionResult
   case class UpdatedClient(client: CromwellClient) extends ActionResult
-
   case class ServerResult(action: Action) extends ActionResult
 
 }
 
 object Commands{
-
+  object Command
   @JsonCodec sealed trait Command extends Action
   case object EmptyCommand extends EmptyAction with Command
   case class SendToServer(action: Action) extends Command

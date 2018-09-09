@@ -77,10 +77,11 @@ class RunnerView(
     //if(client.base != url.now) client = new CromwellClient("http://agingkills.westeurope.cloudapp.azure.com", "v1")
     //dispatcher.dispatch(Commands.ChangeClient(url.now))
     commands := Commands.ChangeClient(url.now)
-    commands := Commands.GetMetadata
+    commands := Commands.GetMetadata()
     //dispatcher.dispatch(Commands.GetMetadata)
   }
 
+  /*
   protected def proxyClick(event: Event): Unit = {
     val u: String = url.now
     if(u.contains(proxy))
@@ -92,12 +93,13 @@ class RunnerView(
       //commands := Commands.GetMetadata
     }
   }
+  */
 
   protected def localhostClick(event: Event): Unit = {
     val d = "http://localhost:8000"
     //url := d
     commands:= Commands.ChangeClient(d)
-    commands := Commands.GetMetadata
+    commands := Commands.GetMetadata()
   }
 
   protected def uploadFileHandler(v: Var[Option[String]])(event: Event): Unit = {
@@ -160,11 +162,6 @@ class RunnerView(
           <div class={enabledIf("ui primary button", validUrl)} onclick={ updateClick _}>Update workflows</div>
             {lastURL.dropRepeats.map{ u =>
               <input id="url" type="text" placeholder="Enter cromwell URL..."  oninput={ updateHandler _ } value={ u } />
-            }
-          }
-          {hasHost.map{ case false =>
-            <div class="ui small button" onclick={ proxyClick _ }>add proxy</div>
-            case true => <!-- -->
             }
           }
           <!-- <div class="ui small button" onclick={ localhostClick _ }>To default</div> -->

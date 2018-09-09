@@ -13,7 +13,13 @@ import scala.concurrent.Future
 object CromwellClient {
   lazy val localhost: CromwellClient = new CromwellClient("http://localhost:8000", "v1")
 
-  def apply(base: String): CromwellClient = new CromwellClient(base, "v1")
+  def apply(base: String): CromwellClient = {
+    val url = if(base.endsWith("/")) {
+      println("deleting last / symbol")
+      base.take(base.length-1)
+    } else base
+    new CromwellClient(url, "v1")
+  }
 }
 
 @JsonCodec case class CromwellClient(base: String, version: String)
