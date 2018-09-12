@@ -82,7 +82,7 @@ class RunnerView(
     //dispatcher.dispatch(Commands.ChangeClient(url.now))
     println("URL == "+getURL())
     commands := Commands.ChangeClient(getURL())
-    //dispatcher.dispatch(Commands.GetMetadata)
+    commands := Commands.GetMetadata()
   }
 
   /*

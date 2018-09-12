@@ -2,6 +2,7 @@ package group.research.aging.cromwell.web
 
 import group.research.aging.cromwell.client._
 import io.circe.generic.JsonCodec
+import java.util.UUID
 
 object Action
 @JsonCodec sealed trait Action
@@ -47,6 +48,7 @@ object Commands{
   case class SendToServer(action: Action) extends Command
   case object CleanMessages extends Command
 
+  case class StreamMetadata(status: WorkflowStatus = WorkflowStatus.AnyStatus, id: String = UUID.randomUUID().toString) extends Command
   case class GetMetadata(status: WorkflowStatus = WorkflowStatus.AnyStatus) extends Command
   case class ChangeClient(newURL: String) extends Command
   case class Run(wdl: String, options: String, input: String) extends Command

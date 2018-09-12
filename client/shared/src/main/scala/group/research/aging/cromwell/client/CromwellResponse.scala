@@ -123,4 +123,9 @@ object Metadata
 
 @JsonCodec case class WorkflowFailure(message: String, causedBy: List[WorkflowFailure] = Nil) extends CromwellResponse
 
-@JsonCodec case class CallCaching(allowResultReuse: Boolean, effectiveCallCachingMode: String, hit: Option[Boolean] = None, result: Option[String] = None)
+object CallCaching {
+
+  //implicit val config: Configuration = Configuration.default.withSnakeCaseMemberNames
+}
+
+@JsonCodec case class CallCaching(allowResultReuse: Boolean, effectiveCallCachingMode: Option[String], hit: Option[Boolean] = None, result: Option[String] = None)

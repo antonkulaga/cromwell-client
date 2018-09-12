@@ -89,7 +89,8 @@ trait CromwellClientShared extends RosHttp with CromwellClientLike {
 
   def getBackends: IO[Backends] = getAPI[Backends](s"/workflows/${version}/backends")
 
-  def getMetadata(id: String, v: String = "v2", expandSubWorkflows: Boolean = true): IO[Metadata] = getAPI[Metadata](s"/workflows/${v}/${id}/metadata?expandSubWorkflows=${expandSubWorkflows}")
+  def getMetadata(id: String, v: String = "v2", expandSubWorkflows: Boolean = true): IO[Metadata] =
+    getAPI[Metadata](s"/workflows/${v}/${id}/metadata?expandSubWorkflows=${expandSubWorkflows}")
 
   def getAllMetadata(status: WorkflowStatus = WorkflowStatus.AnyStatus): IO[List[Metadata]] = getQuery(status).flatMap(q=>
     q.results.map(r=>this.getMetadata(r.id)).sequence

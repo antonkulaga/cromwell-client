@@ -5,6 +5,7 @@ import group.research.aging.cromwell.web.{Commands, Results}
 import group.research.aging.cromwell.web.Results.ActionResult
 import wvlet.log.LogSupport
 import akka.pattern._
+import group.research.aging.cromwell.web.Commands.StreamMetadata
 
 import scala.concurrent.Future
 
@@ -36,6 +37,18 @@ case class UserActor(username: String) extends Actor with LogSupport {
       debug(u)
       output.foreach(o=>o ! WebsocketMessages.WebsocketAction(u))
 
+
+    case stream @ StreamMetadata(status, id) =>
+      error("streams are not implemented yet!")
+      /*
+      val query = client.getQuery(status).unsafeRunSync()
+      val ids = query.results.map(_.id)
+      for(id < ids)
+        {
+          pipe(client.getMetadata(id).unsafeToFuture())
+          //output.foreach(o=>o ! WebsocketMessages.WebsocketAction())
+        }
+      */
     case other =>
       error("UNKNOWN MESSAGE:\n" + other)
 
