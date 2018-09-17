@@ -20,7 +20,7 @@ services:
     ports:
       - "3307:3306"
   cromwell-client:
-    image: quay.io/comp-bio-aging/cromwell-web:0.0.19
+    image: quay.io/comp-bio-aging/cromwell-web:0.0.21
     ports:
       - 8001:8080
     volumes:

@@ -107,14 +107,6 @@ object CromwellWeb extends scala.App with Base {
 
   }
 
-  //workaround to avoid foldp issues
-  allActions.impure.run{ a=>
-    val currentState: State = state.now
-    val newState = reducer(currentState, a)
-    if(newState != currentState) state := newState
-  }
-
-
   //AppCircuit.addProcessor(new LoggingProcessor[AppModel]())
   val updater = new RunnerView(commands, messages, state.map(_.client.base))
   val workflows = new WorkflowsView(
