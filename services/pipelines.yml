@@ -6,7 +6,7 @@ services:
       - /pipelines:/pipelines
       - /pipelines/cromwell-executions:/cromwell-executions
       - /var/run/docker.sock:/var/run/docker.sock
-    command: ["/wait-for-it/wait-for-it.sh mysql-db:3306 -t 120 -- java -Dconfig.file=/app-config/application.conf -jar /app/cromwell.jar server"]
+    command: ["/wait-for-it/wait-for-it.sh mysql-db:3306 -t 120 -- java -Dconfig.file=/pipelines/sources/cromwell-client/services/cromwell/app-config/application.conf -jar /app/cromwell.jar server"]
     ports:
       - "8000:8000"
   mysql-db:
