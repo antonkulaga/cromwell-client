@@ -55,13 +55,6 @@ object CromwellWeb extends scala.App with Base {
 
     case (previous, getMetadata: Commands.GetMetadata) =>
       commands := Commands.SendToServer(getMetadata)
-      val fut = previous.client.getAllMetadata(getMetadata.status).unsafeToFuture()
-      fut.onComplete{
-        case Success(me) => results :=  Results.UpdatedMetadata(me)
-        case Failure(th) =>
-          messages :=
-            Messages.Errors(Messages.ExplainedError(s"getting information from the server failed ${previous.client.base}", Option(th.getMessage).getOrElse(""))::Nil)
-      }
       previous
 
     case (previous, Commands.ChangeClient(url)) =>
@@ -98,6 +91,9 @@ object CromwellWeb extends scala.App with Base {
   }
 
   lazy val resultsReducer: Reducer = {
+
+    case (previous, Results.ServerResult(upd: Results.UpdatedMetadata)) =>
+      previous.copy(metadata = upd.metadata, errors = Nil)
 
     case (previous, Results.UpdatedStatus(md)) =>
       println("not yet sure what to do with updated status")

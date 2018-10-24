@@ -10,9 +10,9 @@ lazy val commonSettings = Seq(
 
 	organization := "group.research.aging",
 
-	scalaVersion :=  "2.12.6",
+	scalaVersion :=  "2.12.7",
 
-	version := "0.0.21",
+	version := "0.0.22",
 
 	unmanagedClasspath in Compile ++= (unmanagedResources in Compile).value,
 
@@ -38,7 +38,7 @@ lazy val commonSettings = Seq(
 
 	addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.1" cross CrossVersion.full),
 
-	addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.7"),
+	addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.8"),
 
 	bintrayRepository := "main",
 
@@ -57,9 +57,9 @@ lazy val commonSettings = Seq(
 
 commonSettings
 
-lazy val hammockVersion = "0.8.5"
+lazy val hammockVersion = "0.8.7"
 
-lazy val semanticUI = "2.3.3"
+lazy val semanticUI = "2.4.0"
 
 lazy val webcomponents = "1.0.1"
 
@@ -82,9 +82,9 @@ lazy val  cromwellClient = crossProject(JSPlatform, JVMPlatform)
 			"com.lihaoyi" %%% "pprint" % "0.5.3",
 			//"org.typelevel" %%% "cats-core"      % "1.3.1",
 			//"org.typelevel" %%% "cats-effect"     % "1.0.0",
-			"io.circe" %%% "circe-generic-extras" % "0.9.2",
+			"io.circe" %%% "circe-generic-extras" % "0.10.0",
 			"com.pepegar" %%% "hammock-circe" % hammockVersion,
-			"org.wvlet.airframe" %%% "airframe-log" % "0.64"
+			"org.wvlet.airframe" %%% "airframe-log" % "0.69"
     )
 	)
 	.disablePlugins(RevolverPlugin)
@@ -108,7 +108,7 @@ lazy val cromwellClientJVM = cromwellClient.jvm
 
 lazy val cromwellClientJS = cromwellClient.js
 
-lazy val akka = "2.5.15"
+lazy val akka = "2.5.17"
 lazy val akkaHttp = "10.1.5"
 
 lazy val cromwellWeb = crossProject(JSPlatform, JVMPlatform)
@@ -123,13 +123,13 @@ lazy val cromwellWeb = crossProject(JSPlatform, JVMPlatform)
 
 		libraryDependencies  ++= Seq(
 			"com.github.japgolly.scalacss" % "core_2.12" % "0.5.5",
-			"org.wvlet.airframe" %%% "airframe-log" % "0.64"
+			"org.wvlet.airframe" %%% "airframe-log" % "0.69"
 		)
 	)
 	.jsSettings(
 		libraryDependencies ++= Seq(
 			"in.nvilla" %%% "monadic-html" % "0.4.0-RC1",
-			"org.akka-js" %%% "akkajsactorstream" % "1.2.5.15"
+			"org.akka-js" %%% "akkajsactorstream" % "1.2.5.16"
 		),
 		jsEnv := new org.scalajs.jsenv.jsdomnodejs.JSDOMNodeJSEnv,
 		scalaJSUseMainModuleInitializer := true
@@ -141,8 +141,8 @@ lazy val cromwellWeb = crossProject(JSPlatform, JVMPlatform)
 			"com.typesafe.akka" %% "akka-http" % akkaHttp,
 			"com.typesafe.akka" %% "akka-http-xml" % akkaHttp,
 			"com.vmunier" %% "scalajs-scripts" % "1.1.2",
-      "de.heikoseeberger" %% "akka-http-circe" % "1.21.0",
-			"ch.megard" %% "akka-http-cors" % "0.3.0"
+      "de.heikoseeberger" %% "akka-http-circe" % "1.22.0",
+			"ch.megard" %% "akka-http-cors" % "0.3.1"
 			//"com.pepegar" %% "hammock-akka-http" % hammockVersion
 		),
 		(managedClasspath in Runtime) += (packageBin in Assets).value,

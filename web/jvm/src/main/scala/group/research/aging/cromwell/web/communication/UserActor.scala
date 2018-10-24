@@ -33,7 +33,7 @@ case class UserActor(username: String) extends Actor with LogSupport {
       this.context.become(operation(output, client))
 
     case u @ Results.UpdatedMetadata(m) =>
-      debug("RECEIVED METADATA: ")
+      debug("UPDATED METADATA: ")
       debug(u)
       output.foreach(o=>o ! WebsocketMessages.WebsocketAction(u))
 
