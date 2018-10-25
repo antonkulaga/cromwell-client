@@ -66,12 +66,11 @@ object CromwellWeb extends scala.App with Base {
         }
       } else previous
 
-/*
     case (previous, Commands.SendToServer(action)) =>
       previous.withEffect{() =>
         toServer := WebsocketMessages.WebsocketAction(action)
       }
-*/
+
     case (previous, Commands.LoadLastUrl) =>
       Option(dom.window.localStorage.getItem(Commands.LoadLastUrl.key)).fold(
         previous)(url=>  previous.copy(client = CromwellClient(url)))
@@ -165,7 +164,7 @@ object CromwellWeb extends scala.App with Base {
   }
 
 
-  protected def onAction(action: Action) = {
+  protected def onAction(action: Action): Unit = {
     val currentState: State = state.now
     val newState = reducer(currentState, action)
     if(newState != currentState) {

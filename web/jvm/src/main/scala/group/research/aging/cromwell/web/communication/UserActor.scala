@@ -1,13 +1,11 @@
 package group.research.aging.cromwell.web.communication
 import akka.actor.{Actor, ActorRef}
-import group.research.aging.cromwell.client.{CromwellClient, Metadata}
-import group.research.aging.cromwell.web.{Commands, Results}
-import group.research.aging.cromwell.web.Results.ActionResult
+import group.research.aging.cromwell.client.{CromwellClient, Metadata, StatusInfo}
+import group.research.aging.cromwell.web.{Commands, EmptyAction, Messages, Results}
 import wvlet.log.LogSupport
 import akka.pattern._
-import group.research.aging.cromwell.web.Commands.StreamMetadata
-
-import scala.concurrent.Future
+import group.research.aging.cromwell.web.Commands.{ChangeClient, StreamMetadata}
+import group.research.aging.cromwell.web.communication.WebsocketMessages.WebsocketAction
 
 
 case class UserActor(username: String) extends Actor with LogSupport {
@@ -22,20 +20,45 @@ case class UserActor(username: String) extends Actor with LogSupport {
       this.context.become(operation(output :+ ref))
 
     case WebsocketMessages.WsHandleDropped =>
-      info("WD HANDLER DROP!")
+      info("Websocket HANDLER DROP!")
 
-    case WebsocketMessages.WebsocketAction(Commands.GetMetadata(status)) =>
+    case WebsocketMessages.WebsocketAction(action) =>
+      debug(s"WebsocketAction: \n ${action}")
+      self ! action
+
+
+    case Commands.GetMetadata(status) =>
       debug("GET METADATA!")
       val metaFut = client.getAllMetadata(status).map(m=>Results.UpdatedMetadata(m)).unsafeToFuture()
       pipe(metaFut)(context.dispatcher) to self
 
-    case WebsocketMessages.WebsocketAction(Commands.CleanMessages) =>
+    case ChangeClient(newURL) =>
+      debug(s"CHANGE CLIENT to ${newURL}!")
+      val newClient = client.copy(base = newURL)
+      this.context.become(operation(output, newClient))
+
+    case Commands.CleanMessages =>
       this.context.become(operation(output, client))
 
     case u @ Results.UpdatedMetadata(m) =>
       debug("UPDATED METADATA: ")
       debug(u)
       output.foreach(o=>o ! WebsocketMessages.WebsocketAction(u))
+
+    case e: Messages.Errors =>
+      output.foreach(o=>o ! WebsocketMessages.WebsocketAction(e))
+
+
+    case s: StatusInfo =>
+      debug(s"received status info: ${s}")
+      self ! Commands.GetMetadata()
+
+    case WebsocketMessages.WebsocketAction(Commands.Run(wdl, input, options)) =>
+      val postFut = client.postWorkflowStrings(wdl, input, options)
+      pipe(postFut)(context.dispatcher) to self
+
+    case akka.actor.Status.Failure(th) =>
+      self !  Messages.Errors(Messages.ExplainedError(s"running workflow at ${client.base} failed", Option(th.getMessage).getOrElse(""))::Nil)
 
 
     case stream @ StreamMetadata(status, id) =>
@@ -49,6 +72,10 @@ case class UserActor(username: String) extends Actor with LogSupport {
           //output.foreach(o=>o ! WebsocketMessages.WebsocketAction())
         }
       */
+
+    case EmptyAction =>
+      debug("empty action, no reaction")
+
     case other =>
       error("UNKNOWN MESSAGE:\n" + other)
 

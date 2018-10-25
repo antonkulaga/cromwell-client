@@ -1,20 +1,15 @@
 package group.research.aging.cromwell.web.communication
 
 
-import akka.actor.{Actor, ActorSystem, Props}
-import group.research.aging.cromwell.web.communication._
 import akka.NotUsed
-import akka.actor.ActorRef
+import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.http.scaladsl.model.ws.{Message, TextMessage}
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
-import akka.io.Tcp.SO.KeepAlive
 import akka.stream.OverflowStrategy
 import akka.stream.scaladsl._
-import group.research.aging.cromwell.web.{Action, KeepAliveAction}
-import io.circe.generic.auto._
-import io.circe.parser._
-import io.circe.syntax._
+import group.research.aging.cromwell.web.KeepAliveAction
+import io.circe.parser.decode
 import wvlet.log.LogFormatter.SourceCodeLogFormatter
 import wvlet.log.{LogSupport, Logger}
 
@@ -55,10 +50,11 @@ class WebsocketServer(system: ActorSystem) extends LogSupport{
     val source: Source[Message, NotUsed] =
       Source
         .actorRef(bufferSize = 50, overflowStrategy = OverflowStrategy.fail)
-        .map{ c: WebsocketMessages.WebsocketAction =>
-          val m = c.asJson
-          debug("Sent:\n" + m.spaces2)
-          TextMessage.Strict(m.noSpaces)
+        .map{ c: WebsocketMessages.WebsocketMessage =>
+          import io.circe.syntax._
+          val js = c.asJson
+          debug("Sent:\n" + js.toString())
+          TextMessage.Strict(js.toString())
         }
         .mapMaterializedValue { wsHandle =>
           // the wsHandle is the way to talk back to the user, our wsUser actor needs to know about this to send
@@ -69,8 +65,13 @@ class WebsocketServer(system: ActorSystem) extends LogSupport{
           // don't expose the wsHandle anymore
           NotUsed
         }
-        .keepAlive(maxIdle = 60.seconds, () =>
-          TextMessage.Strict( WebsocketMessages.WebsocketAction(KeepAliveAction).asJson.noSpaces )
+        .keepAlive(maxIdle = 60.seconds, () => {
+          import io.circe.syntax._
+          val m: WebsocketMessages.WebsocketMessage = WebsocketMessages.WebsocketAction(KeepAliveAction)//
+          val js = m.asJson
+          debug("Sent:\n" + js.toString())
+          TextMessage.Strict(js.toString())
+          }
         )
     Flow.fromSinkAndSource(sink, source)
   }

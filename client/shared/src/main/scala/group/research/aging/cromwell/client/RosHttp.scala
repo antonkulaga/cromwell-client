@@ -39,6 +39,16 @@ trait RosHttp {
 
   def postRequest(subpath: String)(multipart: MultiPartBody): Future[SimpleHttpResponse] = {
     val request = HttpRequest(base + subpath)
+    println("POSTING:\n" + base + subpath)
+    request.post(multipart).onComplete{
+      case Success(value) =>
+        println("IT WOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOORKS!")
+        println(value)
+      case Failure(exception) =>
+        println("IT FFFFFFFFFFFFFFFFFFAAAAAAAAAAAAAAIIIIIIIIIIIIIIIILLLLLLLLLLLLEEEEEEEEEEED!")
+        println(exception)
+        println(exception.getMessage)
+    }
     request.post(multipart)
   }
 
@@ -50,7 +60,9 @@ trait RosHttp {
   }
 
   def postAPI[T](subpath: String)(multipart: MultiPartBody)(implicit decoder: Decoder[T]): Future[T] =
-    post[T](api + subpath)(multipart)(decoder)
+    {
+      post[T](api + subpath)(multipart)(decoder)
+    }
 
 
   /*

@@ -13,3 +13,5 @@ addSbtPlugin("io.spray" % "sbt-revolver" % "0.9.1") //live refresh
 addSbtPlugin("com.typesafe.sbt" % "sbt-native-packager" % "1.3.11")
 
 addSbtPlugin("org.portable-scala" % "sbt-scalajs-crossproject" % "0.6.0")
+
+addSbtPlugin("net.virtual-void" % "sbt-dependency-graph" % "0.9.2")

@@ -6,6 +6,7 @@ import mhtml.Var
 import org.scalajs.dom
 import org.scalajs.dom.raw.WebSocket
 import wvlet.log.{LogLevel, LogSupport, Logger}
+import cats.syntax.show._
 
 object WebsocketClient {
 
@@ -55,7 +56,8 @@ class WebsocketClient(url: String) extends WebsocketSubscriber(url) with LogSupp
         case Some(data) =>
           decode[WebsocketMessages.WebsocketMessage](data.toString) match {
             case Left(er)=>
-              error(er)
+              error(er.show)
+              error("initial text was: \n" + data.toString)
             case Right(message: WebsocketMessages.WebsocketAction) =>
               debug(message)
               messages := message
@@ -78,6 +80,7 @@ class WebsocketClient(url: String) extends WebsocketSubscriber(url) with LogSupp
       case (m, true) =>
         import io.circe.syntax._
         val json = m.asJson
+        println("SENT:\n "+json.toString())
         send(json.toString())
     }
   }
