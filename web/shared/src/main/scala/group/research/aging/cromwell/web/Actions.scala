@@ -4,6 +4,9 @@ import group.research.aging.cromwell.client._
 import io.circe.generic.JsonCodec
 import java.util.UUID
 
+import cats.Monoid
+import group.research.aging.cromwell.client.WorkflowStatus.AnyStatus
+
 object Action
 @JsonCodec sealed trait Action
 
@@ -34,7 +37,15 @@ object Results {
   @JsonCodec sealed trait ActionResult extends Action
   case object EmptyResult extends ActionResult with EmptyAction
   case class GeneratedSequence(sequence: String) extends ActionResult
-  case class UpdatedStatus(info: StatusInfo) extends ActionResult
+
+  object UpdatedStatus {
+    implicit def monoid: cats.Monoid[UpdatedStatus] = new Monoid[UpdatedStatus] {
+      override def empty: UpdatedStatus = UpdatedStatus(WorkflowStatus.AnyStatus)
+
+      override def combine(x: UpdatedStatus, y: UpdatedStatus): UpdatedStatus = y //ugly but works
+    }
+  }
+  case class UpdatedStatus(info: WorkflowStatus) extends ActionResult
   case class UpdatedMetadata(metadata: List[Metadata]) extends ActionResult
   case class UpdatedClient(client: CromwellClient) extends ActionResult
   case class ServerResult(action: Action) extends ActionResult
@@ -49,7 +60,8 @@ object Commands{
   case object CleanMessages extends Command
 
   case class StreamMetadata(status: WorkflowStatus = WorkflowStatus.AnyStatus, id: String = UUID.randomUUID().toString) extends Command
-  case class GetMetadata(status: WorkflowStatus = WorkflowStatus.AnyStatus) extends Command
+  case class GetMetadata(status: WorkflowStatus) extends Command
+  case class UpdateStatus(status: WorkflowStatus) extends Command
   case class ChangeClient(newURL: String) extends Command
   case class Run(wdl: String, options: String, input: String) extends Command
   //case class UpdateURL(url: String) extends Command
@@ -62,4 +74,6 @@ object Commands{
   {
     val key = "lastURL"
   }
+
+  case class EvalJS(code: String) extends Command
 }

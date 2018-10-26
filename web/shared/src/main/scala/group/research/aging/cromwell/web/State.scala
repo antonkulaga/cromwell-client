@@ -1,7 +1,7 @@
 package group.research.aging.cromwell.web
 
 import cats.kernel.Monoid
-import group.research.aging.cromwell.client.{CromwellClient, CromwellClientLike, Metadata}
+import group.research.aging.cromwell.client.{CromwellClient, CromwellClientLike, Metadata, WorkflowStatus}
 
 import scala.collection.immutable._
 
@@ -19,6 +19,7 @@ object State{
 
 case class State (client: CromwellClient,
                   metadata: List[Metadata],
+                  status: WorkflowStatus = WorkflowStatus.AnyStatus,
                   errors: List[Messages.ExplainedError] = Nil,
                   effects: List[()=>Unit] = Nil)
 {

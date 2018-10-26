@@ -58,11 +58,11 @@ object CromwellWeb extends scala.App with Base {
       previous
 
     case (previous, Commands.ChangeClient(url)) =>
-      if(previous.client.base != url) {
+      if (previous.client.base != url){
         dom.window.localStorage.setItem(Commands.LoadLastUrl.key, url)
         previous.copy(client = CromwellClient(url)).withEffect{() =>
           commands := Commands.SendToServer(Commands.ChangeClient(url))
-          commands := Commands.GetMetadata()
+          commands := Commands.GetMetadata(state.now.status)
         }
       } else previous
 
@@ -75,14 +75,20 @@ object CromwellWeb extends scala.App with Base {
       Option(dom.window.localStorage.getItem(Commands.LoadLastUrl.key)).fold(
         previous)(url=>  previous.copy(client = CromwellClient(url)))
 
-    case (previous, run @ Commands.Run(wdl, input, options)) =>
+    case (previos, Commands.UpdateStatus(status)) => previos.copy(status =  status)
 
+
+    case (previous, Commands.EvalJS(code)) =>
+      scalajs.js.eval(code)
+      previous
+
+    case (previous, run @ Commands.Run(wdl, input, options)) =>
       previous.withEffect{() =>
         toServer := WebsocketMessages.WebsocketAction(run)
         val fut = previous.client.postWorkflowStrings(wdl, input, options)
         fut.onComplete{
           case Success(upd) =>
-            commands := Commands.GetMetadata()
+            commands := Commands.GetMetadata(state.now.status)
           case Failure(th) =>
             messages := Messages.Errors(Messages.ExplainedError(s"running workflow at ${previous.client.base} failed", Option(th.getMessage).getOrElse(""))::Nil)
         }
@@ -91,8 +97,15 @@ object CromwellWeb extends scala.App with Base {
 
   lazy val resultsReducer: Reducer = {
 
-    case (previous, Results.ServerResult(upd: Results.UpdatedMetadata)) =>
-      previous.copy(metadata = upd.metadata, errors = Nil)
+    case (previos, Results.ServerResult(action)) =>
+      previos.withEffect{() =>
+        action match {
+          case c: Commands.Command => commands := c
+          case r: Results.ActionResult => results := r
+          case m: Messages.Message =>  messages := m
+          case other =>  error(s"Unkwon server message: \n ${other}")
+        }
+      }
 
     case (previous, Results.UpdatedStatus(md)) =>
       println("not yet sure what to do with updated status")
@@ -103,7 +116,7 @@ object CromwellWeb extends scala.App with Base {
   }
 
   //AppCircuit.addProcessor(new LoggingProcessor[AppModel]())
-  val updater = new RunnerView(commands, messages, state.map(_.client.base))
+  val runner = new RunnerView(commands, messages, state.map(_.status), state.map(_.client.base))
   val workflows = new WorkflowsView(
     state.map(_.sortedMetadata),
     state.map(_.client.base)
@@ -143,13 +156,8 @@ object CromwellWeb extends scala.App with Base {
   val component =
   <div id="cromwell">
     <section class="ui grid">
-        <div class=" six wide column">
-          {  updater.updater  }
-          {  errors.component }
-        </div>
-        <div class="ten wide column">
-          {  updater.runner  }
-        </div>
+          {  runner.component }
+      {  errors.component }
     </section>
     {  workflows.component }
   </div>
@@ -176,13 +184,13 @@ object CromwellWeb extends scala.App with Base {
 
   val div = dom.document.getElementById("main")
 
-
   def activate() = {
     //uglyUpdate(commands, messages, results)
     uglyUpdate(commands, messages, results, fromServer)
     //workaround to avoid foldp issues
     allActions.impure.run(onAction)
     mount(div, component)
+
   }
 
   activate()
