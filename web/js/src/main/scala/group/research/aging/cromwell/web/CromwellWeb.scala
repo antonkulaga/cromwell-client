@@ -62,7 +62,7 @@ object CromwellWeb extends scala.App with Base {
         dom.window.localStorage.setItem(Commands.LoadLastUrl.key, url)
         previous.copy(client = CromwellClient(url)).withEffect{() =>
           commands := Commands.SendToServer(Commands.ChangeClient(url))
-          commands := Commands.GetMetadata(state.now.status)
+          //commands := Commands.GetMetadata(state.now.status)
         }
       } else previous
 
