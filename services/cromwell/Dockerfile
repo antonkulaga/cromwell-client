@@ -6,8 +6,8 @@ RUN apt-key adv --keyserver hkp://p80.pool.sks-keyservers.net:80 --recv-keys F76
 RUN apt-get -y install docker-engine
 
 RUN git clone https://github.com/vishnubob/wait-for-it.git
-RUN mkdir pipelines
-WORKDIR pipelines
+RUN mkdir data
+WORKDIR data
 
 COPY ./app-config /app-config
 
