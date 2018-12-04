@@ -13,6 +13,12 @@ trait CromwellClientShared extends RosHttp with CromwellClientLike {
   def base: String
   def version: String
 
+  lazy val baseNoPort: String = {
+    val first = base.indexOf(":/")
+    val last = base.lastIndexOf(":")
+    if(first!=last) base.substring(0, last) else base
+  }
+
   lazy val api = "/api"
 
   def makeWorkflowOptions(output: String, log: String="", call_log: String = ""): String =

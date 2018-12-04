@@ -12,7 +12,7 @@ lazy val commonSettings = Seq(
 
 	scalaVersion :=  "2.12.7",
 
-	version := "0.0.23",
+	version := "0.0.25",
 
 	unmanagedClasspath in Compile ++= (unmanagedResources in Compile).value,
 
@@ -38,7 +38,7 @@ lazy val commonSettings = Seq(
 
 	addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.1" cross CrossVersion.full),
 
-	addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.8"),
+	addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.9"),
 
 	bintrayRepository := "main",
 
@@ -82,9 +82,9 @@ lazy val  cromwellClient = crossProject(JSPlatform, JVMPlatform)
 			"com.lihaoyi" %%% "pprint" % "0.5.3",
 			//"org.typelevel" %%% "cats-core"      % "1.3.1",
 			//"org.typelevel" %%% "cats-effect"     % "1.0.0",
-			"io.circe" %%% "circe-generic-extras" % "0.10.0",
+			"io.circe" %%% "circe-generic-extras" % "0.10.1",
 			"com.pepegar" %%% "hammock-circe" % hammockVersion,
-			"org.wvlet.airframe" %%% "airframe-log" % "0.69"
+			"org.wvlet.airframe" %%% "airframe-log" % "0.73"
     )
 	)
 	.disablePlugins(RevolverPlugin)
@@ -108,7 +108,7 @@ lazy val cromwellClientJVM = cromwellClient.jvm
 
 lazy val cromwellClientJS = cromwellClient.js
 
-lazy val akka = "2.5.17"
+lazy val akka = "2.5.18"
 lazy val akkaHttp = "10.1.5"
 
 lazy val cromwellWeb = crossProject(JSPlatform, JVMPlatform)
@@ -123,7 +123,7 @@ lazy val cromwellWeb = crossProject(JSPlatform, JVMPlatform)
 
 		libraryDependencies  ++= Seq(
 			"com.github.japgolly.scalacss" % "core_2.12" % "0.5.5",
-			"org.wvlet.airframe" %%% "airframe-log" % "0.69"
+			"org.wvlet.airframe" %%% "airframe-log" % "0.73"
 		)
 	)
 	.jsSettings(

@@ -5,6 +5,7 @@ import group.research.aging.cromwell.web.communication.{WebsocketClient, Websock
 import org.querki.jquery._
 import wvlet.log.LogLevel
 
+
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 import scala.util.{Failure, Random, Success}
 
@@ -82,16 +83,13 @@ object CromwellWeb extends scala.App with Base {
       scalajs.js.eval(code)
       previous
 
+    case (previous, a @ Commands.Abort(id)) =>
+      toServer := WebsocketMessages.WebsocketAction(a)
+      previous
+
     case (previous, run @ Commands.Run(wdl, input, options)) =>
       previous.withEffect{() =>
         toServer := WebsocketMessages.WebsocketAction(run)
-        val fut = previous.client.postWorkflowStrings(wdl, input, options)
-        fut.onComplete{
-          case Success(upd) =>
-            commands := Commands.GetMetadata(state.now.status)
-          case Failure(th) =>
-            messages := Messages.Errors(Messages.ExplainedError(s"running workflow at ${previous.client.base} failed", Option(th.getMessage).getOrElse(""))::Nil)
-        }
       }
   }
 
@@ -119,7 +117,8 @@ object CromwellWeb extends scala.App with Base {
   val runner = new RunnerView(commands, messages, state.map(_.status), state.map(_.client.base))
   val workflows = new WorkflowsView(
     state.map(_.sortedMetadata),
-    state.map(_.client.base)
+    state.map(_.client.baseNoPort),
+    commands
   )
 
   val errors = new ErrorsView(state.map(_.errors), messages)

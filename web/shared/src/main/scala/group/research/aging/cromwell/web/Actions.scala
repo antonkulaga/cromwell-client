@@ -49,6 +49,7 @@ object Results {
   case class UpdatedMetadata(metadata: List[Metadata]) extends ActionResult
   case class UpdatedClient(client: CromwellClient) extends ActionResult
   case class ServerResult(action: Action) extends ActionResult
+  case class WorkflowSent(status: StatusInfo) extends ActionResult
 
 }
 
@@ -64,6 +65,7 @@ object Commands{
   case class UpdateStatus(status: WorkflowStatus) extends Command
   case class ChangeClient(newURL: String) extends Command
   case class Run(wdl: String, options: String, input: String) extends Command
+  case class Abort(id: String) extends Command
   //case class UpdateURL(url: String) extends Command
 
   trait LoadKey {

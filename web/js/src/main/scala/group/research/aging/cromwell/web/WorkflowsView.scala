@@ -2,20 +2,18 @@ package group.research.aging.cromwell.web
 //import diode.{Dispatcher, ModelRO}
 import group.research.aging.cromwell.client.{LogCall, Metadata, WorkflowFailure}
 import mhtml._
-
-import scala.scalajs.js
+import org.scalajs.dom.Event
 import scala.xml.Elem
-import cats._
-import cats.implicits._
 
 
-class WorkflowsView(allMetadata: Rx[List[Metadata]], host: Rx[String])
+class WorkflowsView(allMetadata: Rx[List[Metadata]], host: Rx[String], commands: Var[Commands.Command])
 {
   //val allMetadata: Var[List[Metadata]]  = Var(initialMetadata)
 
   var desc = true
 
   def timingURL(base: String, id: String): String = base + s"/api/workflows/v1/${id}/timing"
+
 
 
   /*
@@ -85,13 +83,19 @@ class WorkflowsView(allMetadata: Rx[List[Metadata]], host: Rx[String])
           </td>
         </tr>
 
+  protected def abort(id: String)(event: Event): Unit = {
+
+    commands := Commands.Abort(id)
+  }
 
   def generalInfo(r: Metadata): Elem =
       <table id="workflows" class="ui small padded striped celled table">
       <tbody>
         <tr>
           <th>name/id</th><td class={statusClass(r.status)}><h3>{r.workflowName.getOrElse("NO NAME")}</h3>{r.id}</td>
-          <th>status</th> <td class={statusClass(r.status)}><h3>{r.status}</h3></td>
+          <th>status</th> <td class={statusClass(r.status)}><h3>{r.status}</h3>{
+            {if(r.status == "Running") <button class="ui button"  onclick={ abort(r.id) _}><i class="stop icon"></i></button> else <span/>}
+          }</td>
         </tr>
         <tr>
           <th>starts</th><td><h3><a href={host.map(h=> timingURL(h, r.id))} target ="_blank">{r.startTime}</a></h3></td>
@@ -108,6 +112,8 @@ class WorkflowsView(allMetadata: Rx[List[Metadata]], host: Rx[String])
       </tbody>
     </table>
 
+  def un(str: String): String = str.replace("\\\"","")
+
   def rowInputs(r: Metadata): Elem =
     <div class="ui info message">
       <div class="header">Inputs:</div>
@@ -115,7 +121,7 @@ class WorkflowsView(allMetadata: Rx[List[Metadata]], host: Rx[String])
         {
         r.inputs.values.toList.map(kv=>
           <div class="item">
-            { kv._1 + " = " + kv._2 }
+            { un(kv._1) + " = " + un(kv._2) }
           </div>
         )
         }
@@ -129,7 +135,7 @@ class WorkflowsView(allMetadata: Rx[List[Metadata]], host: Rx[String])
         {
         r.outputs.values.toList.map(kv=>
           <div class="item">
-            { kv._1 + " = " + kv._2 }
+            { un(kv._1) + " = " + un(kv._2) }
           </div>
         )
         }

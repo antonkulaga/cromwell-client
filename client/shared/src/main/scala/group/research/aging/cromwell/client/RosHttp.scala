@@ -39,16 +39,6 @@ trait RosHttp {
 
   def postRequest(subpath: String)(multipart: MultiPartBody): Future[SimpleHttpResponse] = {
     val request = HttpRequest(base + subpath)
-    println("POSTING:\n" + base + subpath)
-    request.post(multipart).onComplete{
-      case Success(value) =>
-        println("IT WOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOORKS!")
-        println(value)
-      case Failure(exception) =>
-        println("IT FFFFFFFFFFFFFFFFFFAAAAAAAAAAAAAAIIIIIIIIIIIIIIIILLLLLLLLLLLLEEEEEEEEEEED!")
-        println(exception)
-        println(exception.getMessage)
-    }
     request.post(multipart)
   }
 
