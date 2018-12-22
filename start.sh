@@ -1,2 +1,2 @@
 #!/usr/bin/env bash
-docker stack deploy -c services/pipelines.yml cromwell
+docker stack deploy -c services/cromwell.yml cromwell

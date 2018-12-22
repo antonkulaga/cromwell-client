@@ -10,9 +10,9 @@ lazy val commonSettings = Seq(
 
 	organization := "group.research.aging",
 
-	scalaVersion :=  "2.12.7",
+	scalaVersion :=  "2.12.8",
 
-	version := "0.0.25",
+	version := "0.0.26",
 
 	unmanagedClasspath in Compile ++= (unmanagedResources in Compile).value,
 
@@ -59,7 +59,7 @@ commonSettings
 
 lazy val hammockVersion = "0.8.7"
 
-lazy val semanticUI = "2.4.0"
+lazy val semanticUI = "2.4.1"
 
 lazy val webcomponents = "1.0.1"
 
@@ -77,20 +77,20 @@ lazy val  cromwellClient = crossProject(JSPlatform, JVMPlatform)
     name := "cromwell-client",
 
 		libraryDependencies ++= Seq(
-			"fr.hmil" %%% "roshttp" % "2.1.0",
+			"fr.hmil" %%% "roshttp" % "2.2.3",
 			"com.beachape" %%% "enumeratum" % "1.5.13",
 			"com.lihaoyi" %%% "pprint" % "0.5.3",
 			//"org.typelevel" %%% "cats-core"      % "1.3.1",
 			//"org.typelevel" %%% "cats-effect"     % "1.0.0",
 			"io.circe" %%% "circe-generic-extras" % "0.10.1",
 			"com.pepegar" %%% "hammock-circe" % hammockVersion,
-			"org.wvlet.airframe" %%% "airframe-log" % "0.73"
+			"org.wvlet.airframe" %%% "airframe-log" % "0.78"
     )
 	)
 	.disablePlugins(RevolverPlugin)
   .jvmSettings(
     libraryDependencies ++= Seq(
-			"com.github.pathikrit" %% "better-files" % "3.6.0",
+			"com.github.pathikrit" %% "better-files" % "3.7.0",
 			"org.webjars" % "Semantic-UI" %  semanticUI,
 			"org.webjars" % "jquery" % jquery,
 			"org.webjars" % "webcomponentsjs" % webcomponents
@@ -108,8 +108,8 @@ lazy val cromwellClientJVM = cromwellClient.jvm
 
 lazy val cromwellClientJS = cromwellClient.js
 
-lazy val akka = "2.5.18"
-lazy val akkaHttp = "10.1.5"
+lazy val akka = "2.5.19"
+lazy val akkaHttp = "10.1.6"
 
 lazy val cromwellWeb = crossProject(JSPlatform, JVMPlatform)
 	.crossType(CrossType.Full)
@@ -123,7 +123,7 @@ lazy val cromwellWeb = crossProject(JSPlatform, JVMPlatform)
 
 		libraryDependencies  ++= Seq(
 			"com.github.japgolly.scalacss" % "core_2.12" % "0.5.5",
-			"org.wvlet.airframe" %%% "airframe-log" % "0.73"
+			"org.wvlet.airframe" %%% "airframe-log" % "0.78"
 		)
 	)
 	.jsSettings(
@@ -142,7 +142,7 @@ lazy val cromwellWeb = crossProject(JSPlatform, JVMPlatform)
 			"com.typesafe.akka" %% "akka-http-xml" % akkaHttp,
 			"com.vmunier" %% "scalajs-scripts" % "1.1.2",
       "de.heikoseeberger" %% "akka-http-circe" % "1.22.0",
-			"ch.megard" %% "akka-http-cors" % "0.3.1"
+			"ch.megard" %% "akka-http-cors" % "0.3.3"
 			//"com.pepegar" %% "hammock-akka-http" % hammockVersion
 		),
 		(managedClasspath in Runtime) += (packageBin in Assets).value,
