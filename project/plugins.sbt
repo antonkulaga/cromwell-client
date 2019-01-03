@@ -2,7 +2,7 @@ addSbtPlugin("org.foundweekends" % "sbt-bintray" % "0.5.1")
 
 addSbtPlugin("com.timushev.sbt" % "sbt-updates" % "0.3.4")
 
-addSbtPlugin("io.get-coursier" % "sbt-coursier" % "1.1.0-M8")
+addSbtPlugin("io.get-coursier" % "sbt-coursier" % "1.1.0-M9")
 
 addSbtPlugin("com.vmunier" % "sbt-web-scalajs" % "1.0.8-0.6")
 
