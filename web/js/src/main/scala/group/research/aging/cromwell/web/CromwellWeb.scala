@@ -1,10 +1,10 @@
 package group.research.aging.cromwell.web
 
 import group.research.aging.cromwell.client.CromwellClient
+import group.research.aging.cromwell.web.Messages.ExplainedError
 import group.research.aging.cromwell.web.communication.{WebsocketClient, WebsocketMessages}
 import org.querki.jquery._
 import wvlet.log.LogLevel
-
 
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 import scala.util.{Failure, Random, Success}
@@ -38,7 +38,7 @@ object CromwellWeb extends scala.App with Base {
     case other=>
       error("unexpected message from websocket!")
       error(other)
-      Results.ServerResult(EmptyAction)
+      Results.ServerResult(ExplainedError("unexpected message from websocket!", other.toString))
 
   }(Results.ServerResult(EmptyAction))
 
@@ -101,7 +101,8 @@ object CromwellWeb extends scala.App with Base {
           case c: Commands.Command => commands := c
           case r: Results.ActionResult => results := r
           case m: Messages.Message =>  messages := m
-          case other =>  error(s"Unkwon server message: \n ${other}")
+          case EmptyAction =>
+          case other =>  error(s"Unknwon server message: \n ${other}")
         }
       }
 

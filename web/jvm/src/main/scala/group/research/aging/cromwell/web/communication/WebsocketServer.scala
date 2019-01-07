@@ -53,7 +53,7 @@ class WebsocketServer(system: ActorSystem) extends LogSupport{
         .map{ c: WebsocketMessages.WebsocketMessage =>
           import io.circe.syntax._
           val js = c.asJson
-          debug("Sent:\n" + js.toString())
+          //debug("Sent:\n" + js.toString())
           TextMessage.Strict(js.toString())
         }
         .mapMaterializedValue { wsHandle =>
@@ -69,7 +69,7 @@ class WebsocketServer(system: ActorSystem) extends LogSupport{
           import io.circe.syntax._
           val m: WebsocketMessages.WebsocketMessage = WebsocketMessages.WebsocketAction(KeepAliveAction)//
           val js = m.asJson
-          debug("Sent:\n" + js.toString())
+          //debug("Sent:\n" + js.toString())
           TextMessage.Strict(js.toString())
           }
         )
