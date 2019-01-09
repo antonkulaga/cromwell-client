@@ -50,9 +50,9 @@ lazy val commonSettings = Seq(
 
 	exportJars := true,
 
-	scalacOptions ++= Seq( "-target:jvm-1.8", "-feature", "-language:_" ),
+	scalacOptions ++= Seq( "-feature", "-language:_" ),
 
-	javacOptions ++= Seq("-source", "1.8", "-target", "1.8", "-Xlint", "-J-Xss5M", "-encoding", "UTF-8")
+	javacOptions ++= Seq("-Xlint", "-J-Xss5M", "-encoding", "UTF-8")
 )
 
 commonSettings

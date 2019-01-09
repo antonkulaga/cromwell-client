@@ -47,6 +47,11 @@ case class UserActor(username: String) extends Actor with LogSupport {
       val metaFut: Future[Results.UpdatedMetadata] = client.getAllMetadata(WorkflowStatus.AnyStatus).map(m=> Results.UpdatedMetadata(m)).unsafeToFuture()
       pipe(metaFut)(context.dispatcher) to self
 
+    case u @ Results.UpdatedMetadata(m) =>
+      debug("UPDATED METADATA: ")
+      debug(u)
+      output.foreach(o=>o ! WebsocketMessages.WebsocketAction(u))
+
     case ChangeClient(newURL) =>
       debug(s"CHANGE CLIENT to ${newURL}!")
       val newClient = client.copy(base = newURL)
