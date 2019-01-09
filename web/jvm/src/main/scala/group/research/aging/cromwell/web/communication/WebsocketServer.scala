@@ -8,6 +8,7 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.stream.OverflowStrategy
 import akka.stream.scaladsl._
+import group.research.aging.cromwell.web.Commands.ChangeClient
 import group.research.aging.cromwell.web.KeepAliveAction
 import io.circe.parser.decode
 import wvlet.log.LogFormatter.SourceCodeLogFormatter
@@ -59,7 +60,7 @@ class WebsocketServer(system: ActorSystem) extends LogSupport{
         .mapMaterializedValue { wsHandle =>
           // the wsHandle is the way to talk back to the user, our wsUser actor needs to know about this to send
           // messages to the WebSocket user
-          val connection =WebsocketMessages.ConnectWsHandle(wsHandle)
+          val connection = WebsocketMessages.ConnectWsHandle(wsHandle)
           debug("Connection:\n" + connection)
           wsUser ! WebsocketMessages.ConnectWsHandle(wsHandle)
           // don't expose the wsHandle anymore

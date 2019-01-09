@@ -17,9 +17,10 @@ case class UserActor(username: String) extends Actor with LogSupport {
 //  val generator = new CentromereGenerator
 
 
-  protected def operation(output: List[ActorRef], client: CromwellClient = CromwellClient.localhost): Receive = {
+  protected def operation(output: List[ActorRef], client: CromwellClient): Receive = {
     case WebsocketMessages.ConnectWsHandle(ref) =>
-      this.context.become(operation(output :+ ref))
+      this.context.become(operation(output :+ ref, client))
+      ref ! WebsocketMessages.WebsocketAction(Results.UpdatedClient(client))
 
     case WebsocketMessages.WsHandleDropped =>
       info("Websocket HANDLER DROP!")
@@ -55,10 +56,6 @@ case class UserActor(username: String) extends Actor with LogSupport {
       val ab: Future[Commands.GetMetadata] =  client.abort(id).map(_=>Commands.GetMetadata(WorkflowStatus.AnyStatus)).unsafeToFuture()
       pipe(ab)(context.system.dispatcher).pipeTo(self)
 
-    case u @ Results.UpdatedMetadata(m) =>
-      debug("UPDATED METADATA: ")
-      debug(u)
-      output.foreach(o=>o ! WebsocketMessages.WebsocketAction(u))
 
     case e: Messages.Errors =>
       output.foreach(o=>o ! WebsocketMessages.WebsocketAction(e))
@@ -87,6 +84,7 @@ case class UserActor(username: String) extends Actor with LogSupport {
 
   }
 
-  override def receive: Receive = operation(Nil)
+  override def receive: Receive = operation(Nil, new CromwellClient(scala.util.Properties.envOrElse("CROMWELL", "http://localhost:8000" ))
+  )
 
 }

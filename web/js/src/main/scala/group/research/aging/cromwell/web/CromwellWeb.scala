@@ -95,8 +95,8 @@ object CromwellWeb extends scala.App with Base {
 
   lazy val resultsReducer: Reducer = {
 
-    case (previos, Results.ServerResult(action)) =>
-      previos.withEffect{() =>
+    case (previous, Results.ServerResult(action)) =>
+      previous.withEffect{() =>
         action match {
           case c: Commands.Command => commands := c
           case r: Results.ActionResult => results := r
@@ -110,6 +110,8 @@ object CromwellWeb extends scala.App with Base {
       println("not yet sure what to do with updated status")
       previous
 
+
+    case (previous, upd: Results.UpdatedClient) => previous.copy(client = upd.client, errors = Nil)
     case (previous, upd: Results.UpdatedMetadata) => previous.copy(metadata = upd.metadata, errors = Nil)
 
   }
