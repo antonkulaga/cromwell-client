@@ -43,9 +43,9 @@ trait CromwellClientLike {
 
   def getCallOutputs(id: String): IO[CallOutputs]
 
-  def getQuery(status: WorkflowStatus = WorkflowStatus.AnyStatus): IO[QueryResults]
+  def getQuery(status: WorkflowStatus = WorkflowStatus.AnyStatus, includeSubworkflows: Boolean = false): IO[QueryResults]
 
-  def getAllCallOutputs(status: WorkflowStatus = WorkflowStatus.AnyStatus): IO[List[CallOutputs]]
+  def getAllCallOutputs(status: WorkflowStatus = WorkflowStatus.AnyStatus, includeSubworkflows: Boolean = false): IO[List[CallOutputs]]
 
   def getLogs(id: String): IO[Logs]
 

@@ -92,7 +92,7 @@ class WorkflowsView(allMetadata: Rx[List[Metadata]], host: Rx[String], commands:
       <table id="workflows" class="ui small padded striped celled table">
       <tbody>
         <tr>
-          <th>name/id</th><td class={statusClass(r.status)}><h3>{r.workflowName.getOrElse("NO NAME")}</h3>{r.id}</td>
+          <th>name/id</th><td class={statusClass(r.status)}><h3>{r.workflowName}</h3>{r.id}</td>
           <th>status</th> <td class={statusClass(r.status)}><h3>{r.status}</h3>{
             {if(r.status == "Running") <button class="ui button"  onclick={ abort(r.id) _}><i class="stop icon"></i></button> else <span/>}
           }</td>
@@ -107,7 +107,7 @@ class WorkflowsView(allMetadata: Rx[List[Metadata]], host: Rx[String], commands:
           <th>date</th><td>{r.dates}</td>
         </tr>
         <tr>
-          <th >root</th><td colspan="3"><a href={host.map(h=> h + r.workflowRoot.getOrElse(""))}  target ="_blank">{r.workflowRoot.getOrElse("")}</a></td>
+          <th >root</th><td colspan="3"><a href={host.map(h=> h + r.workflowRoot)}  target ="_blank">{r.workflowRoot}</a></td>
         </tr>
       </tbody>
     </table>
@@ -142,7 +142,7 @@ class WorkflowsView(allMetadata: Rx[List[Metadata]], host: Rx[String], commands:
       </div>
     </div>
 
-  def rowCallsTable(r: Metadata): Elem = if(r.calls.isDefined && r.calls.get.nonEmpty)
+  def rowCallsTable(r: Metadata): Elem = if(r.calls.nonEmpty)
     <table class="ui small collapsing table">
       <thead>
         <tr>
@@ -155,7 +155,7 @@ class WorkflowsView(allMetadata: Rx[List[Metadata]], host: Rx[String], commands:
         </tr>
       </thead>
       <tbody>
-        {r.calls.map(_.toList).getOrElse(Nil)
+        {r.calls.toList
         .flatMap(kv=> callRow(kv._1, kv._2, host))}
       </tbody>
     </table>
@@ -164,16 +164,16 @@ class WorkflowsView(allMetadata: Rx[List[Metadata]], host: Rx[String], commands:
   def callRow(name: String, calls: List[LogCall], fileHost: Rx[String]): List[Elem] =
       calls.map(c=>
         <tr>
-          <td><a href={fileHost.map(h=> h + c.callRoot.getOrElse(""))} target="_blank">{name}</a></td>
-          <td class={statusClass(c.executionStatus.getOrElse(""))}>{c.executionStatus}</td>
-          <td><a href={fileHost.map(h=> h + c.stdout.getOrElse(""))}  target ="_blank">{c.stdout}</a></td>
-          <td><a href={fileHost.map(h=> h + c.stderr.getOrElse(""))} target ="_blank">{c.stderr}</a></td>
-          <td>{c.callCaching.fold("")(r=>r.result.getOrElse(""))}</td>
+          <td><a href={fileHost.map(h=> h + c.callRoot)} target="_blank">{name}</a></td>
+          <td class={statusClass(c.executionStatus)}>{c.executionStatus}</td>
+          <td><a href={fileHost.map(h=> h + c.stdout)}  target ="_blank">{c.stdout}</a></td>
+          <td><a href={fileHost.map(h=> h + c.stderr)} target ="_blank">{c.stderr}</a></td>
+          <td>{c.callCaching.fold("")(r=>r.result)}</td>
           <td>{c.shardIndex}</td>
         </tr>
       )
 
-  def rowFailures(r: Metadata): List[Elem] = r.failures.getOrElse(List.empty[WorkflowFailure]).map(f=>
+  def rowFailures(r: Metadata): List[Elem] = r.failures.map(f=>
     <div class="ui negative message">
       {f.message}
       <p> {f.causedBy.mkString}</p>

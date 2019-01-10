@@ -71,18 +71,18 @@ trait CromwellClientShared extends RosHttp with CromwellClientLike {
 
   def getCallOutputs(id: String): IO[CallOutputs] = getAPI[CallOutputs](s"/workflows/${version}/${id}/outputs")
 
-  protected def queryString(status: WorkflowStatus = WorkflowStatus.AnyStatus): String = status match {
+  protected def queryString(status: WorkflowStatus = WorkflowStatus.AnyStatus, includeSubworkflows: Boolean = false): String = status match {
     case WorkflowStatus.AnyStatus => s"/workflows/${version}/query"
-    case status: WorkflowStatus =>   s"/workflows/${version}/query?status=${status.entryName}"
+    case status: WorkflowStatus =>   s"/workflows/${version}/query?status=${status.entryName}&includeSubworkflows=${includeSubworkflows}"
   }
 
-  def getQuery(status: WorkflowStatus = WorkflowStatus.AnyStatus): IO[QueryResults] = {
-    val url = queryString(status)
+  def getQuery(status: WorkflowStatus = WorkflowStatus.AnyStatus, includeSubworkflows: Boolean = false): IO[QueryResults] = {
+    val url = queryString(status, includeSubworkflows)
     getAPI[QueryResults](url)
   }
 
-  def getAllCallOutputs(status: WorkflowStatus = WorkflowStatus.AnyStatus): IO[List[CallOutputs]] =
-    getQuery(status).flatMap(q=>
+  def getAllCallOutputs(status: WorkflowStatus = WorkflowStatus.AnyStatus, includeSubworkflows: Boolean = false): IO[List[CallOutputs]] =
+    getQuery(status, includeSubworkflows).flatMap(q=>
       q.results.map(r=>this.getCallOutputs(r.id)).sequence
     )
 
@@ -98,7 +98,7 @@ trait CromwellClientShared extends RosHttp with CromwellClientLike {
   def getMetadata(id: String, v: String = "v2", expandSubWorkflows: Boolean = true): IO[Metadata] =
     getAPI[Metadata](s"/workflows/${v}/${id}/metadata?expandSubWorkflows=${expandSubWorkflows}")
 
-  def getAllMetadata(status: WorkflowStatus = WorkflowStatus.AnyStatus): IO[List[Metadata]] = getQuery(status).flatMap(q=>
+  def getAllMetadata(status: WorkflowStatus = WorkflowStatus.AnyStatus): IO[List[Metadata]] = getQuery(status, false).flatMap(q=>
     q.results.map(r=>this.getMetadata(r.id)).sequence
   )
 
