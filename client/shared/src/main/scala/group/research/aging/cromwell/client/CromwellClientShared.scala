@@ -72,7 +72,7 @@ trait CromwellClientShared extends RosHttp with CromwellClientLike {
   def getCallOutputs(id: String): IO[CallOutputs] = getAPI[CallOutputs](s"/workflows/${version}/${id}/outputs")
 
   protected def queryString(status: WorkflowStatus = WorkflowStatus.AnyStatus, includeSubworkflows: Boolean = false): String = status match {
-    case WorkflowStatus.AnyStatus => s"/workflows/${version}/query"
+    case WorkflowStatus.AnyStatus => s"/workflows/${version}/query?includeSubworkflows=${includeSubworkflows}"
     case status: WorkflowStatus =>   s"/workflows/${version}/query?status=${status.entryName}&includeSubworkflows=${includeSubworkflows}"
   }
 

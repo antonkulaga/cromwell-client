@@ -101,8 +101,8 @@ object CromwellWeb extends scala.App with Base {
           case c: Commands.Command => commands := c
           case r: Results.ActionResult => results := r
           case m: Messages.Message =>  messages := m
-          case EmptyAction =>
-          case other =>  error(s"Unknwon server message: \n ${other}")
+          case EmptyAction | KeepAliveAction =>
+          case other =>  error(s"Unknown server message: \n ${other}")
         }
       }
 

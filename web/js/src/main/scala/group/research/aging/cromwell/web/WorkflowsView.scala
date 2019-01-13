@@ -119,27 +119,19 @@ class WorkflowsView(allMetadata: Rx[List[Metadata]], host: Rx[String], commands:
       <div class="header">Inputs:</div>
       <div class="ui list">
         {
-        r.inputs.values.toList.map(kv=>
-          <div class="item">
-            { un(kv._1) + " = " + un(kv._2) }
-          </div>
-        )
+          <code class="item">
+            { r.inputs.spaces4 }
+          </code>
         }
       </div>
     </div>
 
-  def rowOutputs(r: Metadata): Elem = if(r.outputs.values.isEmpty) <br/> else
+  def rowOutputs(r: Metadata): Elem = if(r.outputs.isNull) <br/> else
     <div class="ui positive message">
       <div class="header">Outputs:</div>
-      <div class="ui list">
-        {
-        r.outputs.values.toList.map(kv=>
-          <div class="item">
-            { un(kv._1) + " = " + un(kv._2) }
-          </div>
-        )
-        }
-      </div>
+      <code class="ui list">
+        {  r.outputs.spaces4 }
+      </code>
     </div>
 
   def rowCallsTable(r: Metadata): Elem = if(r.calls.nonEmpty)

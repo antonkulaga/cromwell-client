@@ -41,24 +41,7 @@ package object client {
 
   }
 
-  case class WorkflowOutputs(values: Map[String, String]) extends CromwellResponse
-
-  object WorkflowOutputs {
-    import io.circe.syntax._
-    implicit val encode: Encoder[WorkflowOutputs] = (a: WorkflowOutputs) => a.values.asJson
-
-    implicit val decode: Decoder[WorkflowOutputs] = (c: HCursor) => c.focus match {
-      case None => Left(DecodingFailure("Cannot extract workflow output!", c.history))
-      case Some(json) => Right(WorkflowOutputs(json.asObject.map(o => o.toMap.mapValues(v => v.toString())).get))
-    }
-
-    lazy val empty = WorkflowOutputs(Map.empty[String, String])
-
-  }
-
-
-  case class Inputs(values: Map[String, String]) extends CromwellResponse
-
+  /*
   object Inputs {
     import io.circe.syntax._
     implicit val encode: Encoder[Inputs] = (a: Inputs) => a.values.asJson
@@ -72,14 +55,17 @@ package object client {
 
   }
 
+  //@ConfiguredJsonCodec
+  case class Inputs(values: Map[String, String] = Map.empty[String, String]) extends CromwellResponse
+*/
 
   object QueryResults {
     lazy val empty = QueryResults(Nil)
   }
 
-  @ConfiguredJsonCodec  case class QueryResults(results: List[QueryResult]) extends CromwellResponse
+  @ConfiguredJsonCodec case class QueryResults(results: List[QueryResult]) extends CromwellResponse
 
-  @ConfiguredJsonCodec  case class QueryResult(id: String, status: String, start: String = "", end: String = "") extends WorkflowResponse
+  @ConfiguredJsonCodec case class QueryResult(id: String, status: String, start: String = "", end: String = "") extends WorkflowResponse
 
 
   //implicit val config: Configuration = Configuration.default.withSnakeCaseKeys
@@ -93,8 +79,8 @@ package object client {
                                             status: String = "",
                                             start: String = "",
                                             end: String = "",
-                                            inputs: Inputs,
-                                            outputs: WorkflowOutputs = WorkflowOutputs.empty,
+                                            inputs: Json,//Inputs,
+                                            outputs: Json,//WorkflowOutputs = WorkflowOutputs.empty,
                                             failures: List[WorkflowFailure] = Nil,
                                             submittedFiles: SubmittedFiles = SubmittedFiles.empty,
                                             workflowName: String = "",
