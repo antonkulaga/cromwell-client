@@ -1,35 +1,34 @@
 package group.research.aging.cromwell.web.server
 
 import akka.actor.ActorSystem
-import akka.actor.Status.Success
-import akka.http.scaladsl.model.StatusCodes.Redirection
+import akka.http.scaladsl.marshallers.xml.ScalaXmlSupport._
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.{HttpApp, Route, RouteResult}
+import akka.http.scaladsl.{Http, HttpExt, model, server}
+import akka.stream.ActorMaterializer
+import better.files.File
 import cats.effect.IO
-import hammock.jvm.Interpreter
-import scalacss.DevDefaults._
-import io.circe.generic.auto._
-import de.heikoseeberger.akkahttpcirce._
-import akka.http.scaladsl.marshallers.xml.ScalaXmlSupport._
-import akka.http.scaladsl.{Http, HttpExt, model}
-import akka.http.scaladsl.model.Uri.Authority
-import akka.http.scaladsl.model.headers.{Host, HttpOriginRange, RawHeader}
-
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.xml.Unparsed
 import ch.megard.akka.http.cors.scaladsl.CorsDirectives._
-import ch.megard.akka.http.cors.scaladsl.model.HttpHeaderRange
-import ch.megard.akka.http.cors.scaladsl.settings.CorsSettings
+import de.heikoseeberger.akkahttpcirce._
+import group.research.aging.cromwell.client
+import group.research.aging.cromwell.client.CromwellClient
 import group.research.aging.cromwell.web.communication.WebsocketServer
+import hammock.akka.AkkaInterpreter
+import io.circe.generic.auto._
+import scalacss.DevDefaults._
 import wvlet.log.LogFormatter.SourceCodeLogFormatter
 import wvlet.log.{LogLevel, LogSupport, Logger}
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import scala.xml.Unparsed
+import cats.effect.IO
+import cats.free.Free
+import io.circe.Json
+
 
 // Server definition
 object WebServer extends HttpApp with FailFastCirceSupport with LogSupport{
-
-
 
   // Set the default log formatter
   Logger.setDefaultFormatter(SourceCodeLogFormatter)
@@ -37,8 +36,12 @@ object WebServer extends HttpApp with FailFastCirceSupport with LogSupport{
 
   lazy val webjarsPrefix = "lib"
   lazy val resourcePrefix = "public"
+  implicit val materializer = ActorMaterializer()(system)
 
-  implicit  protected def getInterpreter: Interpreter[IO] = Interpreter[IO]
+  //implicit  protected def getInterpreter: Interpreter[IO] = Interpreter[IO]
+  import hammock.akka.implicits._
+  implicit protected def getInterpreter: AkkaInterpreter[IO] =
+    new AkkaInterpreter[IO](http)
 
   def mystyles: Route =  path("styles" / "mystyles.css"){
     complete  {
@@ -78,6 +81,63 @@ object WebServer extends HttpApp with FailFastCirceSupport with LogSupport{
       getFromResource("public/" + file)
     }
   }
+
+  def browse: Route = pathPrefix("data" / Remaining) { file =>
+    val folder = scala.util.Properties.envOrElse("DATA", "/data") + "/" + file
+    getFromBrowseableDirectories(folder)
+  }
+
+  def withCromwell(fun: (CromwellClient, client.WorkflowStatus, Boolean) => Json): Route = parameters("host".?, "status".?, "subworkflows".as[Boolean].?) {
+    (hostOpt, statusOpt, incOpt) =>
+      val c = hostOpt.map(CromwellClient(_)).getOrElse(CromwellClient.default)
+      val status = statusOpt.getOrElse(client.WorkflowStatus.AnyStatus.entryName)
+      val st: client.WorkflowStatus = client.WorkflowStatus.lowerCaseNamesToValuesMap.getOrElse(status, client.WorkflowStatus.AnyStatus)
+      complete(fun(c, st, incOpt.getOrElse(true)))
+  }
+
+  def withCromwell(fun: CromwellClient => Json): Route = parameters("host".?) {
+    hostOpt =>
+      val c = hostOpt.map(CromwellClient(_)).getOrElse(CromwellClient.default)
+      complete(fun(c))
+  }
+
+
+  def api: server.Route = pathPrefix("api"){
+    import hammock._
+    import hammock.marshalling._
+    import hammock.circe.implicits._
+    path("all") {
+     withCromwell{ (c, status, sub)=>
+          val meta = c.getAllMetadata(status, sub)
+          import io.circe.syntax._
+          meta.unsafeRunSync().asJson
+      }
+    } ~ pathPrefix("metadata" / Remaining) { id =>
+       withCromwell{ (c, status, sub)=>
+         val meta = c.getMetadata(id, expandSubWorkflows = sub)
+         import io.circe.syntax._
+         meta.unsafeRunSync().asJson
+       }
+    }  ~ pathPrefix("outputs" / Remaining) { id =>
+         withCromwell{ (c, _, _)=>
+           val outputs = c.getOutputs(id)
+           import io.circe.syntax._
+           outputs.unsafeRunSync().asJson
+         }
+       } ~ pathPrefix("status" / Remaining) { id =>
+        withCromwell{ c =>
+          val result = c.getStatus(id)
+          import io.circe.syntax._
+          c.getEngineStatus
+          result.unsafeRunSync().asJson
+        }
+      } /*~ pathPrefix("pipeline" / Remaining) { wld =>
+        val folder =
+      File(wdl)
+      }
+      */
+  }
+
   implicit lazy val http: HttpExt = Http(this.systemReference.get())
 
   def proxy(request: HttpRequest, url: model.Uri): Future[RouteResult] = {
@@ -103,9 +163,7 @@ object WebServer extends HttpApp with FailFastCirceSupport with LogSupport{
   import cats.effect.IO
   import cats.free.Free
   import hammock._
-  import hammock.circe.implicits._
   import hammock.marshalling._
-  import io.circe.Json
 
   def get(path: String, headers: Map[String, String] = Map.empty): Free[HttpF, HttpResponse] = Hammock.request(Method.GET, Uri.unsafeParse(path), headers)
 
@@ -114,12 +172,17 @@ object WebServer extends HttpApp with FailFastCirceSupport with LogSupport{
 
   implicit lazy val system = ActorSystem("chat")
 
+  lazy val websocketServer: WebsocketServer = new WebsocketServer(system)
 
-  lazy val websocketServer = new WebsocketServer(system)
-
-
-  override def routes: Route = cors(){index~ websocketServer.route ~ webjars ~ mystyles ~ assets ~ loadResources ~redirect}
-
-
+  override def routes: Route = cors(){index~
+    websocketServer.route ~
+    webjars ~
+    mystyles ~
+    assets ~
+    browse ~
+    api ~
+    loadResources ~
+    redirect
+  }
 
 }

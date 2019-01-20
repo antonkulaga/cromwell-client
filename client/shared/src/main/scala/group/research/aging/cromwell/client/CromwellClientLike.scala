@@ -41,11 +41,11 @@ trait CromwellClientLike {
     */
   def abort(id: String): IO[group.research.aging.cromwell.client.StatusInfo]
 
-  def getCallOutputs(id: String): IO[CallOutputs]
+  def getOutputs(id: String): IO[CallOutputs]
 
   def getQuery(status: WorkflowStatus = WorkflowStatus.AnyStatus, includeSubworkflows: Boolean = false): IO[QueryResults]
 
-  def getAllCallOutputs(status: WorkflowStatus = WorkflowStatus.AnyStatus, includeSubworkflows: Boolean = false): IO[List[CallOutputs]]
+  def getAllOutputs(status: WorkflowStatus = WorkflowStatus.AnyStatus, includeSubworkflows: Boolean = false): IO[List[CallOutputs]]
 
   def getLogs(id: String): IO[Logs]
 
@@ -55,7 +55,7 @@ trait CromwellClientLike {
 
   def getMetadata(id: String, v: String = "v2", expandSubWorkflows: Boolean = true): IO[Metadata]
 
-  def getAllMetadata(status: WorkflowStatus = WorkflowStatus.AnyStatus): IO[List[Metadata]]
+  def getAllMetadata(status: WorkflowStatus = WorkflowStatus.AnyStatus, includeSubworkflows: Boolean = true): IO[List[Metadata]]
 
 
   def postWorkflowStrings(fileContent: String,

@@ -79,8 +79,8 @@ package object client {
                                             status: String = "",
                                             start: String = "",
                                             end: String = "",
-                                            inputs: Json,//Inputs,
-                                            outputs: Json,//WorkflowOutputs = WorkflowOutputs.empty,
+                                            inputs: Json = Json.obj(),//Inputs,
+                                            outputs: Json = Json.obj(),//WorkflowOutputs = WorkflowOutputs.empty,
                                             failures: List[WorkflowFailure] = Nil,
                                             submittedFiles: SubmittedFiles = SubmittedFiles.empty,
                                             workflowName: String = "",
@@ -108,7 +108,7 @@ package object client {
 
   @ConfiguredJsonCodec case class Logs(id: String, calls: Option[Map[String, List[LogCall]]] = None) extends WorkflowResponse
 
-  @ConfiguredJsonCodec case class LogCall(stderr: Option[String] , stdout: Option[String], attempt: Int, shardIndex: Int,
+  @ConfiguredJsonCodec case class LogCall(stderr: String = "" , stdout: String = "", attempt: Int = 0, shardIndex: Int,
                                           callRoot: String = "",
                                           executionStatus: String = "",
                                           callCaching: Option[CallCaching] = None) extends CromwellResponse

@@ -5,7 +5,6 @@ import java.nio.ByteBuffer
 
 import better.files._
 import cats.effect.IO
-import hammock.jvm.Interpreter
 
 import scala.concurrent.Future
 
@@ -16,8 +15,6 @@ trait CromwellClientJVMSpecific {
   self: CromwellClientShared =>
 
   import  implicits._
-
-  implicit override protected def getInterpreter: Interpreter[IO] = Interpreter[IO]
 
 
   protected def zipFolder(file: File) = {

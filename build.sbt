@@ -57,7 +57,7 @@ lazy val commonSettings = Seq(
 
 commonSettings
 
-lazy val hammockVersion = "0.8.7"
+lazy val hammockVersion = "0.9.0"
 
 lazy val semanticUI = "2.4.1"
 
@@ -82,7 +82,7 @@ lazy val  cromwellClient = crossProject(JSPlatform, JVMPlatform)
 			"com.lihaoyi" %%% "pprint" % "0.5.3",
 			//"org.typelevel" %%% "cats-core"      % "1.3.1",
 			//"org.typelevel" %%% "cats-effect"     % "1.0.0",
-			"io.circe" %%% "circe-generic-extras" % "0.10.1",
+			"io.circe" %%% "circe-generic-extras" % "0.11.1",
 			"com.pepegar" %%% "hammock-circe" % hammockVersion,
 			"org.wvlet.airframe" %%% "airframe-log" % "0.78"
     )
@@ -91,9 +91,8 @@ lazy val  cromwellClient = crossProject(JSPlatform, JVMPlatform)
   .jvmSettings(
     libraryDependencies ++= Seq(
 			"com.github.pathikrit" %% "better-files" % "3.7.0",
-			"org.webjars" % "Semantic-UI" %  semanticUI,
-			"org.webjars" % "jquery" % jquery,
-			"org.webjars" % "webcomponentsjs" % webcomponents
+			"com.pepegar" %% "hammock-apache-http" % hammockVersion,
+			"com.pepegar" %% "hammock-akka-http" % hammockVersion
     )
   )
   .jsSettings(
@@ -109,7 +108,7 @@ lazy val cromwellClientJVM = cromwellClient.jvm
 lazy val cromwellClientJS = cromwellClient.js
 
 lazy val akka = "2.5.19"
-lazy val akkaHttp = "10.1.6"
+lazy val akkaHttp = "10.1.7"
 
 lazy val cromwellWeb = crossProject(JSPlatform, JVMPlatform)
 	.crossType(CrossType.Full)
@@ -129,7 +128,7 @@ lazy val cromwellWeb = crossProject(JSPlatform, JVMPlatform)
 	.jsSettings(
 		libraryDependencies ++= Seq(
 			"in.nvilla" %%% "monadic-html" % "0.4.0-RC1",
-			"org.akka-js" %%% "akkajsactorstream" % "1.2.5.16"
+			"org.akka-js" %%% "akkajsactorstream" % "1.2.5.19"
 		),
 		jsEnv := new org.scalajs.jsenv.jsdomnodejs.JSDOMNodeJSEnv,
 		scalaJSUseMainModuleInitializer := true
@@ -140,12 +139,15 @@ lazy val cromwellWeb = crossProject(JSPlatform, JVMPlatform)
 			"com.typesafe.akka" %% "akka-stream" % akka,
 			"com.typesafe.akka" %% "akka-http" % akkaHttp,
 			"com.typesafe.akka" %% "akka-http-xml" % akkaHttp,
+			"com.github.swagger-akka-http" %% "swagger-akka-http" % "2.0.1",
 			"com.vmunier" %% "scalajs-scripts" % "1.1.2",
-      "de.heikoseeberger" %% "akka-http-circe" % "1.22.0",
-			"ch.megard" %% "akka-http-cors" % "0.3.3"
-			//"com.pepegar" %% "hammock-akka-http" % hammockVersion
+      "de.heikoseeberger" %% "akka-http-circe" % "1.24.3",
+			"ch.megard" %% "akka-http-cors" % "0.3.4",
+			"org.webjars" % "Semantic-UI" %  semanticUI,
+			"org.webjars" % "jquery" % jquery,
+			"org.webjars" % "webcomponentsjs" % webcomponents
 		),
-		(managedClasspath in Runtime) += (packageBin in Assets).value,
+		//(managedClasspath in Runtime) += (packageBin in Assets).value,
 		//pipelineStages in Assets := Seq(scalaJSProd),
 		pipelineStages in Assets := Seq(scalaJSDev), //to make compilation faster
 		//compile in Compile := ((compile in Compile) dependsOn scalaJSProd).value,
@@ -166,4 +168,4 @@ lazy val webJVM = cromwellWeb.jvm.settings(
 
 mainClass in Compile := (mainClass in webJVM in Compile).value
 
-(fullClasspath in Runtime) += (packageBin in webJVM in Assets).value
+//(fullClasspath in Runtime) += (packageBin in webJVM in Assets).value
