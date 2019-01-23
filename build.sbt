@@ -84,7 +84,7 @@ lazy val  cromwellClient = crossProject(JSPlatform, JVMPlatform)
 			//"org.typelevel" %%% "cats-effect"     % "1.0.0",
 			"io.circe" %%% "circe-generic-extras" % "0.11.1",
 			"com.pepegar" %%% "hammock-circe" % hammockVersion,
-			"org.wvlet.airframe" %%% "airframe-log" % "0.78"
+			"org.wvlet.airframe" %%% "airframe-log" % "0.79"
     )
 	)
 	.disablePlugins(RevolverPlugin)
@@ -139,15 +139,18 @@ lazy val cromwellWeb = crossProject(JSPlatform, JVMPlatform)
 			"com.typesafe.akka" %% "akka-stream" % akka,
 			"com.typesafe.akka" %% "akka-http" % akkaHttp,
 			"com.typesafe.akka" %% "akka-http-xml" % akkaHttp,
+			"javax.ws.rs" % "javax.ws.rs-api" % "2.0.1", //for extra annotations
 			"com.github.swagger-akka-http" %% "swagger-akka-http" % "2.0.1",
+			"com.github.swagger-akka-http" %% "swagger-scala-module" % "2.0.3",
 			"com.vmunier" %% "scalajs-scripts" % "1.1.2",
       "de.heikoseeberger" %% "akka-http-circe" % "1.24.3",
 			"ch.megard" %% "akka-http-cors" % "0.3.4",
 			"org.webjars" % "Semantic-UI" %  semanticUI,
 			"org.webjars" % "jquery" % jquery,
-			"org.webjars" % "webcomponentsjs" % webcomponents
+			"org.webjars" % "webcomponentsjs" % webcomponents,
+			"org.webjars" % "swagger-ui" % "3.20.5" //Swagger UI
 		),
-		//(managedClasspath in Runtime) += (packageBin in Assets).value,
+		(managedClasspath in Runtime) += (packageBin in Assets).value,
 		//pipelineStages in Assets := Seq(scalaJSProd),
 		pipelineStages in Assets := Seq(scalaJSDev), //to make compilation faster
 		//compile in Compile := ((compile in Compile) dependsOn scalaJSProd).value,
@@ -168,4 +171,4 @@ lazy val webJVM = cromwellWeb.jvm.settings(
 
 mainClass in Compile := (mainClass in webJVM in Compile).value
 
-//(fullClasspath in Runtime) += (packageBin in webJVM in Assets).value
+(fullClasspath in Runtime) += (packageBin in webJVM in Assets).value

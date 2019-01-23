@@ -104,7 +104,7 @@ def postWorkflow2(fileContent: String,
 
   def postWorkflowStrings(fileContent: String,
                           workflowInputs: String,
-                          workflowOptions: String,
+                          workflowOptions: String = "",
                           workflowDependencies: Option[java.nio.ByteBuffer] = None
                          ): Future[group.research.aging.cromwell.client.StatusInfo] = {
     val inputs: List[(String, BodyPart)] = if (workflowInputs == "") Nil else
