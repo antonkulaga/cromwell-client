@@ -9,7 +9,10 @@ import group.research.aging.cromwell.web.communication.WebsocketMessages.Websock
 import akka.pattern.pipe
 import scala.concurrent.Future
 
-
+/**
+  * Actors that proccesses most of websocket messages from the users and back
+  * @param username
+  */
 case class UserActor(username: String) extends Actor with LogSupport {
 
   debug(s"user actor ${username}")

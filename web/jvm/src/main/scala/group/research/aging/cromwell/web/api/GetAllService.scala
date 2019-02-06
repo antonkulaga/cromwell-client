@@ -1,6 +1,5 @@
 package group.research.aging.cromwell.web.api
 
-
 import akka.http.scaladsl.server._
 import group.research.aging.cromwell.client
 import io.swagger.v3.oas.annotations._
@@ -15,7 +14,7 @@ class GetAllService extends CromwellClientService {
   @Path("/all")
   @Operation(summary = "Return all metadata", description = "Return all metadata",
     parameters = Array(
-      new Parameter(name = "host", in = ParameterIn.QUERY, description = "url to the cromwell server"),
+      new Parameter(name = "server", in = ParameterIn.QUERY, description = "url to the cromwell server"),
       new Parameter(name = "status", in = ParameterIn.QUERY, description = "show only workflows with some status"),
       new Parameter(name = "subworkflows", in = ParameterIn.QUERY, description = "if subworkflows should be shown")
     ),

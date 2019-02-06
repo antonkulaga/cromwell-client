@@ -7,7 +7,10 @@ import group.research.aging.cromwell.client.CromwellClient
 import io.circe.Json
 import wvlet.log.LogSupport
 
-trait CromwellClientService  extends Directives with FailFastCirceSupport with LogSupport  {
+/**
+  * Basic trait for services that have to deal with CromwellServer
+  */
+trait CromwellClientService extends Directives with FailFastCirceSupport with LogSupport  {
 
   implicit def myRejectionHandler: RejectionHandler =
     RejectionHandler.newBuilder()
@@ -24,9 +27,9 @@ trait CromwellClientService  extends Directives with FailFastCirceSupport with L
     * @param fun
     * @return
     */
-  def withCromwell(fun: (CromwellClient, client.WorkflowStatus, Boolean) => Json): Route = parameters("host".?, "status".?, "subworkflows".as[Boolean].?) {
-    (hostOpt, statusOpt, incOpt) =>
-      val c = hostOpt.map(CromwellClient(_)).getOrElse(CromwellClient.default)
+  def withCromwell(fun: (CromwellClient, client.WorkflowStatus, Boolean) => Json): Route = parameters("server".?, "status".?, "subworkflows".as[Boolean].?) {
+    (serverOpt, statusOpt, incOpt) =>
+      val c = serverOpt.map(CromwellClient(_)).getOrElse(CromwellClient.default)
       val status = statusOpt.getOrElse(client.WorkflowStatus.AnyStatus.entryName)
       val st: client.WorkflowStatus = client.WorkflowStatus.lowerCaseNamesToValuesMap.getOrElse(status, client.WorkflowStatus.AnyStatus)
       complete(fun(c, st, incOpt.getOrElse(true)))
@@ -37,9 +40,9 @@ trait CromwellClientService  extends Directives with FailFastCirceSupport with L
     * @param fun
     * @return
     */
-  def withCromwell(fun: CromwellClient => Json): Route = parameters("host".?) {
-    hostOpt =>
-      val c = hostOpt.map(CromwellClient(_)).getOrElse(CromwellClient.default)
+  def withCromwell(fun: CromwellClient => Json): Route = parameters("server".?) {
+    serverOpt =>
+      val c = serverOpt.map(CromwellClient(_)).getOrElse(CromwellClient.default)
       complete(fun(c))
   }
 

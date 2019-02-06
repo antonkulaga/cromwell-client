@@ -80,3 +80,16 @@ val client = CromwellClient.localhost
 val id = "548a191d-deaf-4ad8-9c9c-9083b6ecbff8"
 val outputs = client.getOutputs(id)
 ```
+
+CromwellWeb REST API
+---------------------
+
+Cromwell Web also allows has some REST API to run bioinformatic workflows. 
+It is similar to cromwell and call cromwell server underneath 
+/api/ shows swagger interface with docs.
+```
+http://localhost:8001/api/all
+```
+```aidl
+http://localhost:8001/api/run/<workflows_name>/
+```

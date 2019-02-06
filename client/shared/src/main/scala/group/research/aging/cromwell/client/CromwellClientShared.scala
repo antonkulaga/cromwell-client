@@ -23,13 +23,13 @@ trait CromwellClientShared extends RosHttp with CromwellClientLike {
 
   def makeWorkflowOptions(output: String, log: String="", call_log: String = ""): String =
     s"""
-      |{
-      | "write_to_cache": true,
-      | "read_from_cache": true,
-      | "final_workflow_CallOutputs_dir": "${output}",
-      | ${if(log!="") s""" "final_workflow_log_dir": "${log}", """ else ""}
-      | ${if (call_log != "") s""" "final_call_logs_dir": "${call_log}", """ else ""}
-      |}
+      {
+       "write_to_cache": true,
+       "read_from_cache": true,
+       "final_workflow_CallOutputs_dir": "${output}",
+       ${if(log!="") s""" "final_workflow_log_dir": "${log}", """ else ""}
+       ${if (call_log != "") s""" "final_call_logs_dir": "${call_log}", """ else ""}
+      }
     """.stripMargin
 
 

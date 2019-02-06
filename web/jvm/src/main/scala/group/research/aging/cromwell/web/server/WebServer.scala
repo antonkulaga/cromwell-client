@@ -21,11 +21,10 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.xml.Unparsed
 
-// Server definition
+/**
+  * Cromwell UI webserver
+  */
 object WebServer extends HttpApp with FailFastCirceSupport with LogSupport {
-
-  //override val apiClasses: Set[Class[_]] = Set.empty//(classOf[PetService], classOf[UserService], classOf[StoreService])
-
 
   // Set the default log formatter
   Logger.setDefaultFormatter(SourceCodeLogFormatter)
@@ -33,7 +32,7 @@ object WebServer extends HttpApp with FailFastCirceSupport with LogSupport {
 
   lazy val webjarsPrefix = "lib"
   lazy val resourcePrefix = "public"
-  implicit val materializer = ActorMaterializer()(system)
+  implicit val materializer: ActorMaterializer = ActorMaterializer()(system)
 
   //implicit  protected def getInterpreter: Interpreter[IO] = Interpreter[IO]
   implicit protected def getInterpreter: AkkaInterpreter[IO] =
@@ -105,7 +104,7 @@ object WebServer extends HttpApp with FailFastCirceSupport with LogSupport {
         //redirect(url, StatusCodes.TemporaryRedirect)
       }
   }
-
+/*
   import cats.effect.IO
   import cats.free.Free
   import hammock._
@@ -115,7 +114,7 @@ object WebServer extends HttpApp with FailFastCirceSupport with LogSupport {
 
   def getIO[T](subpath: String, headers: Map[String, String] = Map.empty)(implicit D: Decoder[T], M: MarshallC[HammockF]): IO[T] =
     get(subpath, headers).as[T](D, M).exec[IO]
-
+*/
   implicit lazy val system = ActorSystem("chat")
 
   lazy val websocketServer: WebsocketServer = new WebsocketServer(system)
@@ -123,7 +122,7 @@ object WebServer extends HttpApp with FailFastCirceSupport with LogSupport {
   override def routes: Route = cors(){
     index~
     websocketServer.route ~
-    RestAPI.routes ~
+    new RestAPI()(materializer).routes ~
     webjars ~
     mystyles ~
     assets ~

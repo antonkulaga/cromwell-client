@@ -172,7 +172,7 @@ class RunnerView(
           <div class="ui label">workflow wld</div>
           <input id ="wdl" onclick="this.value=null;" onchange = { uploadFileHandler(wdlFile) _ } accept=".wdl"  name="wdl" type="file" />
         </div>
-        <div class="ui fluid action input">
+        <div class="ui labeled input">
           <div class="ui label">inputs json</div>
           <input id ="inputs" onclick="this.value=null;" onchange = { uploadFileHandler(inputs) _ } accept=".json" name="inputs" type="file" />
         </div>

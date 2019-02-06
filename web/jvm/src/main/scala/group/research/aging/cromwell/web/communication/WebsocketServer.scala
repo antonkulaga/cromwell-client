@@ -14,6 +14,10 @@ import io.circe.parser.decode
 import wvlet.log.LogFormatter.SourceCodeLogFormatter
 import wvlet.log.{LogSupport, Logger}
 
+/**
+  * Processes key websocket logic and handles users joining/quiting
+  * @param system
+  */
 class WebsocketServer(system: ActorSystem) extends LogSupport{
 
   // Set the default log formatter

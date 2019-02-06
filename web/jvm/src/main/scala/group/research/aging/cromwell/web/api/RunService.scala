@@ -1,51 +1,80 @@
 package group.research.aging.cromwell.web.api
 
-import akka.actor.{ActorSystem, Props}
-import akka.http.scaladsl.marshallers.xml.ScalaXmlSupport._
-import akka.http.scaladsl.marshalling.ToResponseMarshallable
+import java.lang.annotation.Annotation
+
+import akka.actor.ActorSystem
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.server._
-import akka.http.scaladsl.{Http, HttpExt, model, server}
-import akka.stream.ActorMaterializer
 import better.files.File
-import cats.effect.IO
-import ch.megard.akka.http.cors.scaladsl.CorsDirectives._
-import com.github.swagger.akka.SwaggerHttpService
-import de.heikoseeberger.akkahttpcirce._
-import group.research.aging.cromwell.client
 import group.research.aging.cromwell.client.CromwellClient
-import group.research.aging.cromwell.web.communication.WebsocketServer
-import hammock.akka.AkkaInterpreter
 import io.circe.Json
 import io.circe.generic.auto._
-import scalacss.DevDefaults._
-import wvlet.log.LogFormatter.SourceCodeLogFormatter
-import wvlet.log.{LogLevel, LogSupport, Logger}
-import javax.ws.rs._
-
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
-import scala.xml.Unparsed
-import com.github.swagger.akka.SwaggerHttpService
-import group.research.aging.cromwell.web.server.WebServer.getFromBrowseableDirectories
 import io.swagger.v3.oas.annotations._
 import io.swagger.v3.oas.annotations.enums.ParameterIn
-import io.swagger.v3.oas.annotations.responses._
 import io.swagger.v3.oas.annotations.media._
 import io.swagger.v3.oas.annotations.parameters.RequestBody
+import io.swagger.v3.oas.annotations.responses._
+import io.swagger.v3.oas.annotations.media.ExampleObject
+import javax.ws.rs._
+import akka.http.scaladsl.unmarshalling.PredefinedFromEntityUnmarshallers
+import akka.http.scaladsl.unmarshalling.PredefinedFromEntityUnmarshallers._
+import akka.http.scaladsl.server.Route
+import akka.stream.ActorMaterializer
+import io.swagger.v3.oas.annotations.extensions.Extension
 
-@Path("/api")
-class RunService extends CromwellClientService {
+import akka.http.scaladsl.model.MediaTypes
+
+/**
+  * Service to run cromwell pipelines
+  * @param materializer
+  */
+@Path(value = "/api")
+class RunService(implicit materializer: ActorMaterializer) extends CromwellClientService {
 
   @POST
   @Path("/run")
   @Operation(summary = "runs the workflow", description = "runs the workflow and returns its status",
-    requestBody = new RequestBody(content = Array(new Content(schema = new Schema(implementation = classOf[Json])))),
-    parameters = Array(new Parameter(name = "wdl", in = ParameterIn.PATH, description = "path to the workflow inside pipelines folder")),
+    requestBody = new RequestBody(
+      content = Array(new Content(schema = new Schema(
+        example = """{
+"quantification.key": "0a1d74f32382b8a154acacc3a024bdce3709",
+"quantification.samples_folder": "/data/samples",
+"quantification.salmon_indexes": {
+  "Bos taurus": "/data/indexes/salmon/Bos_taurus",
+  "Heterocephalus glaber": "/data/indexes/salmon/Heterocephalus_glaber",
+  "Rattus norvegicus": "/data/indexes/salmon/Rattus_norvegicus",
+  "Caenorhabditis elegans": "/data/indexes/salmon/Caenorhabditis_elegans",
+  "Homo sapiens": "/data/indexes/salmon/Homo_sapiens",
+  "Drosophila melanogaster": "/data/indexes/salmon/Drosophila_melanogaster",
+  "Mus musculus": "/data/indexes/salmon/Mus_musculus"
+},
+"quantification.samples": [
+  "GSM1698568",
+  "GSM1698570",
+  "GSM2927683",
+  "GSM2927750",
+  "GSM2042593",
+  "GSM2042596"
+]
+}"""))), description = "input JSON"),
+    parameters = Array(
+      new Parameter(name = "wdl", in = ParameterIn.PATH, required = true,
+        example = "quantification",
+        description = "path to the workflow inside pipelines folder (defined by PIPELINES enviroment variable, /data/pipelines by default)"),
+      new Parameter(name = "server", in = ParameterIn.QUERY, required = false,
+        example = "http://pic:8000",
+        description = "URL of the cromwell server, enviroment variable CROMWELL by default"),
+      new Parameter(name = "callback", in = ParameterIn.QUERY, required = false,
+        description = "callback URL to report about the result of the query")
+    ),
     responses = Array(
-      new ApiResponse(responseCode = "200", description = "Workflow started",
-        content = Array(new Content(schema = new Schema(implementation = classOf[String])))),
-      new ApiResponse(responseCode = "500", description = "Internal server error"))
+      new ApiResponse(responseCode = "200", description = "Workflow started, returns its ID",
+        content = Array(new Content(schema = new Schema(example = """{
+  "id": "e442e52a-9de1-47f0-8b4f-e6e565008cf1",
+  "status": "Submitted"
+}""")))),
+      new ApiResponse(responseCode = "500", description = "Internal server error")
+    )
   )
   def runAPI: Route = pathPrefix("run" / Remaining) { wdl =>
     val root = File(scala.util.Properties.envOrElse("PIPELINES", "/data/pipelines" ))
@@ -59,23 +88,25 @@ class RunService extends CromwellClientService {
       }
     }
     else {
-      parameters("host".?) { hostOpt =>
-        val c = hostOpt.map(CromwellClient(_)).getOrElse(CromwellClient.default)
-        post {
-          entity(as[Json]) { json =>
-            val wdl = fl.contentAsString
+      parameters("server".?) { serverOpt =>
+        val c = serverOpt.map(CromwellClient(_)).getOrElse(CromwellClient.default)
+          entity(as[String]) { json =>
             //c.postWorkflowStrings(wdl, json.spaces4)
             //debug("JSON RECEIVED!!!")
-            debug("WDL FOUND!")
-            debug(s"WDL IS ${fl.contentAsString}")
-            debug("INPUT JSON SENT:")
-            debug(json.spaces4)
-            //System.out.println(entity.getContentType())
-            complete(json)
-          }
+            //debug("running the following WDL:")
+            //debug(fl.contentAsString)
+            //debug("---------------------------")
+            debug("Input JSON used:")
+            debug(json)
+            val wdl = fl.contentAsString
+            completeOrRecoverWith( c.postWorkflowStrings(wdl, json) ) { extraction =>
+              debug(s"running pipeline failed with ${extraction}")
+              failWith(extraction) // not executed.
+            }
         } ~ {
+          debug("POST REQUEST!")
           debug("WDL FOUND!")
-          debug(s"WDL IS ${fl.contentAsString}")
+          debug(s"WDL IS: ${fl.contentAsString}")
           complete(HttpResponse(StatusCodes.OK, Nil, fl.contentAsString))
         }
       }

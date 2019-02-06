@@ -2,11 +2,11 @@ package group.research.aging.cromwell
 
 import cats.effect.IO
 import group.research.aging.cromwell.client.CromwellClient
-import hammock.jvm.Interpreter
+import hammock.apache.ApacheInterpreter
 
 object Hello extends App {
 
-  implicit val getInterpreter: Interpreter[IO] = Interpreter[IO]
+  implicit val getInterpreter = ApacheInterpreter[IO]
 
   //val host: String = "agingkills.westeurope.cloudapp.azure.com"
 
@@ -31,9 +31,6 @@ object Hello extends App {
     println(url)
     println(client.get(client.api + s"/workflows/${client.version}/${r.id}/outputs", Map.empty).exec[IO].unsafeRunSync())
   }
-
-
-
   //pprint.pprintln(client.getQuery().unsafeRunSync())
   //println("==================")
 
