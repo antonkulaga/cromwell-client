@@ -17,7 +17,11 @@ class TracingService extends BasicService {
      debug("RECEIVED JSON: ")
      debug(json)
       complete(json)
-    }
+    } ~ { ctx=>
+    val st = ctx.request.toString()
+    debug(s"tracing GET request: ${st}")
+    ctx.complete(st)
+  }
   }
 
   def routes: Route  = traceAny

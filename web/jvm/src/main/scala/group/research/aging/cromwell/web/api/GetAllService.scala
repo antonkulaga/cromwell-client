@@ -18,7 +18,7 @@ import akka.http.scaladsl.server.Route
 import akka.pattern.ask
 import akka.util.Timeout
 import group.research.aging.cromwell.client
-import group.research.aging.cromwell.client.{CallOutputs, CromwellClient, WorkflowStatus}
+import group.research.aging.cromwell.client.{CallOutputs, CromwellClient, QueryResults, WorkflowStatus}
 import group.research.aging.cromwell.web.{Commands, Results}
 import group.research.aging.cromwell.web.api.runners.MessagesAPI
 import io.circe.generic.auto._
@@ -251,6 +251,33 @@ class GetAllService(val runner: ActorRef)(implicit val timeout: Timeout) extends
     }
 
 
+  @GET
+  @Path("/all/status")
+  @Operation(summary = "Return all statuses", description = "Return all statuses",
+    parameters = Array(
+      new Parameter(name = "server", in = ParameterIn.QUERY, description = "url to the cromwell server"),
+      new Parameter(name = "status", in = ParameterIn.QUERY, description = "show only workflows with some status"),
+      new Parameter(name = "subworkflows", in = ParameterIn.QUERY, description = "if subworkflows should be shown")
+    ),
+    responses = Array(
+      new ApiResponse(responseCode = "200", description = "Metadata for all pipelines",
+        content = Array(
+          new Content(schema = new Schema(description = "list of statuses of all workflows"))
+        )
+      ),
+      new ApiResponse(responseCode = "500", description = "Internal server error"))
+  )
+  def getAllQuery: Route =
+    pathPrefix("status"){
+      withServerExtended("getting all statuses") { (server, status, sub) =>
+        val com = Commands.GetQuery(status, sub)
+        import io.circe.syntax._
+        val comm = MessagesAPI.ServerCommand(com, server)
+        val fut = (runner ? comm).mapTo[QueryResults]
+        fut
+      }
+    }
 
-  def routes: Route  = pathPrefix("all"){ getAllMeta }
+
+  def routes: Route  = pathPrefix("all"){ getAllQuery ~ getAllMeta }
 }

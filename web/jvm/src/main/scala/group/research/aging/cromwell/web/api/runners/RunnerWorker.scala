@@ -1,31 +1,27 @@
 package group.research.aging.cromwell.web.api.runners
 
-import akka.stream.ActorMaterializer
 import akka.actor.{Actor, ActorRef}
-import akka.http.scaladsl.HttpExt
-import group.research.aging.cromwell.client.CromwellClientAkka
-import group.research.aging.cromwell.web.{Commands, Results}
-import wvlet.log.LogSupport
 import akka.pattern._
-import hammock.{ContentType, Hammock, Method}
+import akka.stream.ActorMaterializer
 import cats.effect.IO
+import group.research.aging.cromwell.client
+import group.research.aging.cromwell.client.CromwellClientAkka
 import group.research.aging.cromwell.web.server.WebServer.http
-import io.circe.generic.auto._
-import hammock._
+import group.research.aging.cromwell.web.{Commands, Results}
 import hammock.akka.AkkaInterpreter
-import hammock.marshalling._
 import hammock.circe.implicits._
-import hammock.hi.Opts
+import hammock.{ContentType, Hammock, Method, _}
 import io.circe.Json
-import io.circe._
-import io.circe.parser._
-import hammock.circe._
 import io.circe.syntax._
-import scala.concurrent.ExecutionContext
+import wvlet.log.LogSupport
+
+import scala.concurrent.ExecutionContextExecutor
 import scala.concurrent.duration._
 class RunnerWorker(client: CromwellClientAkka) extends Actor with LogSupport {
 
-  implicit def dispatcher = context.dispatcher
+  debug(s"runner workser for ${client.base} cromwell server started!")
+
+  implicit def dispatcher: ExecutionContextExecutor = context.dispatcher
 
   context.system.scheduler.schedule(
     1 second,
@@ -43,16 +39,28 @@ class RunnerWorker(client: CromwellClientAkka) extends Actor with LogSupport {
     case MessagesAPI.Poll =>
       //debug(s"polling the callbacks, currently ${callbacks.mkString(",")} are avaliable")
       val results = client.getQuery(includeSubworkflows = true).unsafeRunSync().results
-      for{
+      val toDelete: Seq[(String, MessagesAPI.CallBack)] = for{
         r <- results
         if callbacks.contains(r.id)
-        url <- callbacks(r.id)
+        cb: MessagesAPI.CallBack <- callbacks(r.id)
       }
-      {
-         val json: Json = results.asJson
-         val req = Hammock.request[Json](Method.POST, uri"${url.backURL}", Map("Content-Type"->ContentType.`application/json`.name), Some(json))
-         val result = req.exec[IO].unsafeRunSync()
-        debug(s"calling back $url with result:\n ${result}")
+      yield {
+        val outputs = client.getOutputs(r.id).unsafeRunSync()
+         val json: Json = outputs.asJson
+         val req = Hammock.request[Json](Method.POST, uri"${cb.backURL}", Map("Content-Type"->"application/json"), Some(json))
+         val result: HttpResponse = req.exec[IO].unsafeRunSync()
+        debug(s"calling back ${cb.backURL} with request:")
+        debug(json)
+        debug("and result")
+        debug(result)
+        //debug(s"deleting callback ${cb.backURL} from the list")
+        r.id -> cb
+      }
+      val g: Map[String, Set[MessagesAPI.CallBack]] = toDelete.groupBy(_._1).mapValues(_.map(_._2).toSet)
+      if(g.nonEmpty) {
+        val updCallbacks = callbacks.map{ case (i, cbs) => if(g.contains(i)) (i, cbs -- g(i)) else (i, cbs)}.filter(_._2.nonEmpty)
+        debug(s"deleting ${callbacks.size - updCallbacks.size} callbacks after execution!")
+        context.become(operation(updCallbacks))
       }
 
     case mes @ MessagesAPI.ServerCommand(Commands.Run(wdl, input, options), _, _) =>
@@ -64,6 +72,10 @@ class RunnerWorker(client: CromwellClientAkka) extends Actor with LogSupport {
     case Commands.GetAllMetadata(status, subworkflows) =>
       val s = sender
       client.getAllMetadata(status, subworkflows).map(m=> Results.UpdatedMetadata(m)).unsafeToFuture().pipeTo(s)
+
+    case Commands.GetQuery(status, subs) =>
+      val s = sender
+      client.getQuery(status, subs).unsafeToFuture().pipeTo(s)
 
     case Commands.SingleWorkflow.GetOutput(id) =>
       val s = sender()

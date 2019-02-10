@@ -62,7 +62,8 @@ object Commands{
 
   case class StreamMetadata(status: WorkflowStatus = WorkflowStatus.AnyStatus, id: String = UUID.randomUUID().toString) extends Command
   case class GetAllMetadata(status: WorkflowStatus, expandSubworkFlows: Boolean = true) extends Command
-  case class UpdateStatus(status: WorkflowStatus) extends Command
+  case class GetQuery(statusS: WorkflowStatus, includeSubworkflows: Boolean = true) extends Command
+  case class UpdateStatus(status: WorkflowStatus)  extends Command
   case class ChangeClient(newURL: String) extends Command
   case class Run(wdl: String, input: String, options: String) extends Command
   case class Abort(id: String) extends Command

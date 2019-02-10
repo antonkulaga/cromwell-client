@@ -21,15 +21,16 @@ object Tester {
     // Using the Apache HTTP commons interpreter
     implicit val interpreter = ApacheInterpreter[IO]
 
-  def run(pipeline: String, content: String, server: String = "http://pic:8000") = {
-    val json = parse(content).right.get
+  def run(pipeline: String, content: String, server: String = "http://pic:8000", callback: String = "http://localhost:8001/api/trace"): HttpResponse = {
+    val json: Json = parse(content).right.get
     //val cont = Json.fromString("""{"myWorkflow.name": "World"}""")
     Hammock.request(Method.POST,
-      uri"http://localhost:8001/api/run/${pipeline}?server=${server}",
+      uri"http://localhost:8001/api/run/${pipeline}?server=${server}&callback=${callback}",
       Map("Content-Type"->ContentType.`application/json`.name),
       Some(json)).exec[IO].unsafeRunSync()
   }
 
-    def hello(server: String = "http://pic:8000"): HttpResponse = run("hello-world", """{"myWorkflow.name": "World!"}""")
+    def hello(server: String = "http://pic:8000", callback: String = "http://localhost:8001/api/trace"): HttpResponse =
+      run("hello-world", """{"myWorkflow.name": "World!"}""")
 
 }
