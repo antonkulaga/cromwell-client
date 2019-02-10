@@ -17,8 +17,7 @@ import scalacss.DevDefaults._
 import wvlet.log.LogFormatter.SourceCodeLogFormatter
 import wvlet.log.{LogLevel, LogSupport, Logger}
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 import scala.xml.Unparsed
 
 /**
@@ -32,11 +31,7 @@ object WebServer extends HttpApp with FailFastCirceSupport with LogSupport {
 
   lazy val webjarsPrefix = "lib"
   lazy val resourcePrefix = "public"
-  implicit val materializer: ActorMaterializer = ActorMaterializer()(system)
 
-  //implicit  protected def getInterpreter: Interpreter[IO] = Interpreter[IO]
-  implicit protected def getInterpreter: AkkaInterpreter[IO] =
-    new AkkaInterpreter[IO](http)
 
   def mystyles: Route =  path("styles" / "mystyles.css"){
     complete  {
@@ -84,6 +79,9 @@ object WebServer extends HttpApp with FailFastCirceSupport with LogSupport {
 
 
   implicit lazy val http: HttpExt = Http(this.systemReference.get())
+  implicit lazy val materializer: ActorMaterializer = ActorMaterializer()(http.system)
+  implicit lazy val executionContext: ExecutionContext = http.system.dispatcher
+  implicit protected def getInterpreter: AkkaInterpreter[IO] = new AkkaInterpreter[IO](http)
 
   def proxy(request: HttpRequest, url: model.Uri): Future[RouteResult] = {
     println("url to send is: " + url.toString())
@@ -122,7 +120,7 @@ object WebServer extends HttpApp with FailFastCirceSupport with LogSupport {
   override def routes: Route = cors(){
     index~
     websocketServer.route ~
-    new RestAPI()(materializer).routes ~
+    new RestAPI(http).routes ~
     webjars ~
     mystyles ~
     assets ~

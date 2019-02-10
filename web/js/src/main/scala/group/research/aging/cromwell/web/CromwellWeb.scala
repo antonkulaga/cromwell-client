@@ -54,7 +54,7 @@ object CromwellWeb extends scala.App with Base {
 
   lazy val commandsReducer: Reducer = {
 
-    case (previous, getMetadata: Commands.GetMetadata) =>
+    case (previous, getMetadata: Commands.GetAllMetadata) =>
       commands := Commands.SendToServer(getMetadata)
       previous
 

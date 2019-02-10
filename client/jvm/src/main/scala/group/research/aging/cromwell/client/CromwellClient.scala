@@ -15,7 +15,11 @@ object CromwellClient {
 
   lazy val localhost: CromwellClient = new CromwellClient("http://localhost:8000", "v1")
 
-  lazy val  default: CromwellClient = new CromwellClient(scala.util.Properties.envOrElse("CROMWELL", "http://localhost:8000" ), "v1")
+  lazy val defaultURL = scala.util.Properties.envOrElse("CROMWELL", "http://localhost:8000" )
+
+  lazy val  default: CromwellClient = new CromwellClient(defaultURL, "v1")
+
+
 
   def apply(base: String): CromwellClient = new CromwellClient(base, "v1")
 
@@ -25,9 +29,12 @@ object CromwellClient {
   implicit override protected def getInterpreter: ApacheInterpreter[IO] = ApacheInterpreter[IO]
 }
 
-case class CromwellClientAkka(base: String, version: String = "v1", http: HttpExt)( implicit val mat: ActorMaterializer, executionContext: ExecutionContext) extends CromwellClientShared {
+case class CromwellClientAkka(base: String, version: String = "v1", http: HttpExt)
+                             extends CromwellClientShared {
 
   import  implicits._
+  implicit val materializer: ActorMaterializer = ActorMaterializer()(http.system)
+  implicit val executionContext: ExecutionContext = http.system.dispatcher
 
   implicit override protected def getInterpreter: AkkaInterpreter[IO] = new AkkaInterpreter[IO](http)
 

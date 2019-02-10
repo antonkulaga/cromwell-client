@@ -10,10 +10,12 @@ import io.swagger.v3.oas.annotations.responses._
 import javax.ws.rs._
 
 @Path("/api")
-class TracingService  extends CromwellClientService {
+class TracingService extends BasicService {
   @GET
   @Path("/trace")
   def traceAny: Route = pathPrefix("trace") {  entity(as[String]) { json =>
+     debug("RECEIVED JSON: ")
+     debug(json)
       complete(json)
     }
   }

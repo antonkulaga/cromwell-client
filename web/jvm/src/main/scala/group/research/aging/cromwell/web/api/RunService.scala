@@ -1,35 +1,33 @@
 package group.research.aging.cromwell.web.api
 
-import java.lang.annotation.Annotation
-
-import akka.actor.ActorSystem
+import akka.actor.ActorRef
 import akka.http.scaladsl.model._
-import akka.http.scaladsl.server._
+import akka.http.scaladsl.server.Route
+import akka.http.scaladsl.unmarshalling.PredefinedFromEntityUnmarshallers._
+import akka.pattern.ask
+import akka.util.Timeout
 import better.files.File
-import group.research.aging.cromwell.client.CromwellClient
-import io.circe.Json
+import group.research.aging.cromwell.client.{CromwellClient, StatusInfo}
+import group.research.aging.cromwell.web.Commands
+import group.research.aging.cromwell.web.api.runners.MessagesAPI
 import io.circe.generic.auto._
 import io.swagger.v3.oas.annotations._
 import io.swagger.v3.oas.annotations.enums.ParameterIn
 import io.swagger.v3.oas.annotations.media._
 import io.swagger.v3.oas.annotations.parameters.RequestBody
 import io.swagger.v3.oas.annotations.responses._
-import io.swagger.v3.oas.annotations.media.ExampleObject
 import javax.ws.rs._
-import akka.http.scaladsl.unmarshalling.PredefinedFromEntityUnmarshallers
-import akka.http.scaladsl.unmarshalling.PredefinedFromEntityUnmarshallers._
-import akka.http.scaladsl.server.Route
-import akka.stream.ActorMaterializer
-import io.swagger.v3.oas.annotations.extensions.Extension
 
-import akka.http.scaladsl.model.MediaTypes
+import scala.concurrent.duration._
+import scala.concurrent.{ExecutionContext, Future}
 
 /**
   * Service to run cromwell pipelines
   * @param materializer
   */
 @Path(value = "/api")
-class RunService(implicit materializer: ActorMaterializer) extends CromwellClientService {
+class RunService(val runner: ActorRef)(implicit val timeout: Timeout) extends CromwellClientService {
+
 
   @POST
   @Path("/run")
@@ -88,31 +86,34 @@ class RunService(implicit materializer: ActorMaterializer) extends CromwellClien
       }
     }
     else {
-      parameters("server".?) { serverOpt =>
-        val c = serverOpt.map(CromwellClient(_)).getOrElse(CromwellClient.default)
-          entity(as[String]) { json =>
-            //c.postWorkflowStrings(wdl, json.spaces4)
-            //debug("JSON RECEIVED!!!")
-            //debug("running the following WDL:")
-            //debug(fl.contentAsString)
-            //debug("---------------------------")
-            debug("Input JSON used:")
-            debug(json)
-            val wdl = fl.contentAsString
-            completeOrRecoverWith( c.postWorkflowStrings(wdl, json) ) { extraction =>
-              debug(s"running pipeline failed with ${extraction}")
-              failWith(extraction) // not executed.
-            }
-        } ~ {
-          debug("POST REQUEST!")
-          debug("WDL FOUND!")
-          debug(s"WDL IS: ${fl.contentAsString}")
-          complete(HttpResponse(StatusCodes.OK, Nil, fl.contentAsString))
+      parameters("server".?, "callback".?) { (serverOpt, callBackOpt) =>
+        //val c = serverOpt.map(CromwellClient(_)).getOrElse(CromwellClient.default)
+        val serverURL = serverOpt.getOrElse(CromwellClient.defaultURL)
+        entity(as[String]) { json =>
+          //c.postWorkflowStrings(wdl, json.spaces4)
+          //debug("JSON RECEIVED!!!")
+          //debug("running the following WDL:")
+          //debug(fl.contentAsString)
+          //debug("---------------------------")
+          debug("Input JSON used:")
+          //debug(json)
+          val wdl = fl.contentAsString
+          val toRun = Commands.Run(wdl, json, "")
+          val serverMessage = MessagesAPI.ServerCommand(toRun, serverURL, callBackOpt.map(Set(_)).getOrElse(Set.empty[String]))
+          completeOrRecoverWith((runner ? serverMessage).mapTo[StatusInfo]) { extraction =>
+            debug(s"running pipeline failed with ${extraction}")
+            failWith(extraction) // not executed.
+          }
         }
+      } ~ {
+        debug("POST REQUEST!")
+        debug("WDL FOUND!")
+        debug(s"WDL IS: ${fl.contentAsString}")
+        complete(HttpResponse(StatusCodes.OK, Nil, fl.contentAsString))
       }
     }
-
   }
 
   def routes: Route = runAPI
+
 }

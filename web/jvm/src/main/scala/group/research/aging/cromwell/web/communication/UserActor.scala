@@ -1,12 +1,11 @@
 package group.research.aging.cromwell.web.communication
 import akka.actor.{Actor, ActorRef}
-import group.research.aging.cromwell.client.{CromwellClient, Metadata, StatusInfo, WorkflowStatus}
+import akka.pattern.pipe
+import group.research.aging.cromwell.client.{CromwellClient, WorkflowStatus}
+import group.research.aging.cromwell.web.Commands.{ChangeClient, StreamMetadata}
 import group.research.aging.cromwell.web.{Commands, EmptyAction, Messages, Results}
 import wvlet.log.LogSupport
-import akka.pattern._
-import group.research.aging.cromwell.web.Commands.{ChangeClient, StreamMetadata}
-import group.research.aging.cromwell.web.communication.WebsocketMessages.WebsocketAction
-import akka.pattern.pipe
+
 import scala.concurrent.Future
 
 /**
@@ -33,9 +32,9 @@ case class UserActor(username: String) extends Actor with LogSupport {
       self ! action
 
 
-    case Commands.GetMetadata(status) =>
+    case Commands.GetAllMetadata(status, subworkflows) =>
       debug("GET METADATA!")
-      val metaFut: Future[Results.UpdatedMetadata] = client.getAllMetadata(status).map(m=> Results.UpdatedMetadata(m)).unsafeToFuture()
+      val metaFut: Future[Results.UpdatedMetadata] = client.getAllMetadata(status, subworkflows).map(m=> Results.UpdatedMetadata(m)).unsafeToFuture()
       pipe(metaFut)(context.dispatcher) to self
 
 
@@ -61,7 +60,7 @@ case class UserActor(username: String) extends Actor with LogSupport {
       this.context.become(operation(output, newClient))
 
     case Commands.Abort(id) =>
-      val ab: Future[Commands.GetMetadata] =  client.abort(id).map(_=>Commands.GetMetadata(WorkflowStatus.AnyStatus)).unsafeToFuture()
+      val ab: Future[Commands.GetAllMetadata] =  client.abort(id).map(_=>Commands.GetAllMetadata(WorkflowStatus.AnyStatus)).unsafeToFuture()
       pipe(ab)(context.system.dispatcher).pipeTo(self)
 
 

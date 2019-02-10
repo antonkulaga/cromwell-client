@@ -1,15 +1,26 @@
 package group.research.aging.cromwell.web.api
 
-import akka.http.scaladsl.server._
+import akka.actor.ActorRef
+import akka.http.scaladsl.server.Route
+import akka.pattern.ask
+import akka.util.Timeout
 import group.research.aging.cromwell.client
+import group.research.aging.cromwell.client.{CallOutputs, CromwellClient, WorkflowStatus}
+import group.research.aging.cromwell.web.{Commands, Results}
+import group.research.aging.cromwell.web.api.runners.MessagesAPI
+import io.circe.generic.auto._
 import io.swagger.v3.oas.annotations._
 import io.swagger.v3.oas.annotations.enums.ParameterIn
 import io.swagger.v3.oas.annotations.media._
 import io.swagger.v3.oas.annotations.responses._
 import javax.ws.rs._
 
+import scala.concurrent.Future
+import scala.concurrent.duration._
+
 @Path("/api")
-class WorkflowService extends CromwellClientService {
+class WorkflowService(val runner: ActorRef)(implicit val timeout: Timeout) extends CromwellClientService {
+
 
   @GET
   @Path("/metadata")
@@ -25,10 +36,10 @@ class WorkflowService extends CromwellClientService {
       new ApiResponse(responseCode = "500", description = "Internal server error"))
   )
   def metaData: Route = pathPrefix("metadata" / Remaining) { id =>
-    withCromwell { (c, _, sub) =>
-      val meta = c.getMetadata(id, expandSubWorkflows = sub)
-      import io.circe.syntax._
-      meta.unsafeRunSync().asJson
+    withServerExtended("gettings metadata"){
+      (server, status, incl) =>
+        val comm = MessagesAPI.ServerCommand(Commands.GetAllMetadata(status, incl), server)
+       (runner ? comm).mapTo[Results.UpdatedMetadata]
     }
   }
 
@@ -45,10 +56,12 @@ class WorkflowService extends CromwellClientService {
       new ApiResponse(responseCode = "500", description = "Internal server error"))
   )
   def outputs: Route =  pathPrefix("outputs" / Remaining) { id =>
-    withCromwell { c =>
-      val outputs = c.getOutputs(id)
-      import io.circe.syntax._
-      outputs.unsafeRunSync().asJson
+    withServer("getting outputs"){
+      server =>
+        val g = Commands.SingleWorkflow.GetOutput(id)
+        val comm = MessagesAPI.ServerCommand(g, server)
+        val fut = (runner ? comm).mapTo[CallOutputs]
+        fut
     }
   }
   @GET
@@ -64,11 +77,12 @@ class WorkflowService extends CromwellClientService {
       new ApiResponse(responseCode = "500", description = "Internal server error"))
   )
   def status: Route =   pathPrefix("status" / Remaining) { id =>
-    withCromwell { c =>
-      val result = c.getStatus(id)
-      import io.circe.syntax._
-      c.getEngineStatus
-      result.unsafeRunSync().asJson
+    withServer("getting status"){
+      server =>
+        val g = Commands.SingleWorkflow.GetStatus(id)
+        val comm = MessagesAPI.ServerCommand(g, server)
+        val fut = (runner ? comm).mapTo[CallOutputs]
+        fut
     }
   }
 

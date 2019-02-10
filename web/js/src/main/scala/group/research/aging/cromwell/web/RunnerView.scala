@@ -87,7 +87,7 @@ class RunnerView(
   protected def updateClick(event: Event): Unit = {
     //println("URL == "+getURL())
     commands := Commands.ChangeClient(getURL())
-    commands := Commands.GetMetadata(lastStatus.now)
+    commands := Commands.GetAllMetadata(lastStatus.now)
   }
 
   protected def updateStatus(event: Event): Unit = {
@@ -113,7 +113,7 @@ class RunnerView(
     val d = "http://localhost:8000"
     //url := d
     commands:= Commands.ChangeClient(d)
-    commands := Commands.GetMetadata(lastStatus.now)
+    commands := Commands.GetAllMetadata(lastStatus.now)
   }
 
   protected def uploadFileHandler(v: Var[Option[String]])(event: Event): Unit = {

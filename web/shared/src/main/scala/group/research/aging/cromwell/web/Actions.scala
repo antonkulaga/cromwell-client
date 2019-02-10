@@ -61,10 +61,10 @@ object Commands{
   case object CleanMessages extends Command
 
   case class StreamMetadata(status: WorkflowStatus = WorkflowStatus.AnyStatus, id: String = UUID.randomUUID().toString) extends Command
-  case class GetMetadata(status: WorkflowStatus) extends Command
+  case class GetAllMetadata(status: WorkflowStatus, expandSubworkFlows: Boolean = true) extends Command
   case class UpdateStatus(status: WorkflowStatus) extends Command
   case class ChangeClient(newURL: String) extends Command
-  case class Run(wdl: String, options: String, input: String) extends Command
+  case class Run(wdl: String, input: String, options: String) extends Command
   case class Abort(id: String) extends Command
   //case class UpdateURL(url: String) extends Command
 
@@ -78,4 +78,21 @@ object Commands{
   }
 
   case class EvalJS(code: String) extends Command
+
+  case object SingleWorkflow{
+    sealed trait SingleWorkflowCommand extends Command
+    case class GetOutput(id: String) extends SingleWorkflowCommand
+    case class GetStatus(id: String) extends SingleWorkflowCommand
+    case class GetMetadata(id: String) extends SingleWorkflowCommand
+  }
+
+
+
+  /*
+  case object Workflow {
+    trait SingleWorkflowCommand extends Command
+    case class GetOutputs(id: String)
+    case class GetMetadata(id: String)
+  }
+  */
 }
