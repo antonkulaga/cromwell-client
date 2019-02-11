@@ -26,7 +26,7 @@ object Hello extends App {
   pprint.pprintln(q.results)
 
   for(r <- q.results) {
-    pprint.pprintln(client.getOutputs(r.id).unsafeRunSync())
+    pprint.pprintln(client.getOutput(r.id).unsafeRunSync())
     val url = client.base + client.api + s"/workflows/${client.version}/${r.id}/outputs"
     println(url)
     println(client.get(client.api + s"/workflows/${client.version}/${r.id}/outputs", Map.empty).exec[IO].unsafeRunSync())

@@ -41,7 +41,7 @@ trait CromwellClientLike {
     */
   def abort(id: String): IO[group.research.aging.cromwell.client.StatusInfo]
 
-  def getOutputs(id: String): IO[CallOutputs]
+  def getOutput(id: String): IO[CallOutputs]
 
   def getQuery(status: WorkflowStatus = WorkflowStatus.AnyStatus, includeSubworkflows: Boolean = false): IO[QueryResults]
 

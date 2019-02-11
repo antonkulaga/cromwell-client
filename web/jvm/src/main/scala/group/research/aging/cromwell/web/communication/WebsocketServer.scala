@@ -44,7 +44,7 @@ class WebsocketServer(system: ActorSystem) extends LogSupport{
     val sink: Sink[Message, NotUsed] =
       Flow[Message]
         .collect { case TextMessage.Strict(json) =>
-          debug("Received:\n" + json)
+          //debug("Received:\n" + json)
           decode[WebsocketMessages.WebsocketMessage](json)
         }
         .filter(_.isRight)

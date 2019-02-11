@@ -5,7 +5,7 @@ import akka.pattern._
 import akka.stream.ActorMaterializer
 import cats.effect.IO
 import group.research.aging.cromwell.client
-import group.research.aging.cromwell.client.CromwellClientAkka
+import group.research.aging.cromwell.client.{CallOutput, CromwellClientAkka}
 import group.research.aging.cromwell.web.server.WebServer.http
 import group.research.aging.cromwell.web.{Commands, Results}
 import hammock.akka.AkkaInterpreter
@@ -19,7 +19,7 @@ import scala.concurrent.ExecutionContextExecutor
 import scala.concurrent.duration._
 class RunnerWorker(client: CromwellClientAkka) extends Actor with LogSupport {
 
-  debug(s"runner workser for ${client.base} cromwell server started!")
+  debug(s"runner worker for ${client.base} cromwell server started!")
 
   implicit def dispatcher: ExecutionContextExecutor = context.dispatcher
 
@@ -43,23 +43,24 @@ class RunnerWorker(client: CromwellClientAkka) extends Actor with LogSupport {
         r <- results
         if callbacks.contains(r.id)
         cb: MessagesAPI.CallBack <- callbacks(r.id)
+        if cb.updateOn.contains(r.status)
       }
       yield {
-        val outputs = client.getOutputs(r.id).unsafeRunSync()
-         val json: Json = outputs.asJson
+        val outputs = client.getOutput(r.id).unsafeRunSync()
+         val json: Json = MessagesAPI.PipelineResult(r.id, r.status, outputs.outputs).asJson
          val req = Hammock.request[Json](Method.POST, uri"${cb.backURL}", Map("Content-Type"->"application/json"), Some(json))
          val result: HttpResponse = req.exec[IO].unsafeRunSync()
-        debug(s"calling back ${cb.backURL} with request:")
-        debug(json)
-        debug("and result")
-        debug(result)
+        //debug(s"calling back ${cb.backURL} with request:")
+        //debug(json)
+        //debug("and result")
+        //debug(result)
         //debug(s"deleting callback ${cb.backURL} from the list")
         r.id -> cb
       }
       val g: Map[String, Set[MessagesAPI.CallBack]] = toDelete.groupBy(_._1).mapValues(_.map(_._2).toSet)
       if(g.nonEmpty) {
         val updCallbacks = callbacks.map{ case (i, cbs) => if(g.contains(i)) (i, cbs -- g(i)) else (i, cbs)}.filter(_._2.nonEmpty)
-        debug(s"deleting ${callbacks.size - updCallbacks.size} callbacks after execution!")
+        //debug(s"deleting ${callbacks.size - updCallbacks.size} callbacks after execution!")
         context.become(operation(updCallbacks))
       }
 
@@ -79,7 +80,7 @@ class RunnerWorker(client: CromwellClientAkka) extends Actor with LogSupport {
 
     case Commands.SingleWorkflow.GetOutput(id) =>
       val s = sender()
-      client.getOutputs(id).unsafeToFuture().pipeTo(s)
+      client.getOutput(id).unsafeToFuture().pipeTo(s)
 
     case Commands.SingleWorkflow.GetStatus(id) =>
       val s = sender()

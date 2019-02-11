@@ -28,12 +28,12 @@ case class UserActor(username: String) extends Actor with LogSupport {
       info("Websocket HANDLER DROP!")
 
     case WebsocketMessages.WebsocketAction(action) =>
-      debug(s"WebsocketAction: \n ${action}")
+      //debug(s"WebsocketAction: \n ${action}")
       self ! action
 
 
     case Commands.GetAllMetadata(status, subworkflows) =>
-      debug("GET METADATA!")
+      //debug("GET METADATA!")
       val metaFut: Future[Results.UpdatedMetadata] = client.getAllMetadata(status, subworkflows).map(m=> Results.UpdatedMetadata(m)).unsafeToFuture()
       pipe(metaFut)(context.dispatcher) to self
 
@@ -50,12 +50,12 @@ case class UserActor(username: String) extends Actor with LogSupport {
       pipe(metaFut)(context.dispatcher) to self
 
     case u @ Results.UpdatedMetadata(m) =>
-      debug("UPDATED METADATA: ")
-      debug(u)
+      //debug("UPDATED METADATA: ")
+      //debug(u)
       output.foreach(o=>o ! WebsocketMessages.WebsocketAction(u))
 
     case ChangeClient(newURL) =>
-      debug(s"CHANGE CLIENT to ${newURL}!")
+      //debug(s"CHANGE CLIENT to ${newURL}!")
       val newClient = client.copy(base = newURL)
       this.context.become(operation(output, newClient))
 

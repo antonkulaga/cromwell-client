@@ -96,7 +96,7 @@ class RunService(val runner: ActorRef)(implicit val timeout: Timeout) extends Cr
           //debug(fl.contentAsString)
           //debug("---------------------------")
           debug("Input JSON used:")
-          //debug(json)
+          debug(json)
           val wdl = fl.contentAsString
           val toRun = Commands.Run(wdl, json, "")
           val serverMessage = MessagesAPI.ServerCommand(toRun, serverURL, callBackOpt.map(Set(_)).getOrElse(Set.empty[String]))

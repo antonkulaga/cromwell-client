@@ -69,7 +69,7 @@ trait CromwellClientShared extends RosHttp with CromwellClientLike {
     */
   def abort(id: String): IO[group.research.aging.cromwell.client.StatusInfo] =  getAPI[group.research.aging.cromwell.client.StatusInfo](s"/workflows/${version}/${id}/abort")
 
-  def getOutputs(id: String): IO[CallOutputs] = getAPI[CallOutputs](s"/workflows/${version}/${id}/outputs")
+  def getOutput(id: String): IO[CallOutputs] = getAPI[CallOutputs](s"/workflows/${version}/${id}/outputs")
 
   protected def queryString(status: WorkflowStatus = WorkflowStatus.AnyStatus, includeSubworkflows: Boolean = false): String = status match {
     case WorkflowStatus.AnyStatus => s"/workflows/${version}/query?includeSubworkflows=${includeSubworkflows}"
@@ -83,7 +83,7 @@ trait CromwellClientShared extends RosHttp with CromwellClientLike {
 
   def getAllOutputs(status: WorkflowStatus = WorkflowStatus.AnyStatus, includeSubworkflows: Boolean = false): IO[List[CallOutputs]] =
     getQuery(status, includeSubworkflows).flatMap(q=>
-      q.results.map(r=>this.getOutputs(r.id)).sequence
+      q.results.map(r=>this.getOutput(r.id)).sequence
     )
 
 
