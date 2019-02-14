@@ -33,4 +33,31 @@ object Tester {
     def hello(server: String = "http://pic:8000", callback: String = "http://localhost:8001/api/trace"): HttpResponse =
       run("hello-world", content = """{"myWorkflow.name": "World!"}""", server = server, callback = callback)
 
+  def quantify(server: String = "http://pic:8000", callback: String = "http://localhost:8001/api/trace") = {
+    run(pipeline = "quantification", content =
+      """
+        |{
+        |  "quantification.key": "0a1d74f32382b8a154acacc3a024bdce3709",
+        |  "quantification.samples_folder": "/data/samples",
+        |  "quantification.salmon_indexes": {
+        |    "Bos taurus": "/data/indexes/salmon/Bos_taurus",
+        |    "Heterocephalus glaber": "/data/indexes/salmon/Heterocephalus_glaber",
+        |    "Rattus norvegicus": "/data/indexes/salmon/Rattus_norvegicus",
+        |    "Caenorhabditis elegans": "/data/indexes/salmon/Caenorhabditis_elegans",
+        |    "Homo sapiens": "/data/indexes/salmon/Homo_sapiens",
+        |    "Drosophila melanogaster": "/data/indexes/salmon/Drosophila_melanogaster",
+        |    "Mus musculus": "/data/indexes/salmon/Mus_musculus"
+        |  },
+        |  "quantification.samples": [
+        |    "GSM1698568",
+        |    "GSM1698570",
+        |    "GSM2927683",
+        |    "GSM2927750",
+        |    "GSM2042593",
+        |    "GSM2042596"
+        |  ]
+        |}
+      """.stripMargin, server = server, callback = callback)
+  }
+
 }

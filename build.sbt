@@ -107,7 +107,7 @@ lazy val cromwellClientJVM = cromwellClient.jvm
 
 lazy val cromwellClientJS = cromwellClient.js
 
-lazy val akka = "2.5.19"
+lazy val akka = "2.5.21"
 lazy val akkaHttp = "10.1.7"
 
 lazy val cromwellWeb = crossProject(JSPlatform, JVMPlatform)
@@ -122,7 +122,7 @@ lazy val cromwellWeb = crossProject(JSPlatform, JVMPlatform)
 
 		libraryDependencies  ++= Seq(
 			"com.github.japgolly.scalacss" % "core_2.12" % "0.5.5",
-			"org.wvlet.airframe" %%% "airframe-log" % "0.78"
+			"org.wvlet.airframe" %%% "airframe-log" % "0.80"
 		)
 	)
 	.jsSettings(
@@ -139,7 +139,7 @@ lazy val cromwellWeb = crossProject(JSPlatform, JVMPlatform)
 			"com.typesafe.akka" %% "akka-stream" % akka,
 			"com.typesafe.akka" %% "akka-http" % akkaHttp,
 			"com.typesafe.akka" %% "akka-http-xml" % akkaHttp,
-			"javax.ws.rs" % "javax.ws.rs-api" % "2.0.1", //for extra annotations
+			"javax.ws.rs" % "javax.ws.rs-api" % "2.1.1", //for extra annotations
 			"com.github.swagger-akka-http" %% "swagger-akka-http" % "2.0.1",
 			"com.github.swagger-akka-http" %% "swagger-scala-module" % "2.0.3",
 			"com.vmunier" %% "scalajs-scripts" % "1.1.2",

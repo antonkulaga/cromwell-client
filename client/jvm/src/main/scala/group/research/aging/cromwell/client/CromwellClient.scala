@@ -1,5 +1,7 @@
 package group.research.aging.cromwell.client
 
+import java.net.URL
+
 import akka.http.scaladsl.HttpExt
 import cats.effect.IO
 import hammock.akka.AkkaInterpreter
@@ -8,6 +10,7 @@ import io.circe.generic.JsonCodec
 import akka.stream.ActorMaterializer
 import cats.effect.IO
 import cats.free.Free
+import hammock.Hammock._
 
 import scala.concurrent.ExecutionContext
 
@@ -15,11 +18,15 @@ object CromwellClient {
 
   lazy val localhost: CromwellClient = new CromwellClient("http://localhost:8000", "v1")
 
-  lazy val defaultURL = scala.util.Properties.envOrElse("CROMWELL", "http://localhost:8000" )
+  lazy val defaultServerPort = "8000"
+
+  lazy val defaultURL: String = scala.util.Properties.envOrElse("CROMWELL", s"http://localhost:${defaultServerPort}" )
+
+  lazy val defaultClientPort: String = scala.util.Properties.envOrElse("CROMWELL_CLIENT_PORT", "8001")
+
+  lazy val defaultHost: String = new URL(defaultURL).getHost
 
   lazy val  default: CromwellClient = new CromwellClient(defaultURL, "v1")
-
-
 
   def apply(base: String): CromwellClient = new CromwellClient(base, "v1")
 
