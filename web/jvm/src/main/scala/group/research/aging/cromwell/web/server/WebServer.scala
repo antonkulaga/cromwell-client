@@ -115,7 +115,7 @@ object WebServer extends HttpApp with FailFastCirceSupport with LogSupport {
 */
   implicit lazy val system = ActorSystem("chat")
 
-  lazy val websocketServer: WebsocketServer = new WebsocketServer(system)
+  lazy val websocketServer: WebsocketServer = new WebsocketServer(http)
 
   override def routes: Route = cors(){
     index~

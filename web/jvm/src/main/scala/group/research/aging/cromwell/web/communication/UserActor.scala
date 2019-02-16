@@ -1,28 +1,31 @@
 package group.research.aging.cromwell.web.communication
 import akka.actor.{Actor, ActorRef}
 import akka.pattern.pipe
-import group.research.aging.cromwell.client.{CromwellClient, WorkflowStatus}
+import group.research.aging.cromwell.client.{CromwellClient, CromwellClientAkka, WorkflowStatus}
 import group.research.aging.cromwell.web.Commands.{ChangeClient, StreamMetadata}
 import group.research.aging.cromwell.web.{Commands, EmptyAction, Messages, Results}
 import wvlet.log.LogSupport
-
-import scala.concurrent.Future
+import cats.implicits._
+import scala.concurrent.{ExecutionContextExecutor, Future}
+import scala.util.Failure
 
 /**
   * Actors that proccesses most of websocket messages from the users and back
   * @param username
   */
-case class UserActor(username: String) extends Actor with LogSupport {
+case class UserActor(username: String, initialClient: CromwellClientAkka) extends Actor with LogSupport {
 
   debug(s"user actor ${username}")
+
+  implicit def executionContext: ExecutionContextExecutor = this.context.dispatcher
 
 //  val generator = new CentromereGenerator
 
 
-  protected def operation(output: List[ActorRef], client: CromwellClient): Receive = {
+  protected def operation(output: List[ActorRef], client: CromwellClientAkka): Receive = {
     case WebsocketMessages.ConnectWsHandle(ref) =>
       this.context.become(operation(output :+ ref, client))
-      ref ! WebsocketMessages.WebsocketAction(Results.UpdatedClient(client))
+      ref ! WebsocketMessages.WebsocketAction(Results.UpdateClient(client.base))
 
     case WebsocketMessages.WsHandleDropped =>
       info("Websocket HANDLER DROP!")
@@ -42,7 +45,18 @@ case class UserActor(username: String) extends Actor with LogSupport {
       this.context.become(operation(output, client))
 
     case Commands.Run(wdl, input, options) =>
-      val postFut = client.postWorkflowStrings(wdl, input, options).map(s=>Results.WorkflowSent(s))(context.dispatcher)
+      debug("RUNNING WLD: ")
+      debug(wdl)
+      debug("-------------")
+      debug("INPUT: ")
+      debug(input)
+      debug("=================================")
+      val postFut = client.postWorkflowStrings(wdl, input, options).map[Results.ActionResult](s=>Results.WorkflowSent(s))(context.dispatcher).recover{
+        case th =>
+          error(s"WORKFLOW could not be executed because of: \n ${th}")
+          val m = Option(th.getMessage).combine(Option(th.getCause).map(_.getMessage)).getOrElse(th.toString)
+          Messages.Errors(List(Messages.ExplainedError("workflow could not be executed!", m)))
+      }
       pipe(postFut)(context.dispatcher) to self
 
     case Results.WorkflowSent(status) =>
@@ -91,7 +105,6 @@ case class UserActor(username: String) extends Actor with LogSupport {
 
   }
 
-  override def receive: Receive = operation(Nil, new CromwellClient(scala.util.Properties.envOrElse("CROMWELL", "http://localhost:8000" ))
-  )
+  override def receive: Receive = operation(Nil, initialClient)
 
 }

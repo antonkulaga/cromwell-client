@@ -1,5 +1,7 @@
 package group.research.aging.cromwell.client
 
+import java.net.URI
+
 import cats.effect.IO
 import cats.free.Free
 import cats.implicits._
@@ -12,6 +14,8 @@ trait CromwellClientShared extends RosHttp with CromwellClientLike {
 
   def base: String
   def version: String
+
+  def baseHost: String = new URI(base).getHost
 
   lazy val baseNoPort: String = {
     val first = base.indexOf(":/")

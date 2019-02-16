@@ -111,16 +111,18 @@ object CromwellWeb extends scala.App with Base {
       previous
 
 
-    case (previous, upd: Results.UpdatedClient) => previous.copy(client = upd.client, errors = Nil)
+    case (previous, Results.UpdateClient(base)) => previous.copy(client = previous.client.copy(base = base), errors = Nil)
     case (previous, upd: Results.UpdatedMetadata) => previous.copy(metadata = upd.metadata, errors = Nil)
 
   }
 
   //AppCircuit.addProcessor(new LoggingProcessor[AppModel]())
   val runner = new RunnerView(commands, messages, state.map(_.status), state.map(_.client.base))
+
+
   val workflows = new WorkflowsView(
     state.map(_.sortedMetadata),
-    state.map(_.client.baseNoPort),
+    state.map(_.client.baseHost),
     commands
   )
 

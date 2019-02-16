@@ -47,7 +47,7 @@ object Results {
   }
   case class UpdatedStatus(info: WorkflowStatus) extends ActionResult
   case class UpdatedMetadata(metadata: List[Metadata]) extends ActionResult
-  case class UpdatedClient(client: CromwellClient) extends ActionResult
+  case class UpdateClient(serverURL: String) extends ActionResult
   case class ServerResult(action: Action) extends ActionResult
   case class WorkflowSent(status: StatusInfo) extends ActionResult
 

@@ -1,17 +1,13 @@
 package group.research.aging.cromwell.client
 
-import cats.effect.IO
-import cats.free.Free
-import fr.hmil.roshttp.body.JSONBody.JSONObject
-import group.research.aging.cromwell.client._
-import hammock.marshalling.MarshallC
-import hammock.{Decoder, Entity, Hammock, HammockF, HttpF, HttpResponse, Method, Uri}
 import io.circe.generic.JsonCodec
-
-import scala.concurrent.Future
 
 object CromwellClient {
   lazy val localhost: CromwellClient = new CromwellClient("http://localhost:8000", "v1")
+
+  lazy val defaultClientPort: String = "8001"
+
+  lazy val defaultHost: String = "localhost"
 
   def apply(base: String): CromwellClient = {
     val url = if(base.endsWith("/")) {
@@ -24,7 +20,6 @@ object CromwellClient {
 
 @JsonCodec case class CromwellClient(base: String, version: String)
   extends CromwellClientShared with CromwellClientJSspecific
-
 
 /*
   def postWorkflowStrings(fileContent: String,

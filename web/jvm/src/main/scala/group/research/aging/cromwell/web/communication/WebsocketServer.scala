@@ -3,11 +3,13 @@ package group.research.aging.cromwell.web.communication
 
 import akka.NotUsed
 import akka.actor.{ActorRef, ActorSystem, Props}
+import akka.http.scaladsl.HttpExt
 import akka.http.scaladsl.model.ws.{Message, TextMessage}
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.stream.OverflowStrategy
 import akka.stream.scaladsl._
+import group.research.aging.cromwell.client.{CromwellClient, CromwellClientAkka}
 import group.research.aging.cromwell.web.Commands.ChangeClient
 import group.research.aging.cromwell.web.KeepAliveAction
 import io.circe.parser.decode
@@ -18,7 +20,7 @@ import wvlet.log.{LogSupport, Logger}
   * Processes key websocket logic and handles users joining/quiting
   * @param system
   */
-class WebsocketServer(system: ActorSystem) extends LogSupport{
+class WebsocketServer(http: HttpExt) extends LogSupport{
 
   // Set the default log formatter
   Logger.setDefaultFormatter(SourceCodeLogFormatter)
@@ -36,8 +38,9 @@ class WebsocketServer(system: ActorSystem) extends LogSupport{
     //val wsUser: ActorRef = system.actorOf(WebSocketUser.props(username))
 
     info(s"adding user ${username}")
-
-    val wsUser: ActorRef = system.actorOf(Props(UserActor(username)))
+    val serverURL = CromwellClient.defaultURL
+    val client  = CromwellClientAkka(serverURL, "v1", http)
+    val wsUser: ActorRef = http.system.actorOf(Props(UserActor(username, client)))
 
 
     // Integration point between Akka Streams and the above actor

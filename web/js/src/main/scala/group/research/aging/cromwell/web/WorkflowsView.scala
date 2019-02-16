@@ -2,19 +2,26 @@ package group.research.aging.cromwell.web
 //import diode.{Dispatcher, ModelRO}
 import group.research.aging.cromwell.client.{LogCall, Metadata, WorkflowFailure}
 import mhtml._
+import org.scalajs.dom
 import org.scalajs.dom.Event
+
 import scala.xml.Elem
 
 
-class WorkflowsView(allMetadata: Rx[List[Metadata]], host: Rx[String], commands: Var[Commands.Command])
+class WorkflowsView(allMetadata: Rx[List[Metadata]], baseHost: Rx[String], commands: Var[Commands.Command])
 {
+
+  def clientPort = dom.window.location.port match {
+    case "" => ""
+    case v => ":" + v
+  }
+
+  val host: Rx[String] = baseHost.map(h => dom.window.location.protocol +"//"+ h + clientPort)
   //val allMetadata: Var[List[Metadata]]  = Var(initialMetadata)
 
   var desc = true
 
   def timingURL(base: String, id: String): String = base + s"/api/workflows/v1/${id}/timing"
-
-
 
   /*
   def onMetadataUpdate(reader: ModelRO[List[Metadata]]): Unit = {

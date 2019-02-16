@@ -21,7 +21,8 @@ case class State (client: CromwellClient,
                   metadata: List[Metadata],
                   status: WorkflowStatus = WorkflowStatus.AnyStatus,
                   errors: List[Messages.ExplainedError] = Nil,
-                  effects: List[()=>Unit] = Nil)
+                  effects: List[()=>Unit] = Nil
+                 )
 {
   def withEffect(e: ()=>Unit): State = copy(effects = effects :+ e)
 
