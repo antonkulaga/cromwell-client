@@ -6,8 +6,7 @@ import group.research.aging.cromwell.web.communication.{WebsocketClient, Websock
 import org.querki.jquery._
 import wvlet.log.LogLevel
 
-import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
-import scala.util.{Failure, Random, Success}
+import scala.util.Random
 
 /**
   * Main application
@@ -48,9 +47,7 @@ object CromwellWeb extends scala.App with Base {
     for(r <- rxes) r.impure.run(v=> allActions := v)
   }
 
-
   val state: Var[State] = Var(State.empty)
-
 
   lazy val commandsReducer: Reducer = {
 
@@ -159,10 +156,8 @@ object CromwellWeb extends scala.App with Base {
 
   val component =
   <div id="cromwell">
-    <section class="ui grid">
-          {  runner.component }
+      {  runner.component }
       {  errors.component }
-    </section>
     {  workflows.component }
   </div>
 

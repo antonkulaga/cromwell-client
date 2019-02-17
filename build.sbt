@@ -20,8 +20,6 @@ lazy val commonSettings = Seq(
 
 	resolvers += sbt.Resolver.bintrayRepo("comp-bio-aging", "main"),
 
-	resolvers += sbt.Resolver.bintrayRepo("denigma", "denigma-releases"),
-
 	resolvers += "Broad Artifactory Releases" at "https://artifactory.broadinstitute.org/artifactory/libs-release/",
 
 	resolvers += "Broad Artifactory Snapshots" at "https://artifactory.broadinstitute.org/artifactory/libs-snapshot/",
@@ -172,3 +170,6 @@ lazy val webJVM = cromwellWeb.jvm.settings(
 mainClass in Compile := (mainClass in webJVM in Compile).value
 
 (fullClasspath in Runtime) += (packageBin in webJVM in Assets).value
+
+dockerUpdateLatest := true
+
