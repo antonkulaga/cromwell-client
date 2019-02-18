@@ -96,11 +96,13 @@ object CromwellWeb extends scala.App with Base {
       previous
 
     case (previous, run @ Commands.Run(wdl, input, options, dependencies)) =>
+      //debug("DEPENDENCIES: \n"+ dependencies.mkString("\n"))
       previous.withEffect{() =>
         toServer := WebsocketMessages.WebsocketAction(run)
       }
 
     case (previous, v @ Commands.Validate(wdl, input, options, dependencies)) =>
+      //debug("DEPENDENCIES: \n"+ dependencies.mkString("\n"))
       previous.withEffect{() =>
         toServer := WebsocketMessages.WebsocketAction(v)
       }
@@ -120,7 +122,7 @@ object CromwellWeb extends scala.App with Base {
       }
 
     case (previous, Results.UpdatedStatus(md)) =>
-      println("not yet sure what to do with updated status")
+      println(s"not yet sure what to do with updated status: ${md}")
       previous
 
     case (previous, Results.WorkflowValidated(ers)) =>

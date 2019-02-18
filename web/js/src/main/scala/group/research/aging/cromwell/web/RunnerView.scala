@@ -190,7 +190,7 @@ class RunnerView(
     <td class="ui left aligned">
       <div class="ui labeled input">
         <div class="ui label">dependencies</div>
-        <input id ="wdl" onclick="this.value=null;" onchange = { uploadFilesHandler(dependencies) _ } accept=".wdl"  name="sub" type="file" multiple="multiple" />
+        <input id ="wdl" onclick="this.value=null;" onchange = { uploadFilesHandler(dependencies) _ } accept=".wdl"  name="dependencies" type="file" multiple="multiple" />
       </div>
     </td>
 

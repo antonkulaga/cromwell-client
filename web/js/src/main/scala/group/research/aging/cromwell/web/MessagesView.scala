@@ -33,7 +33,7 @@ class InfoView(val infos: Rx[List[Info]], messages: Var[Messages.Message]) {
     messages := Messages.Errors(Nil)
   }
   val component: Rx[List[Elem]] = infos.map(ii => ii.map(i=>
-    <div class="ui message">
+    <div class="ui info message">
       <i class="close icon" onclick={ cleanInfo _ }></i>
       <div class="header">
         {i.title}

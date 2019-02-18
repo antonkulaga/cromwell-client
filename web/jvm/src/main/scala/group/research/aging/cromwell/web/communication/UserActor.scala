@@ -47,17 +47,15 @@ case class UserActor(username: String, initialClient: CromwellClientAkka) extend
       this.context.become(operation(output, client))
 
     case Commands.Validate(wdl, input, options, dependencies) =>
-      debug("VALIDATING WLD: ")
-      debug(wdl)
+      debug("VALIDATING WDL")
+      debug("DEPENDENCIES: " + dependencies.map(_._1))
+      //debug(wdl)
       debug("-------------")
       debug("INPUT: ")
       debug(input)
       debug("=================================")
       val postFut = client.validateWorkflow(wdl, input, options, dependencies).map{
-        case v =>
-          debug("WORKFLOW VALIDATED!")
-          debug(v)
-          Results.WorkflowValidated(v)
+        case v => Results.WorkflowValidated(v)
       }.recover{
         case th =>
           error(s"WORKFLOW could not be executed because of: \n ${th}")
@@ -72,8 +70,8 @@ case class UserActor(username: String, initialClient: CromwellClientAkka) extend
 
 
     case Commands.Run(wdl, input, options, dependencies) =>
-      debug("RUNNING WLD: ")
-      debug(wdl)
+      debug("RUNNING WDL")
+      //debug(wdl)
       debug("-------------")
       debug("INPUT: ")
       debug(input)
