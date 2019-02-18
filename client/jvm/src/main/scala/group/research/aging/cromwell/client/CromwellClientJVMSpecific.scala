@@ -16,6 +16,41 @@ trait CromwellClientJVMSpecific {
 
   import  implicits._
 
+  def zipDependencies(files: Seq[(String, String)]): Option[File] = if(files.nonEmpty) {
+    val dir = File.newTemporaryDirectory()
+    for{(name, content) <- files}
+    {
+      val file = dir.createChild(name, asDirectory = false)
+      file.write(content)
+    }
+    for(ch <- dir.children) println(s"written dependency as temp file ${ch.pathAsString}")
+    Some(dir.zip())
+  } else None
+
+  def postWorkflowStrings(workflow: String,
+                        workflowInputs: String,
+                        workflowOptions: String = "",
+                        wdlDependencies: Seq[(String, String)] = Seq.empty): Future[StatusInfo] ={
+    self.postWorkflow(
+      workflow,
+      workflowInputs,
+      workflowOptions,
+      zipDependencies(wdlDependencies).map(f=>ByteBuffer.wrap(f.loadBytes))
+    )
+  }
+
+  def validateWorkflow(workflow: String,
+                          workflowInputs: String,
+                          workflowOptions: String = "",
+                          wdlDependencies: Seq[(String, String)] = Seq.empty): Future[ValidationResult] ={
+    self.describeWorkflow(
+      workflow,
+      workflowInputs,
+      workflowOptions,
+      zipDependencies(wdlDependencies).map(f=>ByteBuffer.wrap(f.loadBytes))
+    )
+  }
+
 
   protected def zipFolder(file: File) = {
     /*
@@ -28,11 +63,12 @@ trait CromwellClientJVMSpecific {
     file.zip()
   }
 
-  def postWorkflowFiles(workflow: File,
-                        workflowInputs: File,
-                        workflowOptions: Option[File] = None,
-                        wdlDependencies: Option[File] = None): Future[StatusInfo] ={
-    self.postWorkflowStrings(
+  def postWorkflowFolder(workflow: File,
+                         workflowInputs: File,
+                         workflowOptions: String = "",
+                         wdlDependencies: Option[File] = None,
+                        ): Future[StatusInfo] ={
+    self.postWorkflow(
       workflow.lines.mkString("\n"),
       workflowInputs,
       workflowOptions,

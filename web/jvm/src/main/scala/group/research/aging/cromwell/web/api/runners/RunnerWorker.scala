@@ -64,9 +64,9 @@ class RunnerWorker(client: CromwellClientAkka) extends Actor with LogSupport {
         context.become(operation(updCallbacks))
       }
 
-    case mes @ MessagesAPI.ServerCommand(Commands.Run(wdl, input, options), _, _) =>
+    case mes @ MessagesAPI.ServerCommand(Commands.Run(wdl, input, options, dependencies), _, _) =>
           val source: ActorRef = sender()
-          val statusUpdate = client.postWorkflowStrings(wdl, input, options)
+          val statusUpdate = client.postWorkflowStrings(wdl, input, options, dependencies)
           statusUpdate pipeTo source
           statusUpdate.map(s=>mes.promise(s)) pipeTo self
 

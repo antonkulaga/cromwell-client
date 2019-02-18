@@ -38,7 +38,7 @@ object CromwellClient {
 }
 
 case class CromwellClientAkka(base: String, version: String = "v1", http: HttpExt)
-                             extends CromwellClientShared {
+                             extends CromwellClientShared with CromwellClientJVMSpecific{
 
   import  implicits._
   implicit val materializer: ActorMaterializer = ActorMaterializer()(http.system)

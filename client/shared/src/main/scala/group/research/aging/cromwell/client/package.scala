@@ -105,6 +105,7 @@ package object client {
   @ConfiguredJsonCodec case class CallOutputs(outputs: Map[String,  CallOutput], id: String) extends WorkflowResponse
 
   @ConfiguredJsonCodec case class StatusInfo(id: String, status: String) extends WorkflowResponse
+  @ConfiguredJsonCodec case class ValidationResult(valid: Boolean, errors: List[String]) extends CromwellResponse
 
   @ConfiguredJsonCodec case class Logs(id: String, calls: Option[Map[String, List[LogCall]]] = None) extends WorkflowResponse
 

@@ -7,6 +7,9 @@ import scala.scalajs.js
 trait Base extends LogSupport
 {
 
+  /**
+    * Reducer type, all State updates happen inside the reducers that are partial functions receiving State and Action, returning new value of the State
+    */
   type Reducer = PartialFunction[(State, Action), State]
 
   def enabledIf(str: String, condition: Rx[Boolean]): Rx[String] =

@@ -76,18 +76,23 @@ def postWorkflow2(fileContent: String,
 */
 
 
+  protected def prepareInputOptionsDependencies(
+                                 workflowInputs: String,
+                                 workflowOptions: String = "",
+                                 workflowDependencies: Option[java.nio.ByteBuffer] = None
+                               ): List[(String, BodyPart)] = {
+    val inputs: List[(String, BodyPart)] = if (workflowInputs == "") Nil else
+      List(("workflowInputs", AnyBody(workflowInputs)))
+    val options: List[(String, BodyPart)] = if (workflowOptions == "") Nil else
+      List(("workflowOptions", AnyBody(workflowOptions)))
+    val deps: List[(String, BodyPart)] =
+      workflowDependencies.fold(List.empty[(String, BodyPart)])(part  => List("workflowDependencies" -> ByteBufferBody(part)))
+    inputs ++ options ++ deps
+  }
 
-  /**
-    * 400
-    * Malformed Input
-    * 500
-    * Internal Error
-    * @param fileContent
-    * @param workflowInputs
-    * @param workflowOptions
-    * @param workflowDependencies
-    * @return
-    */
+
+
+  /*
   def postWorkflow(fileContent: String,
                    workflowInputs: Option[JSONObject] = None,
                    workflowOptions: Option[JSONObject] = None,
@@ -101,21 +106,45 @@ def postWorkflow2(fileContent: String,
     val parts = Map[String, BodyPart](params:_*)
     postAPI[group.research.aging.cromwell.client.StatusInfo](s"/workflows/${version}")(new MultiPartBody(parts))
   }
-
-  def postWorkflowStrings(fileContent: String,
+  */
+  /**
+    * 400
+    * Malformed Input
+    * 500
+    * Internal Error
+    * @param fileContent
+    * @param workflowInputs
+    * @param workflowOptions
+    * @param workflowDependencies
+    * @return
+    */
+  def postWorkflow(fileContent: String,
                           workflowInputs: String,
                           workflowOptions: String = "",
                           workflowDependencies: Option[java.nio.ByteBuffer] = None
                          ): Future[group.research.aging.cromwell.client.StatusInfo] = {
-    val inputs: List[(String, BodyPart)] = if (workflowInputs == "") Nil else
-      List(("workflowInputs", AnyBody(workflowInputs)))
-    val options: List[(String, BodyPart)] = if (workflowOptions == "") Nil else
-      List(("workflowOptions", AnyBody(workflowOptions)))
-    val deps: List[(String, BodyPart)] =
-      workflowDependencies.fold(List.empty[(String, BodyPart)])(part  => List("workflowDependencies" -> ByteBufferBody(part)))
-    val params = ("workflowSource", PlainTextBody(fileContent)) :: inputs ++ options ++ deps
+    val params = ("workflowSource", PlainTextBody(fileContent)) :: prepareInputOptionsDependencies(workflowInputs, workflowOptions, workflowDependencies)
     val parts = Map[String, BodyPart](params: _*)
     postAPI[group.research.aging.cromwell.client.StatusInfo](s"/workflows/${version}")(new MultiPartBody(parts))
+  }
+
+  def postWorkflowURL(url: String,
+                      workflowInputs: String,
+                      workflowOptions: String = "",
+                      workflowDependencies: Option[java.nio.ByteBuffer] = None): Future[StatusInfo] = {
+    val params = ("workflowUrl", PlainTextBody(url)) :: prepareInputOptionsDependencies(workflowInputs, workflowOptions, workflowDependencies)
+    val parts = Map[String, BodyPart](params: _*)
+    postAPI[group.research.aging.cromwell.client.StatusInfo](s"/workflows/${version}")(new MultiPartBody(parts))
+  }
+
+  def describeWorkflow(fileContent: String,
+              workflowInputs: String,
+              workflowOptions: String = "",
+              workflowDependencies: Option[java.nio.ByteBuffer] = None): Future[ValidationResult] = {
+    //val inputs: List[(String, BodyPart)] = if (workflowInputs == "") Nil else List(("workflowInputs", AnyBody(workflowInputs)))
+    val params = ("workflowSource", PlainTextBody(fileContent)) :: prepareInputOptionsDependencies(workflowInputs, workflowOptions, workflowDependencies)
+    val parts = Map[String, BodyPart](params: _*)
+    postAPI[group.research.aging.cromwell.client.ValidationResult](s"/womtool/${version}/describe")(new MultiPartBody(parts))
   }
 
 }

@@ -10,6 +10,8 @@ import scala.util.Random
 
 /**
   * Main application
+  * It based on a Redux pattern: all the state is saved in a State veraible while different actions are used to change the state
+  * Uses MonadicHTML libraries (similar to ScalaRx) for DataBinding
   */
 object CromwellWeb extends scala.App with Base {
 
@@ -20,7 +22,10 @@ object CromwellWeb extends scala.App with Base {
 
   lazy val table: JQuery = $("workflows")
 
-
+  /**
+    * commands, messages and results are main types of actions, they are put inside Var-s for DataBinding purposes
+    * Use := to update the Var
+    */
   val commands: Var[Commands.Command] = Var(Commands.EmptyCommand)
   val messages: Var[Messages.Message] = Var(Messages.EmptyMessage)
   val results: Var[Results.ActionResult] = Var(Results.EmptyResult)
@@ -47,8 +52,14 @@ object CromwellWeb extends scala.App with Base {
     for(r <- rxes) r.impure.run(v=> allActions := v)
   }
 
+  /**
+    * Contains the state of the application, wrapped into Var for databinding purposes
+    */
   val state: Var[State] = Var(State.empty)
 
+  /**
+    * All changes of the state happens in onReduce that is a partial function that is composed (for the sake of convenience) from several Reducers
+    */
   lazy val commandsReducer: Reducer = {
 
     case (previous, getMetadata: Commands.GetAllMetadata) =>
@@ -84,9 +95,14 @@ object CromwellWeb extends scala.App with Base {
       toServer := WebsocketMessages.WebsocketAction(a)
       previous
 
-    case (previous, run @ Commands.Run(wdl, input, options)) =>
+    case (previous, run @ Commands.Run(wdl, input, options, dependencies)) =>
       previous.withEffect{() =>
         toServer := WebsocketMessages.WebsocketAction(run)
+      }
+
+    case (previous, v @ Commands.Validate(wdl, input, options, dependencies)) =>
+      previous.withEffect{() =>
+        toServer := WebsocketMessages.WebsocketAction(v)
       }
   }
 
@@ -107,9 +123,19 @@ object CromwellWeb extends scala.App with Base {
       println("not yet sure what to do with updated status")
       previous
 
+    case (previous, Results.WorkflowValidated(ers)) =>
+      if(ers.errors.nonEmpty)
+      {
+        messages := Messages.Errors(ers.errors.map(ExplainedError("workflow validation error", _)))
+      }
+      else {
+        messages := Messages.Infos(List(Messages.Info("validation result", "workflow validated successfully!")))
+      }
+      previous
 
-    case (previous, Results.UpdateClient(base)) => previous.copy(client = previous.client.copy(base = base), errors = Nil)
-    case (previous, upd: Results.UpdatedMetadata) => previous.copy(metadata = upd.metadata, errors = Nil)
+
+    case (previous, Results.UpdateClient(base)) => previous.copy(client = previous.client.copy(base = base), errors = Nil, infos = Nil)
+    case (previous, upd: Results.UpdatedMetadata) => previous.copy(metadata = upd.metadata, errors = Nil, infos = Nil)
 
   }
 
@@ -123,7 +149,8 @@ object CromwellWeb extends scala.App with Base {
     commands
   )
 
-  val errors = new ErrorsView(state.map(_.errors), messages)
+  val errors = new ErrorsView(state.map(s=>s.errors),messages)
+  val infos = new InfoView(state.map(s=>s.infos), messages)
 
 
   lazy val errorReducer: Reducer = {
@@ -135,6 +162,14 @@ object CromwellWeb extends scala.App with Base {
     case (previous, e: Messages.ExplainedError) =>
       error(e)
       previous.copy(errors = e::previous.errors)
+
+    case (previous, Messages.Infos(inf)) =>
+      info(inf)
+      previous.copy(infos = inf)
+
+    case (previous, i: Messages.Info) =>
+      info(i)
+      previous.copy(infos = i::previous.infos)
   }
 
   def onOther : Reducer = {
@@ -149,6 +184,9 @@ object CromwellWeb extends scala.App with Base {
   }
 
 
+  /**
+    * Changes of the state happens only in the Reducers
+    */
   lazy val onReduce: Reducer = commandsReducer
     .orElse(resultsReducer)
     .orElse(errorReducer)
@@ -158,6 +196,7 @@ object CromwellWeb extends scala.App with Base {
   <div id="cromwell">
       {  runner.component }
       {  errors.component }
+      {  infos.component }
     {  workflows.component }
   </div>
 
@@ -183,6 +222,10 @@ object CromwellWeb extends scala.App with Base {
 
   val div = dom.document.getElementById("main")
 
+  /**
+    * Mounts everything together, start data binding of the HTML part
+    * @return
+    */
   def activate() = {
     //uglyUpdate(commands, messages, results)
     uglyUpdate(commands, messages, results, fromServer)

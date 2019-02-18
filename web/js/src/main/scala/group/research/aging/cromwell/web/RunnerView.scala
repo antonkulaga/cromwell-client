@@ -34,6 +34,8 @@ class RunnerView(
 
   val wdlFile: Var[Option[String]] = Var(None)
 
+  val dependencies: Var[List[(String, String)]] = Var(List.empty)
+
   val inputs: Var[Option[String]] = Var(None)
 
   val options: Var[Option[String]] = Var(None)
@@ -123,12 +125,21 @@ class RunnerView(
     }
   }
 
+  protected def uploadFilesHandler(v: Var[List[(String, String)]])(event: Event): Unit = {
+    uploadMultipleHandler(event){
+      case Success(seq) => v := seq.map{ case (f, c) => f.name -> c}.toList
+      case Failure(th)=>
+        dom.console.error(th.getMessage)
+        messages := Messages.ExplainedError("failed uploading files", th.getMessage)
+    }
+  }
   protected def runClick(event: js.Dynamic): Unit = {
     wdlFile.now match {
       case Some(wdl: String) =>
         val toRun = Commands.Run(wdl,
           inputs.now.getOrElse(""),
-          options.now.getOrElse("")
+          options.now.getOrElse(""),
+          dependencies.now
         )
         commands := toRun
       case None => messages := Messages.ExplainedError("No WLD file uploaded!" ,"")
@@ -136,7 +147,16 @@ class RunnerView(
   }
 
   protected def validateClick(event: js.Dynamic): Unit = {
-    messages := Messages.ExplainedError("Not implemented","Validate click button is not yet implemented!")
+    wdlFile.now match {
+      case Some(wdl: String) =>
+        val validate = Commands.Validate(wdl,
+          inputs.now.getOrElse(""),
+          options.now.getOrElse(""),
+          dependencies.now
+        )
+        commands := validate
+      case None => messages := Messages.ExplainedError("No WLD file uploaded!" ,"")
+    }
   }
 
   def enabledIf(str: String, condition: Rx[Boolean]): Rx[String] =
@@ -151,64 +171,6 @@ class RunnerView(
     <option selected="selected" value={value}>{label}</option>
   else <option value={value}>{label}</option>
 
-  /*
-  lazy val updater: Elem =
-        <div class="ui four wide column">
-          {lastURL.dropRepeats.map{ u =>
-              <input id="url" type="text" placeholder="Enter cromwell URL..."  oninput={ updateHandler _ } value={ u } />
-            }
-          }
-          <select id="status"  onclick={ updateStatus _}>
-            { currentStatus.map{ status=>
-            WorkflowStatus.values.map(s =>option(s.entryName, s.entryName, status.entryName))
-          }  }
-          </select>
-          <datalist id="status" value={WorkflowStatus.AnyStatus.entryName}></datalist>
-
-          <div class={enabledIf("ui primary button", validUrl)} onclick={ updateClick _}>Update workflows</div>
-
-        </div>
-
-  lazy val runner: Elem =
-      <div class="ui ten wide column form">
-        <section class="fields">
-          <div class="field">
-            <button class={ enabledIf("ui primary button", validUpload) } onclick = { validateClick _}>Validate</button>
-          </div>
-          <div class="field">
-            <div class="ui labeled input">
-              <div class="ui label">workflow WDL</div>
-              <input id ="wdl" onclick="this.value=null;" onchange = { uploadFileHandler(wdlFile) _ } accept=".wdl"  name="wdl" type="file" />
-            </div>
-          </div>
-          <div class="field">
-            <div class="ui labeled input">
-              <div class="ui label">subworkflows</div>
-              <input id ="wdl" onclick="this.value=null;" onchange = { uploadFileHandler(wdlFile) _ } accept=".wdl"  name="sub" type="file" multiple="multiple" />
-            </div>
-          </div>
-        </section>
-        <section class="fields">
-          <div class="field">
-            <button class={ enabledIf("ui primary button", validUpload) } onclick = { runClick _}>Run</button>
-          </div>
-          <div class="field">
-            <div class="ui labeled input">
-              <div class="ui label">inputs json</div>
-              <input id ="inputs" onclick="this.value=null;" onchange = { uploadFileHandler(inputs) _ } accept=".json" name="inputs" type="file" />
-            </div>
-          </div>
-          <div class="field">
-            <div class="ui labeled input">
-              <div class="ui label">options</div>
-              <input id ="inputs" onclick="this.value=null;" onchange = { uploadFileHandler(inputs) _ } accept=".json" name="options" type="file" />
-            </div>
-          </div>
-        </section>
-
-      </div>
-*/
-
   val component: Elem = <table class="ui collapsing very compact striped blue table">
   <tr class="ui center aligned">
     <td>
@@ -219,16 +181,16 @@ class RunnerView(
     <td>
         <button class={ enabledIf("ui primary button", validUpload) } onclick = { validateClick _}>Validate</button>
     </td>
-    <td>
+    <td class="ui left aligned">
       <div class="ui labeled input">
         <div class="ui label">workflow WDL</div>
         <input id ="wdl" onclick="this.value=null;" onchange = { uploadFileHandler(wdlFile) _ } accept=".wdl"  name="wdl" type="file" />
       </div>
     </td>
-    <td>
+    <td class="ui left aligned">
       <div class="ui labeled input">
-        <div class="ui label">subworkflows</div>
-        <input id ="wdl" onclick="this.value=null;" onchange = { uploadFileHandler(wdlFile) _ } accept=".wdl"  name="sub" type="file" multiple="multiple" />
+        <div class="ui label">dependencies</div>
+        <input id ="wdl" onclick="this.value=null;" onchange = { uploadFilesHandler(dependencies) _ } accept=".wdl"  name="sub" type="file" multiple="multiple" />
       </div>
     </td>
 
@@ -247,17 +209,17 @@ class RunnerView(
       <button class={ enabledIf("ui big primary button", validUpload) } onclick = { runClick _}>Run</button>
     </td>
 
-    <td>
+    <td class="ui left aligned">
       <div class="ui labeled input">
         <div class="ui label">inputs json</div>
         <input id ="inputs" onclick="this.value=null;" onchange = { uploadFileHandler(inputs) _ } accept=".json" name="inputs" type="file" />
       </div>
     </td>
-    <td>
-    <div class="ui labeled input">
-      <div class="ui label">options</div>
-      <input id ="inputs" onclick="this.value=null;" onchange = { uploadFileHandler(inputs) _ } accept=".json" name="options" type="file" />
-    </div>
+    <td class="ui left aligned">
+      <div class="ui labeled input">
+        <div class="ui label">options</div>
+        <input id ="inputs" onclick="this.value=null;" onchange = { uploadFileHandler(inputs) _ } accept=".json" name="options" type="file" />
+      </div>
   </td>
   </tr>
   </table>

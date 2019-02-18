@@ -60,7 +60,6 @@ trait CromwellClientShared extends RosHttp with CromwellClientLike {
 
   def getEngineStatus: IO[Entity] = get(s"/engine/${version}/status", Map.empty).map(_.entity).exec[IO]
 
-
   /**
     * 400
     * Malformed Workflow ID

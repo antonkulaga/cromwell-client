@@ -1,13 +1,16 @@
 package group.research.aging.cromwell.web.communication
 import akka.actor.{Actor, ActorRef}
 import akka.pattern.pipe
+import better.files.File
 import group.research.aging.cromwell.client.{CromwellClient, CromwellClientAkka, WorkflowStatus}
 import group.research.aging.cromwell.web.Commands.{ChangeClient, StreamMetadata}
 import group.research.aging.cromwell.web.{Commands, EmptyAction, Messages, Results}
 import wvlet.log.LogSupport
 import cats.implicits._
+
 import scala.concurrent.{ExecutionContextExecutor, Future}
 import scala.util.Failure
+import better.files._
 
 /**
   * Actors that proccesses most of websocket messages from the users and back
@@ -20,7 +23,6 @@ case class UserActor(username: String, initialClient: CromwellClientAkka) extend
   implicit def executionContext: ExecutionContextExecutor = this.context.dispatcher
 
 //  val generator = new CentromereGenerator
-
 
   protected def operation(output: List[ActorRef], client: CromwellClientAkka): Receive = {
     case WebsocketMessages.ConnectWsHandle(ref) =>
@@ -44,14 +46,39 @@ case class UserActor(username: String, initialClient: CromwellClientAkka) extend
     case Commands.CleanMessages =>
       this.context.become(operation(output, client))
 
-    case Commands.Run(wdl, input, options) =>
+    case Commands.Validate(wdl, input, options, dependencies) =>
+      debug("VALIDATING WLD: ")
+      debug(wdl)
+      debug("-------------")
+      debug("INPUT: ")
+      debug(input)
+      debug("=================================")
+      val postFut = client.validateWorkflow(wdl, input, options, dependencies).map{
+        case v =>
+          debug("WORKFLOW VALIDATED!")
+          debug(v)
+          Results.WorkflowValidated(v)
+      }.recover{
+        case th =>
+          error(s"WORKFLOW could not be executed because of: \n ${th}")
+          val m = Option(th.getMessage).combine(Option(th.getCause).map(_.getMessage)).getOrElse(th.toString)
+          Messages.Errors(List(Messages.ExplainedError("workflow could not be executed!", m)))
+      }
+      pipe(postFut)(context.dispatcher) to self
+
+
+    case v: Results.WorkflowValidated =>
+      output.foreach(o=>o ! WebsocketMessages.WebsocketAction(v))
+
+
+    case Commands.Run(wdl, input, options, dependencies) =>
       debug("RUNNING WLD: ")
       debug(wdl)
       debug("-------------")
       debug("INPUT: ")
       debug(input)
       debug("=================================")
-      val postFut = client.postWorkflowStrings(wdl, input, options).map[Results.ActionResult](s=>Results.WorkflowSent(s))(context.dispatcher).recover{
+      val postFut = client.postWorkflowStrings(wdl, input, options, dependencies).map[Results.ActionResult](s=>Results.WorkflowSent(s))(context.dispatcher).recover{
         case th =>
           error(s"WORKFLOW could not be executed because of: \n ${th}")
           val m = Option(th.getMessage).combine(Option(th.getCause).map(_.getMessage)).getOrElse(th.toString)

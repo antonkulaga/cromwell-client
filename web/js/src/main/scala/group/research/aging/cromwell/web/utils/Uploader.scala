@@ -6,11 +6,33 @@ import org.scalajs.dom.html.Input
 import org.scalajs.dom.raw.FileReader
 
 import scala.annotation.tailrec
+import scala.collection.immutable
 import scala.concurrent.{Future, Promise}
 import scala.util._
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 
 trait Uploader {
+
+  protected def uploadMultipleHandler(ev: Event)(onComplete: Try[Seq[(File, String)]] => Unit): Unit = {
+    if (ev.target == ev.currentTarget){
+      ev.preventDefault()
+      ev.target match {
+        case input: Input =>
+          val files: List[File] = input.files
+          val loaded: immutable.Seq[Future[(File, String)]] = for(f <- files) yield {
+            val reader = new FileReader()
+            reader.readAsText(f)
+            val fut = readText(f)
+            fut //.onComplete(onComplete)
+          }
+          val fut: Future[immutable.Seq[(File, String)]] = Future.sequence(loaded)
+          fut.onComplete(onComplete)
+        case null => println("null file input")
+        case _ => dom.console.error("not a file input")
+      }
+    }
+  }
+
 
   protected def uploadHandler(ev: Event)(onComplete: Try[(File, String)] => Unit): Unit = {
     if (ev.target == ev.currentTarget){

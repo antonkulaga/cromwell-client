@@ -58,25 +58,19 @@ trait CromwellClientLike {
   def getAllMetadata(status: WorkflowStatus = WorkflowStatus.AnyStatus, includeSubworkflows: Boolean = true): IO[List[Metadata]]
 
 
-  def postWorkflowStrings(fileContent: String,
+  def postWorkflow(fileContent: String,
                           workflowInputs: String,
                           workflowOptions: String,
                           workflowDependencies: Option[java.nio.ByteBuffer] = None
                          ): Future[group.research.aging.cromwell.client.StatusInfo]
 
-  /**
-    * 400
-    * Malformed Input
-    * 500
-    * Internal Error
-    * @param fileContent
-    * @param workflowInputs
-    * @param workflowOptions
-    * @param workflowDependencies
-    * @return
-    */
-  def postWorkflow(fileContent: String,
-                   workflowInputs: Option[JSONObject] = None,
-                   workflowOptions: Option[JSONObject] = None,
-                   workflowDependencies: Option[java.nio.ByteBuffer] = None): Future[group.research.aging.cromwell.client.StatusInfo]
+  def postWorkflowURL(url: String,  workflowInputs: String,
+                      workflowOptions: String = "",
+                      workflowDependencies: Option[java.nio.ByteBuffer] = None): Future[StatusInfo]
+
+  def describeWorkflow(fileContent: String,
+                       workflowInputs: String,
+                       workflowOptions: String = "",
+                       workflowDependencies: Option[java.nio.ByteBuffer] = None): Future[ValidationResult]
+
 }

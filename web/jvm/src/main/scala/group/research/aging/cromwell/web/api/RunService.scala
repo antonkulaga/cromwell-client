@@ -98,7 +98,7 @@ class RunService(val runner: ActorRef)(implicit val timeout: Timeout) extends Cr
           debug("Input JSON used:")
           debug(json)
           val wdl = fl.contentAsString
-          val toRun = Commands.Run(wdl, json, "")
+          val toRun = Commands.Run(wdl, json, "", Nil) //TODO: fix problem
           val serverMessage = MessagesAPI.ServerCommand(toRun, serverURL, callBackOpt.map(Set(_)).getOrElse(Set.empty[String]))
           completeOrRecoverWith((runner ? serverMessage).mapTo[StatusInfo]) { extraction =>
             debug(s"running pipeline failed with ${extraction}")

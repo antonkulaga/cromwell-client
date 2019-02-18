@@ -30,10 +30,10 @@ class BasicRunner(
 
   def run(input: String, options: String = "", subs: String = ""): Unit = {
     val status =
-      client.postWorkflowFiles(
+      client.postWorkflowFolder(
         workflowFile,
         getInputFile(input),
-        getOptions(options),
+        getOptions(options).map(_.lines.mkString("\n")).getOrElse(""),
         getSubs(subs)
     )
     //println(status)

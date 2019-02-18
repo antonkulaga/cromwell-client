@@ -24,11 +24,19 @@ object Messages {
   //class Error(val errorMessage: String) extends Message
   trait Error{
     self: Message =>
-    def errorMessage: String
+    def message: String
   }
   //@JsonCodec case class ExplicitError(errorMessage: String) extends Error
-  @JsonCodec case class ExplainedError(message: String, errorMessage: String) extends Error with Message
+  trait ExplainedMessage {
+    self: Message =>
+
+    def title: String
+    def message: String
+  }
+  @JsonCodec case class ExplainedError(title: String, message: String) extends Error with Message with ExplainedMessage
   @JsonCodec case class Errors(errors: List[ExplainedError]) extends Message
+  @JsonCodec case class Infos(infos: List[Info]) extends Message
+  @JsonCodec case class Info(title: String, message: String) extends Message with ExplainedMessage
 
 }
 
@@ -50,6 +58,8 @@ object Results {
   case class UpdateClient(serverURL: String) extends ActionResult
   case class ServerResult(action: Action) extends ActionResult
   case class WorkflowSent(status: StatusInfo) extends ActionResult
+  case class WorkflowValidated(validation: ValidationResult) extends ActionResult
+
 
 }
 
@@ -65,7 +75,8 @@ object Commands{
   case class GetQuery(statusS: WorkflowStatus, includeSubworkflows: Boolean = true) extends Command
   case class UpdateStatus(status: WorkflowStatus)  extends Command
   case class ChangeClient(newURL: String) extends Command
-  case class Run(wdl: String, input: String, options: String) extends Command
+  case class Run(wdl: String, input: String, options: String = "", dependencies: List[(String, String)] = Nil) extends Command
+  case class Validate(wdl: String, input: String, options: String = "", dependencies: List[(String, String)] = Nil) extends Command
   case class Abort(id: String) extends Command
   //case class UpdateURL(url: String) extends Command
 
