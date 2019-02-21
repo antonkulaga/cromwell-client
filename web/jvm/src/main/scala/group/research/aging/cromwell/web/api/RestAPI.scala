@@ -16,7 +16,7 @@ class RestAPI(http: HttpExt) extends Directives {
 
   def host: String = s"localhost:${scala.util.Properties.envOrElse("CROMWELL_CLIENT_PORT", "8001").toInt}"
 
-  val RunnerManager: ActorRef = system.actorOf(Props(new RunnerManager(http)))
+  lazy val runnerManager: ActorRef = system.actorOf(Props(new RunnerManager(http)))
 
   protected def toSwagger: StandardRoute = {
     val url = s"http://${host}/api-docs/swagger.json"
@@ -26,7 +26,12 @@ class RestAPI(http: HttpExt) extends Directives {
 
   def swagger: Route = path("swagger")  { toSwagger }
 
-  def routes: Route = swagger ~ SwaggerDocService.routes ~ pathPrefix("api") {
-    new RunService(RunnerManager).routes ~ new GetAllService(RunnerManager).routes ~ new WorkflowService(RunnerManager).routes ~ new TracingService().routes ~ toSwagger
+  lazy val routes: Route = swagger ~ SwaggerDocService.routes ~ pathPrefix("api") {
+      new TestService(runnerManager).routes ~
+      new RunService(runnerManager).routes ~
+      new GetAllService(runnerManager).routes ~
+      new WorkflowService(runnerManager).routes ~
+      new TracingService().routes ~
+      toSwagger
   }
 }

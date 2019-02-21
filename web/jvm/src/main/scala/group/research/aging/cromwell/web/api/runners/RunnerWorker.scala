@@ -5,7 +5,8 @@ import akka.pattern._
 import akka.stream.ActorMaterializer
 import cats.effect.IO
 import group.research.aging.cromwell.client
-import group.research.aging.cromwell.client.{CallOutput, CromwellClientAkka}
+import group.research.aging.cromwell.client.{CallOutput, CromwellClientAkka, QueryResult, StatusInfo}
+import group.research.aging.cromwell.web.Commands.TestRun
 import group.research.aging.cromwell.web.server.WebServer.http
 import group.research.aging.cromwell.web.{Commands, Results}
 import hammock.akka.AkkaInterpreter
@@ -15,8 +16,14 @@ import io.circe.Json
 import io.circe.syntax._
 import wvlet.log.LogSupport
 
-import scala.concurrent.ExecutionContextExecutor
+import scala.collection.immutable
+import scala.concurrent.{ExecutionContextExecutor, Future}
 import scala.concurrent.duration._
+
+/**
+  * Actors that interacts with cromwell server, receives messages from API and returns stuff back
+  * @param client
+  */
 class RunnerWorker(client: CromwellClientAkka) extends Actor with LogSupport {
 
   debug(s"runner worker for ${client.base} cromwell server started!")
@@ -35,10 +42,15 @@ class RunnerWorker(client: CromwellClientAkka) extends Actor with LogSupport {
   implicit protected def getInterpreter: AkkaInterpreter[IO] =
     new AkkaInterpreter[IO](http)
 
+  /**
+    * Recieve generating functions
+    * @param callbacks callbacks to check for responses from servers
+    * @return new Receive function
+    */
   protected def operation(callbacks: Map[String, Set[MessagesAPI.CallBack]]): Receive = {
     case MessagesAPI.Poll =>
       //debug(s"polling the callbacks, currently ${callbacks.mkString(",")} are avaliable")
-      val results = client.getQuery(includeSubworkflows = true).unsafeRunSync().results
+      val results: immutable.Seq[QueryResult] = client.getQuery(includeSubworkflows = true).unsafeRunSync().results
       val toDelete: Seq[(String, MessagesAPI.CallBack)] = for{
         r <- results
         if callbacks.contains(r.id)
@@ -46,8 +58,9 @@ class RunnerWorker(client: CromwellClientAkka) extends Actor with LogSupport {
         if cb.updateOn.contains(r.status)
       }
       yield {
-        val outputs = client.getOutput(r.id).unsafeRunSync()
+         val outputs = client.getOutput(r.id).unsafeRunSync()
          val json: Json = MessagesAPI.PipelineResult(r.id, r.status, outputs.outputs).asJson
+        debug(s"sending reesults back to ${cb.backURL}")
          val req = Hammock.request[Json](Method.POST, uri"${cb.backURL}", Map("Content-Type"->"application/json"), Some(json))
          val result: HttpResponse = req.exec[IO].unsafeRunSync()
         //debug(s"calling back ${cb.backURL} with request:")
@@ -58,17 +71,41 @@ class RunnerWorker(client: CromwellClientAkka) extends Actor with LogSupport {
         r.id -> cb
       }
       val g: Map[String, Set[MessagesAPI.CallBack]] = toDelete.groupBy(_._1).mapValues(_.map(_._2).toSet)
-      if(g.nonEmpty) {
-        val updCallbacks = callbacks.map{ case (i, cbs) => if(g.contains(i)) (i, cbs -- g(i)) else (i, cbs)}.filter(_._2.nonEmpty)
+      if(g.nonEmpty || callbacks.contains(TestRun.id)) {
+        for {
+          cbs <- callbacks.get(TestRun.id)
+          cb <- cbs
+        } {
+          import io.circe._, io.circe.parser._
+          val res: Option[Json] = parse(cb.updateOn.head).right.map(j=>Some(j)).getOrElse(None)
+          debug(s"sending test result to ${cb.backURL} ${res}")
+          val req = Hammock.request[Json](Method.POST, uri"${cb.backURL}", Map("Content-Type"->"application/json"), res)
+          val result: HttpResponse = req.exec[IO].unsafeRunSync()
+        }
+        val updCallbacks = callbacks.filter(_._1 != TestRun.id).map{ case (i, cbs) => if(g.contains(i)) (i, cbs -- g(i)) else (i, cbs)}.filter(_._2.nonEmpty)
         //debug(s"deleting ${callbacks.size - updCallbacks.size} callbacks after execution!")
         context.become(operation(updCallbacks))
       }
+
 
     case mes @ MessagesAPI.ServerCommand(Commands.Run(wdl, input, options, dependencies), _, _) =>
           val source: ActorRef = sender()
           val statusUpdate = client.postWorkflowStrings(wdl, input, options, dependencies)
           statusUpdate pipeTo source
           statusUpdate.map(s=>mes.promise(s)) pipeTo self
+
+    case mes @ MessagesAPI.ServerCommand(Commands.TestRun(wdl, input, results, dependencies), _, _) =>
+      val source: ActorRef = sender()
+      val statusUpdate: Future[StatusInfo] = Future{
+        StatusInfo("e442e52a-9de1-47f0-8b4f-e6e565008cf1-TEST", "Submitted")
+      }
+      statusUpdate pipeTo source
+      statusUpdate.map { s =>
+        val p = mes.promise(s)
+        debug(s"prossesing TEST RUN with ${Set(results)}")
+        p.copy(callbacks = p.callbacks.map(v => v.copy(updateOn = Set(results))))
+      } pipeTo self
+
 
     case Commands.GetAllMetadata(status, subworkflows) =>
       val s = sender

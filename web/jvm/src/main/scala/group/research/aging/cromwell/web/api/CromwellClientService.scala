@@ -12,6 +12,7 @@ import akka.http.scaladsl.marshalling.ToResponseMarshaller
 import akka.http.scaladsl.server.Route
 import akka.pattern.ask
 import akka.util.Timeout
+import better.files.File
 import group.research.aging.cromwell.client
 import group.research.aging.cromwell.client.{CromwellClient, WorkflowStatus}
 import group.research.aging.cromwell.web.{Commands, Results}
@@ -43,7 +44,7 @@ trait BasicService extends Directives with FailFastCirceSupport with LogSupport 
 /**
   * Basic trait for services that have to deal with CromwellServer
   */
-trait CromwellClientService extends BasicService  {
+trait CromwellClientService extends BasicPipelineService  {
 
   def runner: ActorRef
   implicit def timeout: Timeout
@@ -95,4 +96,9 @@ trait CromwellClientService extends BasicService  {
   }
   */
 
+}
+
+trait BasicPipelineService extends BasicService {
+  lazy val pipelinesRoot: File = File(scala.util.Properties.envOrElse("PIPELINES", if(File("/data/pipelines").exists) "/data/pipelines" else if(File("./pipelines").exists) "./pipelines" else
+  if(File("./workflows").exists) "./workflows" else "."))
 }

@@ -13,7 +13,14 @@ import wvlet.log.LogSupport
   */
 case class RunnerManager(http: HttpExt) extends Actor with LogSupport {
 
-  debug(s"runner manager actor started")
+  override def preStart { debug(s"runner manager actor started at ${java.time.LocalDateTime.now()}") }
+  override def postStop { debug(s"runner manager actor stopped at ${java.time.LocalDateTime.now()}") }
+  override def preRestart(reason: Throwable, message: Option[Any]) {
+    error(s"runner manager actor restarted at ${java.time.LocalDateTime.now()}")
+    error(s" MESSAGE: ${message.getOrElse("")}")
+    error(s" REASON: ${reason.getMessage}")
+    super.preRestart(reason, message)
+  }
 
   protected def operation(workers: Map[String, ActorRef]): Receive = {
     case mes @ MessagesAPI.ServerCommand(com, serverURL, callbackURLs) =>
@@ -22,6 +29,10 @@ case class RunnerManager(http: HttpExt) extends Actor with LogSupport {
           com match {
             case run: Commands.Run =>
               debug(s"sending run message wrapped in server message to ${serverURL} with callbacks to ${callbackURLs}")
+              worker forward mes
+
+            case run: Commands.TestRun =>
+              debug(s"sending TEST MESSAGE wrapped in server message to ${serverURL} with callbacks to ${callbackURLs}")
               worker forward mes
 
             case other =>

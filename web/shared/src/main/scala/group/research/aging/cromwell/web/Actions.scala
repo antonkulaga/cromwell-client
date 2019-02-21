@@ -76,6 +76,11 @@ object Commands{
   case class UpdateStatus(status: WorkflowStatus)  extends Command
   case class ChangeClient(newURL: String) extends Command
   case class Run(wdl: String, input: String, options: String = "", dependencies: List[(String, String)] = Nil) extends Command
+  object TestRun
+  {
+    val id = "e442e52a-9de1-47f0-8b4f-e6e565008cf1-TEST"
+  }
+  case class TestRun(wdl: String, input: String, options: String = "", dependencies: List[(String, String)] = Nil) extends Command
   case class Validate(wdl: String, input: String, options: String = "", dependencies: List[(String, String)] = Nil) extends Command
   case class Abort(id: String) extends Command
   //case class UpdateURL(url: String) extends Command

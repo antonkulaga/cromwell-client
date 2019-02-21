@@ -1,5 +1,12 @@
 package group.research.aging.cromwell.web.api
 
+import akka.http.scaladsl.model.HttpHeader.ParsingResult.Ok
+import akka.http.scaladsl.server._
+import group.research.aging.cromwell.client
+import io.swagger.v3.oas.annotations._
+import io.swagger.v3.oas.annotations.enums.{ParameterIn, ParameterStyle}
+import io.swagger.v3.oas.annotations.responses._
+import javax.ws.rs._
 import akka.actor.ActorRef
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Route
@@ -12,33 +19,27 @@ import group.research.aging.cromwell.web.Commands
 import group.research.aging.cromwell.web.api.runners.MessagesAPI
 import io.circe.generic.auto._
 import io.swagger.v3.oas.annotations._
-import io.swagger.v3.oas.annotations.enums.{ParameterIn, ParameterStyle}
+import io.swagger.v3.oas.annotations.enums.ParameterIn
 import io.swagger.v3.oas.annotations.media._
 import io.swagger.v3.oas.annotations.parameters.RequestBody
 import io.swagger.v3.oas.annotations.responses._
 import javax.ws.rs._
-import wvlet.log.LogSupport
 
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 
-
-/**
-  * Service to run cromwell pipelines
-  * @param materializer
-  */
-@Path(value = "/api")
-class RunService(val runner: ActorRef)(implicit val timeout: Timeout) extends CromwellClientService with LocalWorkflows {
+@Path("/api")
+class TestService(val runner: ActorRef)(implicit val timeout: Timeout) extends CromwellClientService with LocalWorkflows {
 
 
   @POST
-  @Path("/run/{pipeline}")
-  @Operation(summary = "runs the workflow", description = "runs the workflow and returns its status and (with callback) the results", tags = Array("run"),
+  @Path("/test/{pipeline}")
+  @Operation(summary = "tests the workflow", description = "tests the workflow running", tags = Array("test"),
     requestBody = new RequestBody(
       content = Array(new Content(
         mediaType = "application/json",
         schema = new Schema(
-        example = """{
+          example = """{
 "quantification.key": "0a1d74f32382b8a154acacc3a024bdce3709",
 "quantification.samples_folder": "/data/samples",
 "quantification.salmon_indexes": {
@@ -80,7 +81,7 @@ class RunService(val runner: ActorRef)(implicit val timeout: Timeout) extends Cr
       new ApiResponse(responseCode = "500", description = "Internal server error")
     )
   )
-  def runAPI: Route = pathPrefix("run" / Remaining) { pipeline =>
+  def testRun: Route = pathPrefix("test" / Remaining) { pipeline =>
     debug(s"BEFORE PARAMETER EXTRACTION FOR ${pipeline}")
     extractPipeline(pipelinesRoot, pipeline) match {
       case (None, _) =>
@@ -96,9 +97,9 @@ class RunService(val runner: ActorRef)(implicit val timeout: Timeout) extends Cr
             debug("Input JSON used:")
             debug(json)
 
-            val toRun = Commands.Run(wdl, json, "", deps) //TODO: fix problem
+            val toRun = Commands.TestRun(wdl, json, (File(pipeline) / "test.json").lines.mkString("\n"), deps) //TODO: fix problem
 
-          val serverMessage = MessagesAPI.ServerCommand(toRun, serverURL, callBackOpt.map(Set(_)).getOrElse(Set.empty[String]))
+            val serverMessage = MessagesAPI.ServerCommand(toRun, serverURL, callBackOpt.map(Set(_)).getOrElse(Set.empty[String]))
             completeOrRecoverWith((runner ? serverMessage).mapTo[StatusInfo]) { extraction =>
               debug(s"running pipeline failed with ${extraction}")
               failWith(extraction) // not executed.
@@ -114,6 +115,6 @@ class RunService(val runner: ActorRef)(implicit val timeout: Timeout) extends Cr
     }
   }
 
-  def routes: Route = runAPI
 
+  def routes: Route  = testRun
 }

@@ -24,6 +24,12 @@ case class UserActor(username: String, initialClient: CromwellClientAkka) extend
 
 //  val generator = new CentromereGenerator
 
+  /**
+    * Key functions that generates Recieve function based on outputs and server client
+    * @param output
+    * @param client
+    * @return
+    */
   protected def operation(output: List[ActorRef], client: CromwellClientAkka): Receive = {
     case WebsocketMessages.ConnectWsHandle(ref) =>
       this.context.become(operation(output :+ ref, client))
@@ -54,9 +60,7 @@ case class UserActor(username: String, initialClient: CromwellClientAkka) extend
       debug("INPUT: ")
       debug(input)
       debug("=================================")
-      val postFut = client.validateWorkflow(wdl, input, options, dependencies).map{
-        case v => Results.WorkflowValidated(v)
-      }.recover{
+      val postFut = client.validateWorkflow(wdl, input, options, dependencies).map(v => Results.WorkflowValidated(v)).recover{
         case th =>
           error(s"WORKFLOW could not be executed because of: \n ${th}")
           val m = Option(th.getMessage).combine(Option(th.getCause).map(_.getMessage)).getOrElse(th.toString)

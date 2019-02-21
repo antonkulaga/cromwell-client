@@ -117,10 +117,12 @@ object WebServer extends HttpApp with FailFastCirceSupport with LogSupport {
 
   lazy val websocketServer: WebsocketServer = new WebsocketServer(http)
 
+  lazy val restAPI = new RestAPI(http)
+
   override def routes: Route = cors(){
     index~
     websocketServer.route ~
-    new RestAPI(http).routes ~
+    restAPI.routes ~
     webjars ~
     mystyles ~
     assets ~

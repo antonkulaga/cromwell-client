@@ -9,8 +9,7 @@ import wvlet.log.LogSupport
 object SwaggerDocService extends SwaggerHttpService {
   override val apiClasses: Set[Class[_]] = Set( classOf[GetAllService], classOf[WorkflowService], classOf[RunService])
 
-  CromwellClient.defaultURL
-  override val host = s"${CromwellClient.defaultHost}:${CromwellClient.defaultServerPort.toInt}"
+  //override val host = s"${CromwellClient.defaultHost}:${CromwellClient.defaultClientPort.toInt}"
   //override val info = Info(version = "1.0")
   //override val securitySchemeDefinitions = Map("basicAuth" -> new BasicAuthDefinition())
   override val unwantedDefinitions = Seq("Function1", "Function1RequestContextFutureRouteResult")

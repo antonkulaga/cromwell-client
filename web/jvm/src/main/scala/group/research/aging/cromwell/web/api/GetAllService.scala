@@ -6,8 +6,7 @@ import group.research.aging.cromwell.client
 import group.research.aging.cromwell.web.{Commands, Results}
 import group.research.aging.cromwell.web.api.runners.MessagesAPI
 import io.swagger.v3.oas.annotations._
-import io.swagger.v3.oas.annotations.enums.ParameterIn
-import io.swagger.v3.oas.annotations.media._
+import io.swagger.v3.oas.annotations.enums.{ParameterIn, ParameterStyle}
 import io.swagger.v3.oas.annotations.responses._
 import javax.ws.rs._
 import akka.pattern._
@@ -36,7 +35,7 @@ class GetAllService(val runner: ActorRef)(implicit val timeout: Timeout) extends
 
   @GET
   @Path("/all")
-  @Operation(summary = "Return all metadata", description = "Return all metadata",
+  @Operation(summary = "Return all metadata", description = "Return all metadata", tags = Array("all"),
     parameters = Array(
       new Parameter(name = "server", in = ParameterIn.QUERY, description = "url to the cromwell server"),
       new Parameter(name = "status", in = ParameterIn.QUERY, description = "show only workflows with some status"),
@@ -253,11 +252,11 @@ class GetAllService(val runner: ActorRef)(implicit val timeout: Timeout) extends
 
   @GET
   @Path("/all/status")
-  @Operation(summary = "Return all statuses", description = "Return all statuses",
+  @Operation(summary = "Return all statuses", description = "Return all statuses", tags = Array("all"),
     parameters = Array(
-      new Parameter(name = "server", in = ParameterIn.QUERY, description = "url to the cromwell server"),
-      new Parameter(name = "status", in = ParameterIn.QUERY, description = "show only workflows with some status"),
-      new Parameter(name = "subworkflows", in = ParameterIn.QUERY, description = "if subworkflows should be shown")
+      new Parameter(name = "server", in = ParameterIn.QUERY, description = "url to the cromwell server",  style = ParameterStyle.SIMPLE, allowReserved = true),
+      new Parameter(name = "status", in = ParameterIn.QUERY, description = "show only workflows with some status",  style = ParameterStyle.SIMPLE, allowReserved = true),
+      new Parameter(name = "subworkflows", in = ParameterIn.QUERY, description = "if subworkflows should be shown",  style = ParameterStyle.SIMPLE, allowReserved = true)
     ),
     responses = Array(
       new ApiResponse(responseCode = "200", description = "Metadata for all pipelines",
