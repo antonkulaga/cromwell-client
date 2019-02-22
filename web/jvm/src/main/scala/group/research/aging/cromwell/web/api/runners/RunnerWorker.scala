@@ -7,7 +7,7 @@ import cats.effect.IO
 import group.research.aging.cromwell.client
 import group.research.aging.cromwell.client.{CallOutput, CromwellClientAkka, QueryResult, StatusInfo}
 import group.research.aging.cromwell.web.Commands.TestRun
-import group.research.aging.cromwell.web.server.WebServer.http
+import group.research.aging.cromwell.web.WebServer.http
 import group.research.aging.cromwell.web.{Commands, Results}
 import hammock.akka.AkkaInterpreter
 import hammock.circe.implicits._
@@ -61,7 +61,7 @@ class RunnerWorker(client: CromwellClientAkka) extends Actor with LogSupport {
          val outputs = client.getOutput(r.id).unsafeRunSync()
          val json: Json = MessagesAPI.PipelineResult(r.id, r.status, outputs.outputs).asJson
         debug(s"sending reesults back to ${cb.backURL}")
-         val req = Hammock.request[Json](Method.POST, uri"${cb.backURL}", Map("Content-Type"->"application/json"), Some(json))
+         val req = Hammock.request[Json](Method.POST, Uri.unsafeParse("${cb.backURL}"), Map("Content-Type"->"application/json"), Some(json))
          val result: HttpResponse = req.exec[IO].unsafeRunSync()
         //debug(s"calling back ${cb.backURL} with request:")
         //debug(json)
@@ -78,9 +78,11 @@ class RunnerWorker(client: CromwellClientAkka) extends Actor with LogSupport {
         } {
           import io.circe._, io.circe.parser._
           val res: Option[Json] = parse(cb.updateOn.head).right.map(j=>Some(j)).getOrElse(None)
-          debug(s"sending test result to ${cb.backURL} ${res}")
-          val req = Hammock.request[Json](Method.POST, uri"${cb.backURL}", Map("Content-Type"->"application/json"), res)
+          val u = Uri.unsafeParse(cb.backURL)
+          debug(s"SENDING TEST RESULT TO ${u}:\n ${res}")
+          val req = Hammock.request[Json](Method.POST, u, Map("Content-Type"->"application/json"), res)
           val result: HttpResponse = req.exec[IO].unsafeRunSync()
+          println("RESULT RECEIVED: " + result.toString)
         }
         val updCallbacks = callbacks.filter(_._1 != TestRun.id).map{ case (i, cbs) => if(g.contains(i)) (i, cbs -- g(i)) else (i, cbs)}.filter(_._2.nonEmpty)
         //debug(s"deleting ${callbacks.size - updCallbacks.size} callbacks after execution!")
@@ -102,7 +104,7 @@ class RunnerWorker(client: CromwellClientAkka) extends Actor with LogSupport {
       statusUpdate pipeTo source
       statusUpdate.map { s =>
         val p = mes.promise(s)
-        debug(s"prossesing TEST RUN with ${Set(results)}")
+        //debug(s"prossesing TEST RUN with ${Set(results)}")
         p.copy(callbacks = p.callbacks.map(v => v.copy(updateOn = Set(results))))
       } pipeTo self
 

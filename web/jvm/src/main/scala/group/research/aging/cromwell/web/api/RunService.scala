@@ -27,7 +27,7 @@ import scala.concurrent.{ExecutionContext, Future}
   * Service to run cromwell pipelines
   * @param materializer
   */
-@Path(value = "/api")
+@Path("/api")
 class RunService(val runner: ActorRef)(implicit val timeout: Timeout) extends CromwellClientService with LocalWorkflows {
 
 
@@ -63,8 +63,7 @@ class RunService(val runner: ActorRef)(implicit val timeout: Timeout) extends Cr
       new Parameter(name = "pipeline", in = ParameterIn.PATH, required = true,
         example = "quantification", style = ParameterStyle.DEFAULT, allowReserved = true,
         description = "path to the workflow inside pipelines folder (defined by PIPELINES enviroment variable, /data/pipelines by default)"),
-      new Parameter(name = "server", in = ParameterIn.QUERY, required = false,
-        example = "http://pic:8000", style = ParameterStyle.SIMPLE, allowReserved = true,
+      new Parameter(name = "server", in = ParameterIn.QUERY, required = false, style = ParameterStyle.SIMPLE, allowReserved = true,
         description = "URL of the cromwell server, enviroment variable CROMWELL by default"),
       new Parameter(name = "callback", style = ParameterStyle.SIMPLE,  allowReserved = true,
         in = ParameterIn.QUERY, required = false,
@@ -82,7 +81,7 @@ class RunService(val runner: ActorRef)(implicit val timeout: Timeout) extends Cr
   )
   def runAPI: Route = pathPrefix("run" / Remaining) { pipeline =>
     debug(s"BEFORE PARAMETER EXTRACTION FOR ${pipeline}")
-    extractPipeline(pipelinesRoot, pipeline) match {
+    extractPipeline(pipeline) match {
       case (None, _) =>
         error(s"CANNOT FIND ${pipeline}")
         reject(PipelinesRejections.PipelineNotFound(pipeline))

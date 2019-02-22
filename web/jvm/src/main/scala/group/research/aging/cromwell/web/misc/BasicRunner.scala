@@ -1,6 +1,4 @@
-package group.research.aging.cromwell.web.runner
-
-import java.io.{File => JFile}
+package group.research.aging.cromwell.web.misc
 
 import better.files._
 import group.research.aging.cromwell.client._

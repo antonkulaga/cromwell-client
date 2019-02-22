@@ -1,4 +1,4 @@
-package group.research.aging.cromwell.web.server
+package group.research.aging.cromwell.web
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.marshallers.xml.ScalaXmlSupport._
@@ -29,7 +29,6 @@ object WebServer extends HttpApp with FailFastCirceSupport with LogSupport {
   Logger.setDefaultFormatter(SourceCodeLogFormatter)
   Logger.setDefaultLogLevel(LogLevel.DEBUG)
 
-  lazy val webjarsPrefix = "lib"
   lazy val resourcePrefix = "public"
 
 
@@ -42,6 +41,7 @@ object WebServer extends HttpApp with FailFastCirceSupport with LogSupport {
     getFromResourceDirectory("")
   }
 
+  lazy val webjarsPrefix = "lib"
 
   def webjars: Route = pathPrefix(webjarsPrefix ~ Slash)  {  getFromResourceDirectory(webjarsPrefix)  }
 

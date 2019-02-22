@@ -4,11 +4,14 @@ import better.files.File
 import wvlet.log.LogSupport
 
 trait LocalWorkflows {
-  self: BasicService =>
+  self: BasicPipelineService =>
 
-  def extractPipeline(root: File, pipeline: String): (Option[String], List[(String,String)]) = {
-    val fl = if(root.exists) {  if( (root / (pipeline + ".wdl")).exists) root / (pipeline + ".wdl") else root / pipeline } else if(File(pipeline).exists) File(pipeline) else File(pipeline + ".wdl")
-    fl match {
+  def getPipelineFile(pipeline: String): File = {
+    if(pipelinesRoot.exists) {  if( (pipelinesRoot / (pipeline + ".wdl")).exists) pipelinesRoot / (pipeline + ".wdl") else pipelinesRoot / pipeline } else if(File(pipeline).exists) File(pipeline) else File(pipeline + ".wdl")
+
+  }
+  def extractPipeline(pipeline: String): (Option[String], List[(String,String)]) = {
+    getPipelineFile(pipeline) match {
       case dir if dir.isDirectory && dir.nonEmpty && dir.children.exists(_.extension.contains(".wdl")) =>
         val workflows: Seq[File] = dir.children.filter(f=>f.isRegularFile && f.extension.contains(".wdl")).toList
         val main: File = workflows.collectFirst{ case ch if ch.name == pipeline + ".wdl" | ch.name == "main.wdl" || ch.name == "index.wdl" => ch}.getOrElse {

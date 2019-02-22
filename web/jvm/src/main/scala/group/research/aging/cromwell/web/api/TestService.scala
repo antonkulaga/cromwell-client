@@ -34,7 +34,8 @@ class TestService(val runner: ActorRef)(implicit val timeout: Timeout) extends C
 
   @POST
   @Path("/test/{pipeline}")
-  @Operation(summary = "tests the workflow", description = "tests the workflow running", tags = Array("test"),
+  @Operation(summary = "tests the workflow", description = "test output of the workflow and returns its status and (with callback) the results",
+    tags = Array("test"),
     requestBody = new RequestBody(
       content = Array(new Content(
         mediaType = "application/json",
@@ -64,8 +65,7 @@ class TestService(val runner: ActorRef)(implicit val timeout: Timeout) extends C
       new Parameter(name = "pipeline", in = ParameterIn.PATH, required = true,
         example = "quantification", style = ParameterStyle.DEFAULT, allowReserved = true,
         description = "path to the workflow inside pipelines folder (defined by PIPELINES enviroment variable, /data/pipelines by default)"),
-      new Parameter(name = "server", in = ParameterIn.QUERY, required = false,
-        example = "http://pic:8000", style = ParameterStyle.SIMPLE, allowReserved = true,
+      new Parameter(name = "server", in = ParameterIn.QUERY, required = false, style = ParameterStyle.SIMPLE, allowReserved = true,
         description = "URL of the cromwell server, enviroment variable CROMWELL by default"),
       new Parameter(name = "callback", style = ParameterStyle.SIMPLE,  allowReserved = true,
         in = ParameterIn.QUERY, required = false,
@@ -83,7 +83,7 @@ class TestService(val runner: ActorRef)(implicit val timeout: Timeout) extends C
   )
   def testRun: Route = pathPrefix("test" / Remaining) { pipeline =>
     debug(s"BEFORE PARAMETER EXTRACTION FOR ${pipeline}")
-    extractPipeline(pipelinesRoot, pipeline) match {
+    extractPipeline(pipeline) match {
       case (None, _) =>
         error(s"CANNOT FIND ${pipeline}")
         reject(PipelinesRejections.PipelineNotFound(pipeline))
@@ -97,7 +97,7 @@ class TestService(val runner: ActorRef)(implicit val timeout: Timeout) extends C
             debug("Input JSON used:")
             debug(json)
 
-            val toRun = Commands.TestRun(wdl, json, (File(pipeline) / "test.json").lines.mkString("\n"), deps) //TODO: fix problem
+            val toRun = Commands.TestRun(wdl, json, (getPipelineFile(pipeline) / "test.json").lines.mkString("\n"), deps) //TODO: fix problem
 
             val serverMessage = MessagesAPI.ServerCommand(toRun, serverURL, callBackOpt.map(Set(_)).getOrElse(Set.empty[String]))
             completeOrRecoverWith((runner ? serverMessage).mapTo[StatusInfo]) { extraction =>
@@ -106,9 +106,9 @@ class TestService(val runner: ActorRef)(implicit val timeout: Timeout) extends C
             }
           }
         } ~ {
-          debug("POST REQUEST!")
-          debug("WDL FOUND!")
-          debug(s"WDL IS: ${wdl}")
+          //debug("POST REQUEST!")
+          //debug("WDL FOUND!")
+          //debug(s"WDL IS: ${wdl}")
           if(deps.nonEmpty) debug(s"Found dependencies [${deps.map(_._1).mkString(", ")}]!")
           complete(HttpResponse(StatusCodes.OK, Nil, wdl))
         }

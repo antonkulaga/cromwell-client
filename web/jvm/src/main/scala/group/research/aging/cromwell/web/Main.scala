@@ -1,4 +1,4 @@
-package group.research.aging.cromwell.web.server
+package group.research.aging.cromwell.web
 
 object Main extends scala.App {
   // Starting the server

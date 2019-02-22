@@ -1,10 +1,7 @@
-package group.research.aging.cromwell.web.server
-
-import scalacss.DevDefaults._
+package group.research.aging.cromwell.web
+import scalacss.DevDefaults._  // Always use dev settings
 
 object MyStyles extends StyleSheet.Standalone {
-
-
   import dsl._
 
   media.maxWidth(1024 px) - {
