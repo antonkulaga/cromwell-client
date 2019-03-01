@@ -63,6 +63,8 @@ lazy val webcomponents = "1.0.1"
 
 lazy val jquery = "3.3.1"
 
+lazy val airframeLogVersion = "19.2.1"
+
 lazy val  cromwellClient = crossProject(JSPlatform, JVMPlatform)
   .crossType(CrossType.Full)
   .in(file("client"))
@@ -82,7 +84,7 @@ lazy val  cromwellClient = crossProject(JSPlatform, JVMPlatform)
 			//"org.typelevel" %%% "cats-effect"     % "1.0.0",
 			"io.circe" %%% "circe-generic-extras" % "0.11.1",
 			"com.pepegar" %%% "hammock-circe" % hammockVersion,
-			"org.wvlet.airframe" %%% "airframe-log" % "0.79"
+			"org.wvlet.airframe" %%% "airframe-log" % airframeLogVersion
     )
 	)
 	.disablePlugins(RevolverPlugin)
@@ -120,7 +122,7 @@ lazy val cromwellWeb = crossProject(JSPlatform, JVMPlatform)
 
 		libraryDependencies  ++= Seq(
 			"com.github.japgolly.scalacss" % "core_2.12" % "0.5.5",
-			"org.wvlet.airframe" %%% "airframe-log" % "0.80"
+			"org.wvlet.airframe" %%% "airframe-log" % airframeLogVersion
 		)
 	)
 	.jsSettings(
@@ -141,12 +143,12 @@ lazy val cromwellWeb = crossProject(JSPlatform, JVMPlatform)
 			"com.github.swagger-akka-http" %% "swagger-akka-http" % "2.0.1",
 			"com.github.swagger-akka-http" %% "swagger-scala-module" % "2.0.3",
 			"com.vmunier" %% "scalajs-scripts" % "1.1.2",
-      "de.heikoseeberger" %% "akka-http-circe" % "1.24.3",
+      "de.heikoseeberger" %% "akka-http-circe" % "1.25.2",
 			"ch.megard" %% "akka-http-cors" % "0.3.4",
 			"org.webjars" % "Semantic-UI" %  semanticUI,
 			"org.webjars" % "jquery" % jquery,
 			"org.webjars" % "webcomponentsjs" % webcomponents,
-			"org.webjars" % "swagger-ui" % "3.20.5" //Swagger UI
+			"org.webjars" % "swagger-ui" % "3.20.9" //Swagger UI
 		),
 		(managedClasspath in Runtime) += (packageBin in Assets).value,
 		//pipelineStages in Assets := Seq(scalaJSProd),

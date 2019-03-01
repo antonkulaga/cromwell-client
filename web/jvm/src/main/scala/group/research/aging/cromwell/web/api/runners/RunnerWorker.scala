@@ -1,13 +1,14 @@
 package group.research.aging.cromwell.web.api.runners
 
-import akka.actor.{Actor, ActorRef}
+import akka.actor._
 import akka.pattern._
-import akka.stream.ActorMaterializer
+import akka.stream._
 import cats.effect.IO
 import group.research.aging.cromwell.client
 import group.research.aging.cromwell.client.{CallOutput, CromwellClientAkka, QueryResult, StatusInfo}
 import group.research.aging.cromwell.web.Commands.TestRun
 import group.research.aging.cromwell.web.WebServer.http
+import group.research.aging.cromwell.web.common.BasicActor
 import group.research.aging.cromwell.web.{Commands, Results}
 import hammock.akka.AkkaInterpreter
 import hammock.circe.implicits._
@@ -20,13 +21,22 @@ import scala.collection.immutable
 import scala.concurrent.{ExecutionContextExecutor, Future}
 import scala.concurrent.duration._
 
+
 /**
   * Actors that interacts with cromwell server, receives messages from API and returns stuff back
   * @param client
   */
-class RunnerWorker(client: CromwellClientAkka) extends Actor with LogSupport {
+class RunnerWorker(client: CromwellClientAkka) extends BasicActor {
 
   debug(s"runner worker for ${client.base} cromwell server started!")
+
+  import scala.concurrent.duration._
+  import scala.concurrent.duration._
+
+  val decider: Supervision.Decider = {
+    case _: ArithmeticException ⇒ Supervision.Resume
+    case _                      ⇒ Supervision.Restart
+  }
 
   implicit def dispatcher: ExecutionContextExecutor = context.dispatcher
 
@@ -36,7 +46,7 @@ class RunnerWorker(client: CromwellClientAkka) extends Actor with LogSupport {
     self,
     MessagesAPI.Poll)
 
-  implicit val materializer: ActorMaterializer = ActorMaterializer()(context.system)
+  implicit val materializer: ActorMaterializer = ActorMaterializer( ActorMaterializerSettings(context.system).withSupervisionStrategy(decider))
 
   //implicit  protected def getInterpreter: Interpreter[IO] = Interpreter[IO]
   implicit protected def getInterpreter: AkkaInterpreter[IO] =

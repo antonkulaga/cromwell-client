@@ -11,12 +11,13 @@ import cats.implicits._
 import scala.concurrent.{ExecutionContextExecutor, Future}
 import scala.util.Failure
 import better.files._
+import group.research.aging.cromwell.web.common.BasicActor
 
 /**
   * Actors that proccesses most of websocket messages from the users and back
   * @param username
   */
-case class UserActor(username: String, initialClient: CromwellClientAkka) extends Actor with LogSupport {
+case class UserActor(username: String, initialClient: CromwellClientAkka) extends BasicActor {
 
   debug(s"user actor ${username}")
 

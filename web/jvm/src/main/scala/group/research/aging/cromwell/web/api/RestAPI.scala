@@ -28,7 +28,7 @@ class RestAPI(http: HttpExt) extends SwaggerHttpService with Directives {
   override val unwantedDefinitions = Seq("Function1", "Function1RequestContextFutureRouteResult")
 
 
-  lazy val runnerManager: ActorRef = system.actorOf(Props(new RunnerManager(http)))
+  lazy val runnerManager: ActorRef = system.actorOf(Props(new RunnerManager(http)), name = "manager")
 
   //def swagger: Route = path("swagger")  { toSwagger }
 

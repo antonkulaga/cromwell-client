@@ -1,26 +1,20 @@
 package group.research.aging.cromwell.web.api.runners
 
-import akka.actor.{Actor, ActorRef, Props}
+import akka.actor.{Actor, ActorRef, Props, _}
 import akka.http.scaladsl.HttpExt
 import group.research.aging.cromwell.client.CromwellClientAkka
-import group.research.aging.cromwell.web.{Commands, Results}
+import group.research.aging.cromwell.web.Commands
+import group.research.aging.cromwell.web.common.BasicActor
 import wvlet.log.LogSupport
+
+import scala.concurrent.duration._
 
 /**
   * Actors that proccesses most of websocket messages from the users and back
  *
   * @param username
   */
-case class RunnerManager(http: HttpExt) extends Actor with LogSupport {
-
-  override def preStart { debug(s"runner manager actor started at ${java.time.LocalDateTime.now()}") }
-  override def postStop { debug(s"runner manager actor stopped at ${java.time.LocalDateTime.now()}") }
-  override def preRestart(reason: Throwable, message: Option[Any]) {
-    error(s"runner manager actor restarted at ${java.time.LocalDateTime.now()}")
-    error(s" MESSAGE: ${message.getOrElse("")}")
-    error(s" REASON: ${reason.getMessage}")
-    super.preRestart(reason, message)
-  }
+case class RunnerManager(http: HttpExt) extends BasicActor {
 
   protected def operation(workers: Map[String, ActorRef]): Receive = {
     case mes @ MessagesAPI.ServerCommand(com, serverURL, callbackURLs) =>
@@ -44,7 +38,7 @@ case class RunnerManager(http: HttpExt) extends Actor with LogSupport {
         case None =>
           val client  = CromwellClientAkka(serverURL, "v1", http)
           debug(s"adding client for ${serverURL}")
-          context.become(operation(workers.updated(serverURL, context.actorOf(Props(new RunnerWorker(client))))))
+          context.become(operation(workers.updated(serverURL, context.actorOf(Props(new RunnerWorker(client)), name = "runner_" + workers.size + 1))))
           self forward mes
       }
 

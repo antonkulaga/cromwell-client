@@ -5,7 +5,7 @@ import akka.http.scaladsl.marshallers.xml.ScalaXmlSupport._
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.server._
 import akka.http.scaladsl.{Http, HttpExt, model}
-import akka.stream.ActorMaterializer
+import akka.stream.{ActorMaterializer, ActorMaterializerSettings, Supervision}
 import cats.effect.IO
 import ch.megard.akka.http.cors.scaladsl.CorsDirectives._
 import de.heikoseeberger.akkahttpcirce._
@@ -77,9 +77,15 @@ object WebServer extends HttpApp with FailFastCirceSupport with LogSupport {
     getFromBrowseableDirectories(folder)
   }
 
+  val decider: Supervision.Decider = {
+    case _: ArithmeticException ⇒ Supervision.Resume
+    case _                      ⇒ Supervision.Restart
+  }
+
 
   implicit lazy val http: HttpExt = Http(this.systemReference.get())
-  implicit lazy val materializer: ActorMaterializer = ActorMaterializer()(http.system)
+  implicit def actorSystem = http.system
+  implicit lazy val materializer: ActorMaterializer = ActorMaterializer(ActorMaterializerSettings(http.system).withSupervisionStrategy(decider))
   implicit lazy val executionContext: ExecutionContext = http.system.dispatcher
   implicit protected def getInterpreter: AkkaInterpreter[IO] = new AkkaInterpreter[IO](http)
 
@@ -113,7 +119,6 @@ object WebServer extends HttpApp with FailFastCirceSupport with LogSupport {
   def getIO[T](subpath: String, headers: Map[String, String] = Map.empty)(implicit D: Decoder[T], M: MarshallC[HammockF]): IO[T] =
     get(subpath, headers).as[T](D, M).exec[IO]
 */
-  implicit lazy val system = ActorSystem("chat")
 
   lazy val websocketServer: WebsocketServer = new WebsocketServer(http)
 

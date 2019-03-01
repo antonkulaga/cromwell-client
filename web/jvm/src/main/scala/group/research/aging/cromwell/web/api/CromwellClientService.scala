@@ -1,31 +1,15 @@
 package group.research.aging.cromwell.web.api
 import akka.actor.ActorRef
-import akka.http.scaladsl.model._
-import akka.http.scaladsl.server._
-import de.heikoseeberger.akkahttpcirce._
-import group.research.aging.cromwell.client
-import group.research.aging.cromwell.client.CromwellClient
-import io.circe.Json
-import wvlet.log.LogSupport
-import akka.actor.ActorRef
 import akka.http.scaladsl.marshalling.ToResponseMarshaller
-import akka.http.scaladsl.server.Route
-import akka.pattern.ask
+import akka.http.scaladsl.model._
+import akka.http.scaladsl.server.{Route, _}
 import akka.util.Timeout
 import better.files.File
-import group.research.aging.cromwell.client
+import de.heikoseeberger.akkahttpcirce._
 import group.research.aging.cromwell.client.{CromwellClient, WorkflowStatus}
-import group.research.aging.cromwell.web.{Commands, Results}
-import group.research.aging.cromwell.web.api.runners.MessagesAPI
-import io.circe.generic.auto._
-import io.swagger.v3.oas.annotations._
-import io.swagger.v3.oas.annotations.enums.ParameterIn
-import io.swagger.v3.oas.annotations.media._
-import io.swagger.v3.oas.annotations.responses._
-import javax.ws.rs._
+import wvlet.log.LogSupport
 
 import scala.concurrent.Future
-import scala.concurrent.duration._
 
 trait BasicService extends Directives with FailFastCirceSupport with LogSupport {
 

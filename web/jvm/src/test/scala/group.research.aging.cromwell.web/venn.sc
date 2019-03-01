@@ -6,6 +6,11 @@ val str = """19832	5585	5753	2698	1230	2825	1694
 2825	1681	2310	5271	729	20618	4029
 1694	940	1466	6319	824	4029	38037"""
 
+//"[" + str.replace("	", "	,") + "]"
+
+val list = s"[" + str.split("\n").map(s =>"[" + s.replace("	", ", ") + "]").mkString("\n")
+/*
+
 val mat: Array[Array[String]] = str.split("\n").map(_.split("\t"))
 
 val headers: Map[String, Int] = "Bowhead whale   Gray whale   Minke whale   Human   Naked mole rat   Cow   Mouse".split("   ").zipWithIndex.toMap
@@ -36,3 +41,4 @@ for{
   two <- headers.keys
   if one != two
 } println(make2(one, two) + ",")
+*/

@@ -1,4 +1,4 @@
-package group.research.aging.cromwell.web.misc
+package group.research.aging.cromwell.web.common
 
 import better.files._
 import group.research.aging.cromwell.client._

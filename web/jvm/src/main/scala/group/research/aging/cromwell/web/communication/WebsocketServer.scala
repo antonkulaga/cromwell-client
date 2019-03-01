@@ -40,7 +40,7 @@ class WebsocketServer(http: HttpExt) extends LogSupport{
     info(s"adding user ${username}")
     val serverURL = CromwellClient.defaultURL
     val client  = CromwellClientAkka(serverURL, "v1", http)
-    val wsUser: ActorRef = http.system.actorOf(Props(UserActor(username, client)))
+    val wsUser: ActorRef = http.system.actorOf(Props(UserActor(username, client)), name = username)
 
 
     // Integration point between Akka Streams and the above actor
