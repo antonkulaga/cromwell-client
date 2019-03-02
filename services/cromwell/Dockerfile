@@ -1,4 +1,4 @@
-FROM broadinstitute/cromwell:develop
+FROM broadinstitute/cromwell:37
 
 RUN apt update &&  apt -y upgrade
 RUN apt -y install apt-transport-https ca-certificates curl software-properties-common gnupg2 git
