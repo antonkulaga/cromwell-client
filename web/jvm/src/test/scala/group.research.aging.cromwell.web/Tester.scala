@@ -1,16 +1,11 @@
 package group.research.aging.cromwell.web
 
-import hammock.apache.ApacheInterpreter
 import cats.effect.IO
-import io.circe.generic.auto._
 import hammock._
-import hammock.marshalling._
 import hammock.apache.ApacheInterpreter
 import hammock.circe.implicits._
-import hammock.hi.Opts
 import io.circe.Json
-import io.circe._, io.circe.parser._
-import hammock.circe._
+import io.circe.parser._
 
 object Tester {
   /*
