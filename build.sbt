@@ -1,6 +1,6 @@
 import sbt.Keys.{javaOptions, javacOptions, resolvers, scalacOptions, sourceGenerators}
 import sbt._
-// shadow sbt-scalajs' crossProject and CrossType until Scala.js 1.0.0 is released
+import com.typesafe.sbt.packager.docker.{Cmd, DockerChmodType}
 import sbtcrossproject.{crossProject, CrossType}
 
 name := "cromwell-client-parent"
@@ -157,8 +157,17 @@ lazy val cromwellWeb = crossProject(JSPlatform, JVMPlatform)
 		(emitSourceMaps in fullOptJS) := true,
 		fork in run := true,
 		maintainer in Docker := "Anton Kulaga <antonkulaga@gmail.com>",
-		dockerExposedPorts := Seq(8080),
+		dockerBaseImage := "openjdk:11-oracle",
+		daemonUserUid in Docker := None,
+		daemonUser in Docker := "root",
+		dockerExposedVolumes := Seq("/data"),
+		dockerUpdateLatest := true,
+		dockerChmodType := DockerChmodType.UserGroupWriteExecute,
 		dockerRepository := Some("quay.io/comp-bio-aging"),
+		dockerCommands ++= Seq(
+			Cmd("WORKDIR", "/data")
+		),
+		dockerExposedPorts := Seq(8080)
 	).jvmConfigure(p=>
 		p.enablePlugins(SbtWeb, JavaAppPackaging, DockerPlugin)
 	)

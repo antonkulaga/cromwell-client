@@ -54,7 +54,7 @@ case class UserActor(username: String, initialClient: CromwellClientAkka) extend
       this.context.become(operation(output, client))
 
     case Commands.Validate(wdl, input, options, dependencies) =>
-      debug("VALIDATING WDL")
+      info(s"VALIDATING WDL at ${client.base}")
       debug("DEPENDENCIES: " + dependencies.map(_._1))
       //debug(wdl)
       debug("-------------")
@@ -75,7 +75,7 @@ case class UserActor(username: String, initialClient: CromwellClientAkka) extend
 
 
     case Commands.Run(wdl, input, options, dependencies) =>
-      debug("RUNNING WDL")
+      info(s"RUNNING WDL at ${client.base}")
       //debug(wdl)
       debug("-------------")
       debug("INPUT: ")
