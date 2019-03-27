@@ -175,7 +175,11 @@ lazy val cromwellWeb = crossProject(JSPlatform, JVMPlatform)
 
 lazy val webJS = cromwellWeb.js
 lazy val webJVM = cromwellWeb.jvm.settings(
-	scalaJSProjects := Seq(webJS)
+	scalaJSProjects := Seq(webJS),
+	libraryDependencies ++= Seq(
+		"com.lihaoyi" %% "requests" % "0.1.7" % Test,
+		"com.lihaoyi" %% "ammonite-ops" % "1.6.3" % Test
+	)
 )
 
 mainClass in Compile := (mainClass in webJVM in Compile).value

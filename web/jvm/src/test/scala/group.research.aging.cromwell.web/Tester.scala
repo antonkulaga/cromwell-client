@@ -25,10 +25,10 @@ object Tester {
       Some(json)).exec[IO].unsafeRunSync()
   }
 
-    def hello(server: String = "http://pic:8000", callback: String = "http://localhost:8001/api/trace"): HttpResponse =
-      run("hello-world", content = """{"myWorkflow.name": "World!"}""", server = server, callback = callback)
+  def hello(server: String = "http://pic:8000", callback: String = "http://localhost:8001/api/trace"): HttpResponse =
+    run("hello-world", content = """{"myWorkflow.name": "World!"}""", server = server, callback = callback)
 
-  def quantify(server: String = "http://pic:8000", callback: String = "http://localhost:8001/api/trace") = {
+  def quantify(server: String = "http://pic:8000", callback: String = "http://localhost:8001/api/trace"): HttpResponse = {
     run(pipeline = "quantification", content =
       """
         |{
