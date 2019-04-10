@@ -24,19 +24,24 @@ lazy val commonSettings = Seq(
 
 	resolvers += "Broad Artifactory Snapshots" at "https://artifactory.broadinstitute.org/artifactory/libs-snapshot/",
 
-	/*
-	libraryDependencies += "com.lihaoyi" % "ammonite" % "1.0.5" % Test cross CrossVersion.full,
+	// https://mvnrepository.com/artifact/com.sun.xml.ws/jaxws-rt
+	libraryDependencies ++= Seq(
+		"com.sun.xml.ws" % "jaxws-api" % "2.3.2"
+	)
 
-	sourceGenerators in Test += Def.task {
-		val file = (sourceManaged in Test).value / "amm.scala"
-		IO.write(file, """object amm extends App { ammonite.Main().run() }""")
-		Seq(file)
-	}.taskValue,
-	*/
+		/*
+    libraryDependencies += "com.lihaoyi" % "ammonite" % "1.0.5" % Test cross CrossVersion.full,
+
+    sourceGenerators in Test += Def.task {
+      val file = (sourceManaged in Test).value / "amm.scala"
+      IO.write(file, """object amm extends App { ammonite.Main().run() }""")
+      Seq(file)
+    }.taskValue,
+    */
 
 	addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.1" cross CrossVersion.full),
 
-	addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.9"),
+	addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.10"),
 
 	bintrayRepository := "main",
 
@@ -50,7 +55,7 @@ lazy val commonSettings = Seq(
 
 	scalacOptions ++= Seq( "-feature", "-language:_" ),
 
-	javacOptions ++= Seq("-Xlint", "-J-Xss5M", "-encoding", "UTF-8")
+	javacOptions ++= Seq("-Xlint", "-J-Xss5M", "-encoding", "UTF-8", "-XDignore.symbol.file")
 )
 
 commonSettings
@@ -63,7 +68,7 @@ lazy val webcomponents = "1.0.1"
 
 lazy val jquery = "3.3.1"
 
-lazy val airframeLogVersion = "19.2.1"
+lazy val airframeLogVersion = "19.4.1"
 
 lazy val  cromwellClient = crossProject(JSPlatform, JVMPlatform)
   .crossType(CrossType.Full)
@@ -77,9 +82,9 @@ lazy val  cromwellClient = crossProject(JSPlatform, JVMPlatform)
     name := "cromwell-client",
 
 		libraryDependencies ++= Seq(
-			"fr.hmil" %%% "roshttp" % "2.2.3",
+			"fr.hmil" %%% "roshttp" % "2.2.4",
 			"com.beachape" %%% "enumeratum" % "1.5.13",
-			"com.lihaoyi" %%% "pprint" % "0.5.3",
+			"com.lihaoyi" %%% "pprint" % "0.5.4",
 			//"org.typelevel" %%% "cats-core"      % "1.3.1",
 			//"org.typelevel" %%% "cats-effect"     % "1.0.0",
 			"io.circe" %%% "circe-generic-extras" % "0.11.1",
@@ -90,7 +95,7 @@ lazy val  cromwellClient = crossProject(JSPlatform, JVMPlatform)
 	.disablePlugins(RevolverPlugin)
   .jvmSettings(
     libraryDependencies ++= Seq(
-			"com.github.pathikrit" %% "better-files" % "3.7.0",
+			"com.github.pathikrit" %% "better-files" % "3.7.1",
 			"com.pepegar" %% "hammock-apache-http" % hammockVersion,
 			"com.pepegar" %% "hammock-akka-http" % hammockVersion
     )
@@ -108,7 +113,7 @@ lazy val cromwellClientJVM = cromwellClient.jvm
 lazy val cromwellClientJS = cromwellClient.js
 
 lazy val akka = "2.5.21"
-lazy val akkaHttp = "10.1.7"
+lazy val akkaHttp = "10.1.8"
 
 lazy val cromwellWeb = crossProject(JSPlatform, JVMPlatform)
 	.crossType(CrossType.Full)
@@ -128,7 +133,7 @@ lazy val cromwellWeb = crossProject(JSPlatform, JVMPlatform)
 	.jsSettings(
 		libraryDependencies ++= Seq(
 			"in.nvilla" %%% "monadic-html" % "0.4.0-RC1",
-			"org.akka-js" %%% "akkajsactorstream" % "1.2.5.19"
+			"org.akka-js" %%% "akkajsactorstream" % "1.2.5.21"
 		),
 		jsEnv := new org.scalajs.jsenv.jsdomnodejs.JSDOMNodeJSEnv,
 		scalaJSUseMainModuleInitializer := true
@@ -140,7 +145,7 @@ lazy val cromwellWeb = crossProject(JSPlatform, JVMPlatform)
 			"com.typesafe.akka" %% "akka-http" % akkaHttp,
 			"com.typesafe.akka" %% "akka-http-xml" % akkaHttp,
 			"javax.ws.rs" % "javax.ws.rs-api" % "2.1.1", //for extra annotations
-			"com.github.swagger-akka-http" %% "swagger-akka-http" % "2.0.1",
+			"com.github.swagger-akka-http" %% "swagger-akka-http" % "2.0.2",
 			"com.github.swagger-akka-http" %% "swagger-scala-module" % "2.0.3",
 			"com.vmunier" %% "scalajs-scripts" % "1.1.2",
       "de.heikoseeberger" %% "akka-http-circe" % "1.25.2",
@@ -178,7 +183,7 @@ lazy val webJVM = cromwellWeb.jvm.settings(
 	scalaJSProjects := Seq(webJS),
 	libraryDependencies ++= Seq(
 		"com.lihaoyi" %% "requests" % "0.1.7" % Test,
-		"com.lihaoyi" %% "ammonite-ops" % "1.6.3" % Test
+		"com.lihaoyi" %% "ammonite-ops" % "1.6.5" % Test
 	)
 )
 
