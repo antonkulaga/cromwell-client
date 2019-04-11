@@ -2,7 +2,6 @@ package fr.hmil.roshttp
 
 import java.nio.ByteBuffer
 
-import com.sun.xml.internal.ws.api.pipe.ContentType
 import fr.hmil.roshttp.body.BulkBodyPart
 import fr.hmil.roshttp.body.JSONBody.JSONValue
 

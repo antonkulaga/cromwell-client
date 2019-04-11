@@ -7,6 +7,7 @@ import org.scalajs.dom.Event
 
 import scala.xml.Elem
 
+import java.time.format.DateTimeFormatter
 
 class WorkflowsView(allMetadata: Rx[List[Metadata]], baseHost: Rx[String], commands: Var[Commands.Command])
 {
@@ -27,7 +28,7 @@ class WorkflowsView(allMetadata: Rx[List[Metadata]], baseHost: Rx[String], comma
   def onMetadataUpdate(reader: ModelRO[List[Metadata]]): Unit = {
     allMetadata := (if(desc) reader.value.reverse else reader.value)
   }
-
+ colspan="3"
   def onHostUpdate(reader: ModelRO[String]): Unit = {
     host := reader.value
   }
@@ -52,7 +53,7 @@ class WorkflowsView(allMetadata: Rx[List[Metadata]], baseHost: Rx[String], comma
     <table id="workflows" class="ui small blue striped celled table">
     <thead>
       <tr>
-        <th>workflow</th>
+        <th  colspan="2">workflow</th>
         <th>calls and failures</th>
       </tr>
     </thead>
@@ -66,7 +67,16 @@ class WorkflowsView(allMetadata: Rx[List[Metadata]], baseHost: Rx[String], comma
       }
     }
     <tbody>
-      {allMetadata.map(meta=> meta.map(r=>metadataRow(r)))}
+      {allMetadata.map(meta=> meta.sortWith{
+      case (a, b) =>
+        val parentRelation = (a.parentWorkflowId.isDefined && a.parentWorkflowId.get == b.id) ||
+          (a.rootWorkflowId.isDefined && a.rootWorkflowId.get == b.id)
+        if(parentRelation) false else
+          (for{
+          sa <- a.start
+          sb <- b.start
+        } yield sa.isAfter(sb)).getOrElse(false)
+    }.map(r=>metadataRow(r)))}
     </tbody>
   </table>
 
@@ -77,36 +87,34 @@ class WorkflowsView(allMetadata: Rx[List[Metadata]], baseHost: Rx[String], comma
   }
 
 
-  def metadataRow(r: Metadata): Elem =
-        <tr class={statusClass(r.status)}>
-          <td>
-            {generalInfo(r)}
-            {rowInputs(r)}
-            {rowOutputs(r)}
-          </td>
-          <td>
-            {rowFailures(r)}
-            {rowCallsTable(r)}
-          </td>
-        </tr>
-
+  def metadataRow(r: Metadata): Elem = {
+    <tr class={statusClass(r.status)}>
+      {if(r.parentWorkflowId.isDefined) <td style="border: 0px !important;"></td> else <!--no cell-->}
+      <td colspan={if(r.parentWorkflowId.isDefined) "1" else "2"} style={if(r.parentWorkflowId.isDefined) "border: 0px !important;" else ""}>{generalInfo(r)}{rowInputs(r)}{rowOutputs(r)}</td>
+      <td>
+        {rowFailures(r)}{rowCallsTable(r)}
+      </td>
+    </tr>
+  }
   protected def abort(id: String)(event: Event): Unit = {
 
     commands := Commands.Abort(id)
   }
 
+  private def workflowHeader(r: Metadata)(fun: Metadata=>String): Elem = if(r.parentWorkflowId.isDefined) <b>{fun(r)}</b> else <h3>{fun(r)}</h3>
+
   def generalInfo(r: Metadata): Elem =
-      <table id="workflows" class="ui small padded striped celled table">
+      <table id="workflows" class="ui tiny padded striped celled table">
       <tbody>
         <tr>
-          <th>name/id</th><td class={statusClass(r.status)}><h3>{r.workflowName}</h3>{r.id}</td>
-          <th>status</th> <td class={statusClass(r.status)}><h3>{r.status}</h3>{
+          <th>name/id</th><td class={statusClass(r.status)}>{workflowHeader(r)(m=>m.workflowName)}</td>
+          <th>status</th> <td class={statusClass(r.status)}>{workflowHeader(r)(m=>m.status)}{
             {if(r.status == "Running") <button class="ui button"  onclick={ abort(r.id) _}><i class="stop icon"></i></button> else <span/>}
           }</td>
         </tr>
         <tr>
-          <th>starts</th><td><h3><a href={host.map(h=> timingURL(h, r.id))} target ="_blank">{r.startTime}</a></h3></td>
-          <th>ends</th><td><h3><a href={host.map(h=> timingURL(h, r.id))} target ="_blank">{r.endTime}</a></h3></td>
+          <th>starts</th><td><h3><a href={host.map(h=> timingURL(h, r.id))} target ="_blank">{r.start.map(_.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))).getOrElse("")}</a></h3></td>
+          <th>ends</th><td><h3><a href={host.map(h=> timingURL(h, r.id))} target ="_blank">{r.end.map(_.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))).getOrElse("")}</a></h3></td>
         </tr>
 
         <tr>
@@ -116,13 +124,20 @@ class WorkflowsView(allMetadata: Rx[List[Metadata]], baseHost: Rx[String], comma
         <tr>
           <th >root</th><td colspan="3"><a href={host.map(h=> h + r.workflowRoot)}  target ="_blank">{r.workflowRoot}</a></td>
         </tr>
+        {(if(r.parentWorkflowId.isDefined)
+        <tr>
+        <th>parents</th> <td colspan="3"> {r.rootWorkflowId.map(v=>if(v == r.parentWorkflowId.get) "" else v + "/").getOrElse("") + r.parentWorkflowId.get}
+        </td>
+      </tr> else <br></br>)
+        }
       </tbody>
     </table>
 
   def un(str: String): String = str.replace("\\\"","")
+  private def messageClass(r: Metadata, tp: String = "positive") = if(r.parentWorkflowId.isDefined) s"ui ${tp} tiny message" else s"ui ${tp} small message"
 
   def rowInputs(r: Metadata): Elem =
-    <div class="ui info message">
+    <div class={messageClass(r, "info")}>
       <div class="header">Inputs:</div>
       <div class="ui list">
         {
@@ -133,13 +148,16 @@ class WorkflowsView(allMetadata: Rx[List[Metadata]], baseHost: Rx[String], comma
       </div>
     </div>
 
+
   def rowOutputs(r: Metadata): Elem = if(r.outputs.isNull) <br/> else
-    <div class="ui positive message">
+     <div class={messageClass(r)}>
       <div class="header">Outputs:</div>
       <code class="ui list">
         {  r.outputs.spaces4 }
       </code>
     </div>
+
+
 
   def rowCallsTable(r: Metadata): Elem = if(r.calls.nonEmpty)
     <table class="ui small collapsing table">

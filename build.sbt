@@ -12,7 +12,7 @@ lazy val commonSettings = Seq(
 
 	scalaVersion :=  "2.12.8",
 
-	version := "0.1.2",
+	version := "0.1.3",
 
 	unmanagedClasspath in Compile ++= (unmanagedResources in Compile).value,
 
@@ -23,11 +23,6 @@ lazy val commonSettings = Seq(
 	resolvers += "Broad Artifactory Releases" at "https://artifactory.broadinstitute.org/artifactory/libs-release/",
 
 	resolvers += "Broad Artifactory Snapshots" at "https://artifactory.broadinstitute.org/artifactory/libs-snapshot/",
-
-	// https://mvnrepository.com/artifact/com.sun.xml.ws/jaxws-rt
-	libraryDependencies ++= Seq(
-		"com.sun.xml.ws" % "jaxws-api" % "2.3.2"
-	)
 
 		/*
     libraryDependencies += "com.lihaoyi" % "ammonite" % "1.0.5" % Test cross CrossVersion.full,
@@ -87,6 +82,7 @@ lazy val  cromwellClient = crossProject(JSPlatform, JVMPlatform)
 			"com.lihaoyi" %%% "pprint" % "0.5.4",
 			//"org.typelevel" %%% "cats-core"      % "1.3.1",
 			//"org.typelevel" %%% "cats-effect"     % "1.0.0",
+			"io.circe" %%% "circe-java8" % "0.11.1",
 			"io.circe" %%% "circe-generic-extras" % "0.11.1",
 			"com.pepegar" %%% "hammock-circe" % hammockVersion,
 			"org.wvlet.airframe" %%% "airframe-log" % airframeLogVersion

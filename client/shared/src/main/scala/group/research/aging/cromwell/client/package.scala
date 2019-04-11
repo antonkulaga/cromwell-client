@@ -1,6 +1,35 @@
 package group.research.aging.cromwell
 
+import java.time.OffsetDateTime
+import java.time.format.DateTimeFormatter
+import java.util.UUID
+
+import io.circe.{Encoder, Json}
+import java.time.OffsetDateTime
+import java.time.format.DateTimeFormatterBuilder
+
+import io.circe.{ Decoder, Encoder }
+
+import io.circe.java8.time._
+
 package object client {
+
+  val dateTimeFormat = DateTimeFormatter.ISO_DATE_TIME
+
+  implicit object DateTimeEncoder extends Encoder[OffsetDateTime] {
+    import io.circe._
+    import io.circe.syntax._
+
+    override def apply(dt: OffsetDateTime): Json = dateTimeFormat.format(dt).asJson
+  }
+
+  implicit object UuidEncoder extends Encoder[UUID] {
+    import io.circe._
+    import io.circe.syntax._
+
+    override def apply(u: UUID): Json = u.toString.asJson
+  }
+
   import io.circe.generic.extras.Configuration
   import io.circe.generic.extras._
   import io.circe.syntax._
@@ -75,25 +104,28 @@ package object client {
 
   @ConfiguredJsonCodec case class Metadata(
                                             id: String,
-                                            submission: String = "",
-                                            status: String = "",
-                                            start: String = "",
-                                            end: String = "",
+                                            workflowName: String = "",
+                                            rootWorkflowId: Option[String] = None,
+                                            calls: Map[String, List[LogCall]] = Map.empty[String, List[LogCall]],
+                                            workflowRoot: String = "",
+                                            //id is here
                                             inputs: Json = Json.obj(),//Inputs,
+                                            status: String = "",
+                                            parentWorkflowId: Option[String] = None,
+                                            submission: Option[OffsetDateTime] = None,
+                                            start: Option[OffsetDateTime] = None,
+                                            end: Option[OffsetDateTime] = None,
                                             outputs: Json = Json.obj(),//WorkflowOutputs = WorkflowOutputs.empty,
                                             failures: List[WorkflowFailure] = Nil,
-                                            submittedFiles: SubmittedFiles = SubmittedFiles.empty,
-                                            workflowName: String = "",
-                                            workflowRoot: String = "",
-                                            calls: Map[String, List[LogCall]] = Map.empty[String, List[LogCall]]
+                                            submittedFiles: SubmittedFiles = SubmittedFiles.empty
                                           ) extends WorkflowResponse
   {
 
-    lazy val startDate: String = start.substring(0, Math.max(0, start.indexOf("T")))
-    lazy val endDate: String = end.substring(0, Math.max(0, end.indexOf("T")))
+    lazy val startDate: String = start.map(_.toLocalDate.toString).getOrElse("")
+    lazy val endDate: String = end.map(_.toLocalDate.toString).getOrElse("")
 
-    lazy val startTime: String = start.substring(start.indexOf("T")+1, start.lastIndexOf("."))
-    lazy val endTime: String = end.substring(end.indexOf("T")+1, end.lastIndexOf("."))
+    lazy val startTime: String = start.map(_.toLocalDate.toString).getOrElse("")
+    lazy val endTime: String = end.map(_.toLocalDate.toString).getOrElse("")
 
     lazy val dates: String = if(endDate==startDate || endDate=="") startDate else s"${startDate}-${endDate}"
 
