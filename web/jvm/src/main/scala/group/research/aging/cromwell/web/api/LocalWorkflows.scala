@@ -10,7 +10,16 @@ trait LocalWorkflows {
     if(pipelinesRoot.exists) {  if( (pipelinesRoot / (pipeline + ".wdl")).exists) pipelinesRoot / (pipeline + ".wdl") else pipelinesRoot / pipeline } else if(File(pipeline).exists) File(pipeline) else File(pipeline + ".wdl")
 
   }
-  def extractPipeline(pipeline: String): (Option[String], List[(String,String)]) = {
+
+  protected def getDefaults(dir: File, containsName: String = "default"): String = {
+    dir.children
+      .filter(f=>f.isRegularFile && f.name.contains(containsName) && f.extension.contains(".json"))
+      .foldLeft(""){
+        (acc, el) => acc + el.lines.mkString("\n")
+      }.trim
+  }
+
+  def extractPipeline(pipeline: String): (Option[String], List[(String,String)], String) = {
     getPipelineFile(pipeline) match {
       case dir if dir.isDirectory && dir.nonEmpty && dir.children.exists(_.extension.contains(".wdl")) =>
         val workflows: Seq[File] = dir.children.filter(f=>f.isRegularFile && f.extension.contains(".wdl")).toList
@@ -18,14 +27,16 @@ trait LocalWorkflows {
           error("could not find good candidate for the main workflows, choosing the random wdl file")
           workflows.head
         }
-        (Some(main.lines.mkString("\n")), workflows.filter(_ != main).map(f=>f.name->f.lines.mkString("\n")).toList)
+        val inputDefaults: String = getDefaults(dir, "default")
+        (Some(main.lines.mkString("\n")), workflows.filter(_ != main).map(f=>f.name->f.lines.mkString("\n")).toList, inputDefaults)
 
       case file if file.exists =>
-        (Some(file.lines.mkString("\n")), Nil)
+        val defs = getDefaults(file.parent, file.nameWithoutExtension + "_defaults")
+        (Some(file.lines.mkString("\n")), Nil, defs)
 
       case other =>
         error(s"no pipeline found for ${other}!")
-        (None, Nil)
+        (None, Nil, "")
     }
   }
 

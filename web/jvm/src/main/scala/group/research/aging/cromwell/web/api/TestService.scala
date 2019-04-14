@@ -72,11 +72,11 @@ class TestService(val runner: ActorRef)(implicit val timeout: Timeout) extends C
   def testRun: Route = pathPrefix("test" / Remaining) { pipeline =>
     debug(s"BEFORE PARAMETER EXTRACTION FOR ${pipeline}")
     extractPipeline(pipeline) match {
-      case (None, _) =>
+      case (None, _, _) =>
         error(s"CANNOT FIND ${pipeline}")
         reject(PipelinesRejections.PipelineNotFound(pipeline))
 
-      case (Some(wdl), deps) =>
+      case (Some(wdl), deps, _) =>
         parameters("server".?, "callback".?) { (serverOpt, callBackOpt) =>
           debug(s"FOUND PARAMETERS FOR RUNNING ${pipeline}")
           //val c = serverOpt.map(CromwellClient(_)).getOrElse(CromwellClient.default)

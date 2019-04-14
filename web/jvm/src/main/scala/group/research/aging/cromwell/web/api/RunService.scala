@@ -30,7 +30,18 @@ import scala.concurrent.{ExecutionContext, Future}
 @Path("/api")
 class RunService(val runner: ActorRef)(implicit val timeout: Timeout) extends CromwellClientService with LocalWorkflows {
 
+  private def concatJson(defaults: String, json: String) = {
+    val d = defaults.trim
+    if(d.endsWith("}"))
+      d.replaceFirst("}$", ",") + json.trim.replaceAll("^\\{", "\n")
+      else
+    {
+      d + json
+    }
 
+  }
+
+  @POST
   @POST
   @Path("/run/{pipeline}")
   @Operation(summary = "runs the workflow", description = "runs the workflow and returns its status and (with callback) the results", tags = Array("run"),
@@ -82,20 +93,19 @@ class RunService(val runner: ActorRef)(implicit val timeout: Timeout) extends Cr
   def runAPI: Route = pathPrefix("run" / Remaining) { pipeline =>
     debug(s"BEFORE PARAMETER EXTRACTION FOR ${pipeline}")
     extractPipeline(pipeline) match {
-      case (None, _) =>
+      case (None, _, _) =>
         error(s"CANNOT FIND ${pipeline}")
         reject(PipelinesRejections.PipelineNotFound(pipeline))
 
-      case (Some(wdl), deps) =>
+      case (Some(wdl), deps, defs) =>
         parameters("server".?, "callback".?) { (serverOpt, callBackOpt) =>
           debug(s"FOUND PARAMETERS FOR RUNNING ${pipeline}")
           //val c = serverOpt.map(CromwellClient(_)).getOrElse(CromwellClient.default)
           val serverURL = serverOpt.getOrElse(CromwellClient.defaultURL)
           entity(as[String]) { json =>
-            debug("Input JSON used:")
-            debug(json)
-
-            val toRun = Commands.Run(wdl, json, "", deps) //TODO: fix problem
+            val js = concatJson(defs, json)
+            debug(js)
+            val toRun = Commands.Run(wdl, js, "", deps) //TODO: fix problem
 
           val serverMessage = MessagesAPI.ServerCommand(toRun, serverURL, callBackOpt.map(Set(_)).getOrElse(Set.empty[String]))
             completeOrRecoverWith((runner ? serverMessage).mapTo[StatusInfo]) { extraction =>
