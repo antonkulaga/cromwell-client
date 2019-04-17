@@ -32,7 +32,7 @@ object MessagesAPI {
   }
   case class CallBack(backURL: String, workflowId: String, serverURL: String,
                       updateOn: Set[String] = CallBack.defaultUpdateOnStrings,
-                      start: DateTime = DateTime.now, timeout: Duration = 48 hours) extends MessageAPI
+                      start: DateTime = DateTime.now, timeout: Duration = 48 hours, headers: Map[String, String] = Map.empty) extends MessageAPI
 
   case object Poll extends MessageAPI
 
@@ -42,10 +42,11 @@ object MessagesAPI {
     }
   }
 
-  case class ServerCommand(command: Commands.Command, serverURL: String, callbackURLs: Set[String] = Set.empty) extends MessageAPI
+  case class ServerCommand(command: Commands.Command, serverURL: String, callbackURLs: Set[String] = Set.empty, extraHeaders: Map[String, String] = Map.empty) extends MessageAPI
   {
-    def callbacks(id: String): Set[CallBack] = callbackURLs.map(u=> CallBack(u, id, serverURL, CallBack.defaultUpdateOnStrings, DateTime.now, defaultDuration))
-    def promise(status: StatusInfo): ServerPromise = ServerPromise(status, callbacks(status.id))
+    def callbacks(id: String): Set[CallBack] = callbackURLs.map(u=>
+      CallBack(u, id, serverURL, CallBack.defaultUpdateOnStrings, DateTime.now, defaultDuration, extraHeaders))
+    def promise(status: StatusInfo, additionalParameters: Map[String, String] = Map.empty[String, String]): ServerPromise = ServerPromise(status, callbacks(status.id))
   }
 
   case class ServerPromise(statusInfo: StatusInfo, callbacks: Set[CallBack]) extends MessageAPI

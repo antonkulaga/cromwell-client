@@ -91,7 +91,7 @@ class WorkflowsView(allMetadata: Rx[List[Metadata]], baseHost: Rx[String], comma
     <tr class={statusClass(r.status)}>
       {if(r.parentWorkflowId.isDefined) <td style="border: 0px !important;"></td> else <!--no cell-->}
       <td colspan={if(r.parentWorkflowId.isDefined) "1" else "2"} style={if(r.parentWorkflowId.isDefined) "border: 0px !important;" else ""}>{generalInfo(r)}{rowInputs(r)}{rowOutputs(r)}</td>
-      <td>
+      <td style={if(r.parentWorkflowId.isDefined) "border: 0px !important;" else ""}>
         {rowFailures(r)}{rowCallsTable(r)}
       </td>
     </tr>

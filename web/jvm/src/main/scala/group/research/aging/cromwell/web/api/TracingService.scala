@@ -14,17 +14,21 @@ import javax.ws.rs._
 class TracingService extends BasicService {
 
   @Path("/trace")
-  def traceAny: Route = pathPrefix("trace") {  entity(as[String]) { json =>
-     debug("RECEIVED JSON STRING: ")
+  def traceAny: Route = pathPrefix("trace") {  entity(as[String]) { json => ctx =>
+      debug("RECEIVED REQUEST WITH HEADERS: " + ctx.request.headers)
+      debug("RECEIVED JSON: ")
+      debug("RECEIVED JSON STRING: ")
      debug(json)
-      complete(json)
-    } ~ entity(as[Json]) { json =>
-    debug("RECEIVED JSON: ")
-    debug(json)
-    complete(json)
+      ctx.complete(json)
+    } ~ entity(as[Json]) { json => ctx =>
+      debug("RECEIVED REQUEST WITH HEADERS: " + ctx.request.headers)
+      debug("RECEIVED JSON: ")
+      debug(json)
+      ctx.complete(json)
   } ~ { ctx=>
     val st = ctx.request.toString()
     debug(s"tracing GET request: ${st}")
+    debug(s"request headers are: ${ctx.request.headers}")
     ctx.complete(st)
   }
   }

@@ -71,13 +71,15 @@ class RunnerWorker(client: CromwellClientAkka) extends BasicActor {
          val outputs = client.getOutput(r.id).unsafeRunSync()
          val json: Json = MessagesAPI.PipelineResult(r.id, r.status, outputs.outputs).asJson
         debug(s"sending reesults back to ${cb.backURL}")
-         val req = Hammock.request[Json](Method.POST, Uri.unsafeParse("${cb.backURL}"), Map("Content-Type"->"application/json"), Some(json))
+        val headers = Map("Content-Type"->"application/json") ++ cb.headers
+         val req = Hammock.request[Json](Method.POST, Uri.unsafeParse(s"${cb.backURL}"), headers, Some(json))
          val result: HttpResponse = req.exec[IO].unsafeRunSync()
-        //debug(s"calling back ${cb.backURL} with request:")
-        //debug(json)
-        //debug("and result")
-        //debug(result)
-        //debug(s"deleting callback ${cb.backURL} from the list")
+        debug(s"calling back ${cb.backURL} with request:")
+        debug(json)
+        debug("and result")
+        debug(result)
+        debug("with headers = " + headers.mkString(";"))
+        debug(s"deleting callback ${cb.backURL} from the list")
         r.id -> cb
       }
       val g: Map[String, Set[MessagesAPI.CallBack]] = toDelete.groupBy(_._1).mapValues(_.map(_._2).toSet)
@@ -86,13 +88,16 @@ class RunnerWorker(client: CromwellClientAkka) extends BasicActor {
           cbs <- callbacks.get(TestRun.id)
           cb <- cbs
         } {
+          val headers = Map("Content-Type"->"application/json") ++ cb.headers
           import io.circe._, io.circe.parser._
           val res: Option[Json] = parse(cb.updateOn.head).right.map(j=>Some(j)).getOrElse(None)
           val u = Uri.unsafeParse(cb.backURL)
           debug(s"SENDING TEST RESULT TO ${u}:\n ${res}")
           val req = Hammock.request[Json](Method.POST, u, Map("Content-Type"->"application/json"), res)
           val result: HttpResponse = req.exec[IO].unsafeRunSync()
+          debug(s"calling back ${cb.backURL} with request:")
           println("RESULT RECEIVED: " + result.toString)
+          debug("with headers = " + headers.mkString(";"))
         }
         val updCallbacks = callbacks.filter(_._1 != TestRun.id).map{ case (i, cbs) => if(g.contains(i)) (i, cbs -- g(i)) else (i, cbs)}.filter(_._2.nonEmpty)
         //debug(s"deleting ${callbacks.size - updCallbacks.size} callbacks after execution!")
@@ -100,13 +105,13 @@ class RunnerWorker(client: CromwellClientAkka) extends BasicActor {
       }
 
 
-    case mes @ MessagesAPI.ServerCommand(Commands.Run(wdl, input, options, dependencies), _, _) =>
+    case mes @ MessagesAPI.ServerCommand(Commands.Run(wdl, input, options, dependencies), _, _, _) =>
           val source: ActorRef = sender()
           val statusUpdate = client.postWorkflowStrings(wdl, input, options, dependencies)
           statusUpdate pipeTo source
           statusUpdate.map(s=>mes.promise(s)) pipeTo self
 
-    case mes @ MessagesAPI.ServerCommand(Commands.TestRun(wdl, input, results, dependencies), _, _) =>
+    case mes @ MessagesAPI.ServerCommand(Commands.TestRun(wdl, input, results, dependencies), _, _, _) =>
       val source: ActorRef = sender()
       val statusUpdate: Future[StatusInfo] = Future{
         StatusInfo("e442e52a-9de1-47f0-8b4f-e6e565008cf1-TEST", "Submitted")

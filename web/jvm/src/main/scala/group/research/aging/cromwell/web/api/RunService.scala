@@ -40,8 +40,7 @@ class RunService(val runner: ActorRef)(implicit val timeout: Timeout) extends Cr
     }
 
   }
-
-  @POST
+  
   @POST
   @Path("/run/{pipeline}")
   @Operation(summary = "runs the workflow", description = "runs the workflow and returns its status and (with callback) the results", tags = Array("run"),
@@ -49,33 +48,15 @@ class RunService(val runner: ActorRef)(implicit val timeout: Timeout) extends Cr
       content = Array(new Content(
         mediaType = "application/json",
         schema = new Schema(
-        example = """{
-"quantification.key": "0a1d74f32382b8a154acacc3a024bdce3709",
-"quantification.samples_folder": "/data/samples",
-"quantification.salmon_indexes": {
-  "Bos taurus": "/data/indexes/salmon/Bos_taurus",
-  "Heterocephalus glaber": "/data/indexes/salmon/Heterocephalus_glaber",
-  "Rattus norvegicus": "/data/indexes/salmon/Rattus_norvegicus",
-  "Caenorhabditis elegans": "/data/indexes/salmon/Caenorhabditis_elegans",
-  "Homo sapiens": "/data/indexes/salmon/Homo_sapiens",
-  "Drosophila melanogaster": "/data/indexes/salmon/Drosophila_melanogaster",
-  "Mus musculus": "/data/indexes/salmon/Mus_musculus"
-},
-"quantification.samples": [
-  "GSM1698568",
-  "GSM1698570",
-  "GSM2927683",
-  "GSM2927750",
-  "GSM2042593",
-  "GSM2042596"
-]
-}"""))), description = "input JSON"),
+          example = """{"quantification.samples": [ "GSM1698568","GSM1698570","GSM2927683","GSM2927750","GSM2042593","GSM2042596"]}"""))), description = "input JSON"),
     parameters = Array(
       new Parameter(name = "pipeline", in = ParameterIn.PATH, required = true,
         example = "quantification", style = ParameterStyle.DEFAULT, allowReserved = true,
         description = "path to the workflow inside pipelines folder (defined by PIPELINES enviroment variable, /data/pipelines by default)"),
       new Parameter(name = "server", in = ParameterIn.QUERY, required = false, style = ParameterStyle.SIMPLE, allowReserved = true,
         description = "URL of the cromwell server, enviroment variable CROMWELL by default"),
+      new Parameter(name = "authorization", in = ParameterIn.QUERY, required = false, style = ParameterStyle.SIMPLE, allowReserved = true,
+        description = "Optional authorization parameter"),
       new Parameter(name = "callback", style = ParameterStyle.SIMPLE,  allowReserved = true,
         in = ParameterIn.QUERY, required = false,
         description = "callback URL to report about the result of the query")
@@ -98,7 +79,7 @@ class RunService(val runner: ActorRef)(implicit val timeout: Timeout) extends Cr
         reject(PipelinesRejections.PipelineNotFound(pipeline))
 
       case (Some(wdl), deps, defs) =>
-        parameters("server".?, "callback".?) { (serverOpt, callBackOpt) =>
+        parameters("server".?, "callback".?, "authorization".?) { (serverOpt, callBackOpt, authOpt) =>
           debug(s"FOUND PARAMETERS FOR RUNNING ${pipeline}")
           //val c = serverOpt.map(CromwellClient(_)).getOrElse(CromwellClient.default)
           val serverURL = serverOpt.getOrElse(CromwellClient.defaultURL)
@@ -106,8 +87,8 @@ class RunService(val runner: ActorRef)(implicit val timeout: Timeout) extends Cr
             val js = concatJson(defs, json)
             debug(js)
             val toRun = Commands.Run(wdl, js, "", deps) //TODO: fix problem
-
-          val serverMessage = MessagesAPI.ServerCommand(toRun, serverURL, callBackOpt.map(Set(_)).getOrElse(Set.empty[String]))
+            val headers = authOpt.fold(Map.empty[String, String])(a=>Map("Authorization" -> a))
+            val serverMessage = MessagesAPI.ServerCommand(toRun, serverURL, callBackOpt.map(Set(_)).getOrElse(Set.empty[String]), headers)
             completeOrRecoverWith((runner ? serverMessage).mapTo[StatusInfo]) { extraction =>
               debug(s"running pipeline failed with ${extraction}")
               failWith(extraction) // not executed.
