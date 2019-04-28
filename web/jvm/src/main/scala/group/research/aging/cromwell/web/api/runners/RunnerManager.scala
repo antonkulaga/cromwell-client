@@ -17,7 +17,7 @@ import scala.concurrent.duration._
 case class RunnerManager(http: HttpExt) extends BasicActor {
 
   protected def operation(workers: Map[String, ActorRef]): Receive = {
-    case mes @ MessagesAPI.ServerCommand(com, serverURL, callbackURLs, authOpt) =>
+    case mes @ MessagesAPI.ServerCommand(com, serverURL, callbackURLs, _, authOpt) =>
       workers.get(serverURL) match {
         case Some(worker) =>
           com match {

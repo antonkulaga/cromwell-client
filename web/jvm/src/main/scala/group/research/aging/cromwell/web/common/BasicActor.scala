@@ -5,7 +5,7 @@ import wvlet.log.LogSupport
 
 import scala.concurrent.duration._
 
-trait BasicActor  extends Actor with LogSupport {
+trait BasicActor extends Actor with LogSupport {
 
   override val supervisorStrategy: SupervisorStrategy =
     OneForOneStrategy(maxNrOfRetries = 10, withinTimeRange = 1 minute) {

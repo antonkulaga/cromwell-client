@@ -20,6 +20,7 @@ import wvlet.log.LogSupport
 import scala.collection.immutable
 import scala.concurrent.{ExecutionContextExecutor, Future}
 import scala.concurrent.duration._
+import scala.util.Try
 
 
 /**
@@ -58,6 +59,8 @@ class RunnerWorker(client: CromwellClientAkka) extends BasicActor {
     * @return new Receive function
     */
   protected def operation(callbacks: Map[String, Set[MessagesAPI.CallBack]]): Receive = {
+
+
     case MessagesAPI.Poll =>
       //debug(s"polling the callbacks, currently ${callbacks.mkString(",")} are avaliable")
       val results: immutable.Seq[QueryResult] = client.getQuery(includeSubworkflows = true).unsafeRunSync().results
@@ -66,14 +69,28 @@ class RunnerWorker(client: CromwellClientAkka) extends BasicActor {
         if callbacks.contains(r.id)
         cb: MessagesAPI.CallBack <- callbacks(r.id)
         if cb.updateOn.contains(r.status)
+        outputs = client.getOutput(r.id).unsafeRunSync()
+        json: Json = MessagesAPI.PipelineResult(r.id, r.status, outputs.outputs).asJson
+        //debug(s"sending reesults back to ${cb.backURL}")
+        headers = Map("Content-Type"->"application/json") ++ cb.headers
+        resultTry = Try{
+          val req = Hammock.request[Json](Method.POST, Uri.unsafeParse(s"${cb.backURL}"), headers, Some(json))
+          req.exec[IO].unsafeRunSync()
+        }
+        if (resultTry match {
+          case scala.util.Success(_) => true
+          case scala.util.Failure(th) =>
+            error(
+              s"""
+                |Failed to run ${cb.backURL} with the following error:
+                |${th}
+              """.stripMargin)
+            false
+        })
       }
       yield {
-         val outputs = client.getOutput(r.id).unsafeRunSync()
-         val json: Json = MessagesAPI.PipelineResult(r.id, r.status, outputs.outputs).asJson
         debug(s"sending reesults back to ${cb.backURL}")
-        val headers = Map("Content-Type"->"application/json") ++ cb.headers
-         val req = Hammock.request[Json](Method.POST, Uri.unsafeParse(s"${cb.backURL}"), headers, Some(json))
-         val result: HttpResponse = req.exec[IO].unsafeRunSync()
+        val result: HttpResponse = resultTry.get
         debug(s"calling back ${cb.backURL} with request:")
         debug(json)
         debug("and result")
@@ -105,13 +122,13 @@ class RunnerWorker(client: CromwellClientAkka) extends BasicActor {
       }
 
 
-    case mes @ MessagesAPI.ServerCommand(Commands.Run(wdl, input, options, dependencies), _, _, _) =>
+    case mes @ MessagesAPI.ServerCommand(Commands.Run(wdl, input, options, dependencies), _, _, _, _) =>
           val source: ActorRef = sender()
           val statusUpdate = client.postWorkflowStrings(wdl, input, options, dependencies)
           statusUpdate pipeTo source
           statusUpdate.map(s=>mes.promise(s)) pipeTo self
 
-    case mes @ MessagesAPI.ServerCommand(Commands.TestRun(wdl, input, results, dependencies), _, _, _) =>
+    case mes @ MessagesAPI.ServerCommand(Commands.TestRun(wdl, input, results, dependencies), _, _, _, _) =>
       val source: ActorRef = sender()
       val statusUpdate: Future[StatusInfo] = Future{
         StatusInfo("e442e52a-9de1-47f0-8b4f-e6e565008cf1-TEST", "Submitted")
@@ -126,7 +143,7 @@ class RunnerWorker(client: CromwellClientAkka) extends BasicActor {
 
     case Commands.GetAllMetadata(status, subworkflows) =>
       val s = sender
-      client.getAllMetadata(status, subworkflows).map(m=> Results.UpdatedMetadata(m)).unsafeToFuture().pipeTo(s)
+      client.getAllMetadata(status, subworkflows).map(m=> Results.UpdatedMetadata(m.map(r=>r.id->r).toMap)).unsafeToFuture().pipeTo(s)
 
     case Commands.GetQuery(status, subs) =>
       val s = sender

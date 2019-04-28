@@ -2,7 +2,7 @@ package group.research.aging.cromwell.web.communication
 
 
 import akka.NotUsed
-import akka.actor.{ActorRef, ActorSystem, Props}
+import akka.actor.{ActorRef, Props}
 import akka.http.scaladsl.HttpExt
 import akka.http.scaladsl.model.ws.{Message, TextMessage}
 import akka.http.scaladsl.server.Directives._
@@ -10,8 +10,7 @@ import akka.http.scaladsl.server.Route
 import akka.stream.OverflowStrategy
 import akka.stream.scaladsl._
 import group.research.aging.cromwell.client.{CromwellClient, CromwellClientAkka}
-import group.research.aging.cromwell.web.Commands.ChangeClient
-import group.research.aging.cromwell.web.KeepAliveAction
+import group.research.aging.cromwell.web.KeepAlive
 import io.circe.parser.decode
 import wvlet.log.LogFormatter.SourceCodeLogFormatter
 import wvlet.log.{LogSupport, Logger}
@@ -73,9 +72,9 @@ class WebsocketServer(http: HttpExt) extends LogSupport{
           // don't expose the wsHandle anymore
           NotUsed
         }
-        .keepAlive(maxIdle = 60.seconds, () => {
+        .keepAlive(maxIdle = 10.seconds, () => {
           import io.circe.syntax._
-          val m: WebsocketMessages.WebsocketMessage = WebsocketMessages.WebsocketAction(KeepAliveAction)//
+          val m: WebsocketMessages.WebsocketMessage = WebsocketMessages.WebsocketAction(KeepAlive.web)//
           val js = m.asJson
           //debug("Sent:\n" + js.toString())
           TextMessage.Strict(js.toString())

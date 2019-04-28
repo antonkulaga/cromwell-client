@@ -69,13 +69,16 @@ class WorkflowsView(allMetadata: Rx[List[Metadata]], baseHost: Rx[String], comma
     <tbody>
       {allMetadata.map(meta=> meta.sortWith{
       case (a, b) =>
-        val parentRelation = (a.parentWorkflowId.isDefined && a.parentWorkflowId.get == b.id) ||
-          (a.rootWorkflowId.isDefined && a.rootWorkflowId.get == b.id)
-        if(parentRelation) false else
-          (for{
-          sa <- a.start
-          sb <- b.start
-        } yield sa.isAfter(sb)).getOrElse(false)
+        val isParent = b.parentWorkflowId.isDefined && b.parentWorkflowId.get == a.id || b.rootWorkflowId.isDefined && b.rootWorkflowId.get == a.id
+        val notChild = a.parentWorkflowId.isEmpty || (a.parentWorkflowId.get != b.id && a.rootWorkflowId.isDefined && a.rootWorkflowId.get != b.id)
+          isParent ||
+            (notChild &&
+          (
+            for{
+            sa <- a.start
+            sb <- b.start
+            } yield sa.isAfter(sb)).getOrElse(false)
+          )
     }.map(r=>metadataRow(r)))}
     </tbody>
   </table>

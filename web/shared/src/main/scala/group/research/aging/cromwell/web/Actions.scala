@@ -10,7 +10,10 @@ import group.research.aging.cromwell.client.WorkflowStatus.AnyStatus
 object Action
 @JsonCodec sealed trait Action
 
-case object KeepAliveAction extends Action with  EmptyAction
+object KeepAlive {
+  lazy val web: Action = KeepAlive("web")
+}
+case class KeepAlive(name: String) extends Action
 case object EmptyAction extends Action with EmptyAction
 trait EmptyAction {
   self: Action =>
@@ -33,6 +36,7 @@ object Messages {
     def title: String
     def message: String
   }
+
   @JsonCodec case class ExplainedError(title: String, message: String) extends Error with Message with ExplainedMessage
   @JsonCodec case class Errors(errors: List[ExplainedError]) extends Message
   @JsonCodec case class Infos(infos: List[Info]) extends Message
@@ -54,18 +58,31 @@ object Results {
     }
   }
   case class UpdatedStatus(info: WorkflowStatus) extends ActionResult
-  case class UpdatedMetadata(metadata: List[Metadata]) extends ActionResult
+  case class UpdatedMetadata(metadata: Map[String, Metadata]) extends ActionResult
   case class UpdateClient(serverURL: String) extends ActionResult
   case class ServerResult(action: Action) extends ActionResult
   case class WorkflowSent(status: StatusInfo) extends ActionResult
   case class WorkflowValidated(validation: ValidationResult) extends ActionResult
 
+  object QueryWorkflowResults {
+    lazy val empty = QueryWorkflowResults(QueryResults.empty, Map.empty)
+  }
+  case class QueryWorkflowResults(queryResults: QueryResults, metadata: Map[String, Metadata]) extends ActionResult {
+    lazy val complete: Boolean = queryResults.ids == metadata.keySet
+    lazy val missing: Set[String] = queryResults.ids.diff(metadata.keySet)
+
+    def updated(upd: UpdatedMetadata): QueryWorkflowResults = {
+      copy(metadata = metadata -- upd.metadata.keys ++ upd.metadata)
+    }
+  }
 
 }
 
 object Commands{
   object Command
   @JsonCodec sealed trait Command extends Action
+  case object CheckTime extends Command
+
   case object EmptyCommand extends EmptyAction with Command
   case class SendToServer(action: Action) extends Command
   case object CleanMessages extends Command

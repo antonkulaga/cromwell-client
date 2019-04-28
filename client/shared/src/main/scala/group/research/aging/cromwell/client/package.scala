@@ -92,9 +92,12 @@ package object client {
     lazy val empty = QueryResults(Nil)
   }
 
-  @ConfiguredJsonCodec case class QueryResults(results: List[QueryResult]) extends CromwellResponse
+  @ConfiguredJsonCodec case class QueryResults(results: List[QueryResult]) extends CromwellResponse{
+    lazy val ids: Set[String] = results.map(_.id).toSet
+    lazy val rootWorkflows: List[QueryResult] = results.filter(w=>w.parentWorkflowId.isEmpty && w.rootWorkflowId.isEmpty)
+  }
 
-  @ConfiguredJsonCodec case class QueryResult(id: String, status: String, start: String = "", end: String = "") extends WorkflowResponse
+  @ConfiguredJsonCodec case class QueryResult(id: String, status: String, start: String = "", end: String = "", parentWorkflowId: Option[String] = None, rootWorkflowId: Option[String] = None) extends WorkflowResponse
 
 
   //implicit val config: Configuration = Configuration.default.withSnakeCaseKeys

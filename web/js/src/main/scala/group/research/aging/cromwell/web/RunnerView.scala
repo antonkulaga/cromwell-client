@@ -1,26 +1,26 @@
 package group.research.aging.cromwell.web
 
-import group.research.aging.cromwell.client.{CromwellClient, QueryResults, WorkflowStatus}
+import java.time.{Duration, OffsetDateTime, ZoneOffset}
+
+import cats.implicits._
+import group.research.aging.cromwell.client.{QueryResults, WorkflowStatus}
 import group.research.aging.cromwell.web.utils.Uploader
 import mhtml._
 import org.scalajs.dom
 import org.scalajs.dom.Event
+import org.scalajs.dom.html.Input
 
 import scala.scalajs.js
 import scala.util.{Failure, Success}
 import scala.xml.Elem
-import cats._
-import cats.implicits._
-import org.scalajs.dom.ext._
-import org.scalajs.dom.html.Input
-import org.scalajs.dom.raw.EventTarget
 
 
 class RunnerView(
                   commands: Var[Commands.Command],
                   messages: Var[Messages.Message],
                   currentStatus: Rx[WorkflowStatus],
-                  lastURL: Rx[String])
+                  lastURL: Rx[String],
+                  heartBeat: Rx[HeartBeat])
   extends Uploader{
 
 
@@ -193,7 +193,6 @@ class RunnerView(
         <input id ="wdl" onclick="this.value=null;" onchange = { uploadFilesHandler(dependencies) _ } accept=".wdl"  name="dependencies" type="file" multiple="multiple" />
       </div>
     </td>
-
   </tr>
   <tr class="ui center aligned">
     <td>
@@ -220,6 +219,17 @@ class RunnerView(
         <div class="ui label">options</div>
         <input id ="inputs" onclick="this.value=null;" onchange = { uploadFileHandler(inputs) _ } accept=".json" name="options" type="file" />
       </div>
+      <i class={
+         heartBeat.map {
+           case h => h.warning match {
+
+             case None =>
+               "big red ban icon"
+             case Some(true) => "big orange circle outline icon"
+             case Some(false) => "big green circle outline icon"
+           }
+         }
+         }></i><small>connection</small>
   </td>
   </tr>
   </table>

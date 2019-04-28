@@ -11,7 +11,10 @@ import cats.implicits._
 import scala.concurrent.{ExecutionContextExecutor, Future}
 import scala.util.Failure
 import better.files._
+import group.research.aging.cromwell.web.Results.QueryWorkflowResults
 import group.research.aging.cromwell.web.common.BasicActor
+
+import scala.concurrent.duration._
 
 /**
   * Actors that proccesses most of websocket messages from the users and back
@@ -19,11 +22,17 @@ import group.research.aging.cromwell.web.common.BasicActor
   */
 case class UserActor(username: String, initialClient: CromwellClientAkka) extends BasicActor {
 
+  lazy val heartBeatInterval = 10 seconds
+
   debug(s"user actor ${username}")
 
   implicit def executionContext: ExecutionContextExecutor = this.context.dispatcher
 
-//  val generator = new CentromereGenerator
+  //This will schedule to check the connection each
+  //to the tickActor after 0ms repeating every 50ms
+  //val cancellable = context.system.scheduler.schedule(5 seconds, 50 milliseconds, self, Commands.CheckTime)
+
+  //  val generator = new CentromereGenerator
 
   /**
     * Key functions that generates Recieve function based on outputs and server client
@@ -32,6 +41,7 @@ case class UserActor(username: String, initialClient: CromwellClientAkka) extend
     * @return
     */
   protected def operation(output: List[ActorRef], client: CromwellClientAkka): Receive = {
+
     case WebsocketMessages.ConnectWsHandle(ref) =>
       this.context.become(operation(output :+ ref, client))
       ref ! WebsocketMessages.WebsocketAction(Results.UpdateClient(client.base))
@@ -46,9 +56,19 @@ case class UserActor(username: String, initialClient: CromwellClientAkka) extend
 
     case Commands.GetAllMetadata(status, subworkflows) =>
       //debug("GET METADATA!")
-      val metaFut: Future[Results.UpdatedMetadata] = client.getAllMetadata(status, subworkflows).map(m=> Results.UpdatedMetadata(m)).unsafeToFuture()
-      pipe(metaFut)(context.dispatcher) to self
+      //val metaFut: Future[Results.UpdatedMetadata] = client.getAllMetadata(status, subworkflows).map(m=> Results.UpdatedMetadata(m)).unsafeToFuture()
+      val queryResults = client.getQuery(status, subworkflows).map(r=>QueryWorkflowResults(r, Map.empty)).unsafeToFuture()
+      pipe(queryResults)(context.dispatcher) to self
 
+    case r: Results.QueryWorkflowResults =>
+      output.foreach(o=>o ! WebsocketMessages.WebsocketAction(r))
+      for(id <- r.missing) {
+        val metaFut = client.getMetadata(id).map(r=>Results.UpdatedMetadata(Map(r.id-> r))).unsafeToFuture()
+        pipe(metaFut)(context.dispatcher) to self
+      }
+
+    case r: Results.UpdatedMetadata =>
+      output.foreach(o=> o ! WebsocketMessages.WebsocketAction(r))
 
     case Commands.CleanMessages =>
       this.context.become(operation(output, client))
@@ -90,13 +110,7 @@ case class UserActor(username: String, initialClient: CromwellClientAkka) extend
       pipe(postFut)(context.dispatcher) to self
 
     case Results.WorkflowSent(status) =>
-      val metaFut: Future[Results.UpdatedMetadata] = client.getAllMetadata(WorkflowStatus.AnyStatus).map(m=> Results.UpdatedMetadata(m)).unsafeToFuture()
-      pipe(metaFut)(context.dispatcher) to self
-
-    case u @ Results.UpdatedMetadata(m) =>
-      //debug("UPDATED METADATA: ")
-      //debug(u)
-      output.foreach(o=>o ! WebsocketMessages.WebsocketAction(u))
+      self ! Commands.GetAllMetadata(WorkflowStatus.AnyStatus, true)
 
     case ChangeClient(newURL) =>
       //debug(s"CHANGE CLIENT to ${newURL}!")

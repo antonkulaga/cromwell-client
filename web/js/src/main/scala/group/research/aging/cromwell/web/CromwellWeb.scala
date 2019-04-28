@@ -1,5 +1,7 @@
 package group.research.aging.cromwell.web
 
+import java.time.{OffsetDateTime, ZoneOffset}
+
 import group.research.aging.cromwell.client.CromwellClient
 import group.research.aging.cromwell.web.Messages.ExplainedError
 import group.research.aging.cromwell.web.communication.{WebsocketClient, WebsocketMessages}
@@ -30,21 +32,27 @@ object CromwellWeb extends scala.App with Base {
   val messages: Var[Messages.Message] = Var(Messages.EmptyMessage)
   val results: Var[Results.ActionResult] = Var(Results.EmptyResult)
 
+  import scala.scalajs.js.timers._
+  import scala.concurrent.duration._
+
+  val checkDelaysInterval = 3 seconds
+
+  setInterval(checkDelaysInterval){
+    commands := Commands.CheckTime
+  }
+
 
   protected lazy val randomUser = "user" + Random.nextInt(10000)
+
   val websocketClient: WebsocketClient = WebsocketClient.fromRelativeURL("ws" + "/" + randomUser)
-  val toServer: Var[WebsocketMessages.WebsocketMessage] = websocketClient.toSend
+  websocketClient.opened.map{
+    case true =>
+      state := state.now.copy(heartBeat = HeartBeat())
+      messages := Messages.ExplainedError("websocket closed", "Websocket was classed")
+    case false =>
 
-  val fromServer: Rx[Results.ServerResult] = websocketClient.messages.collect{
-    case WebsocketMessages.WebsocketAction(a) =>
-      Results.ServerResult(a)
-
-    case other=>
-      error("unexpected message from websocket!")
-      error(other)
-      Results.ServerResult(ExplainedError("unexpected message from websocket!", other.toString))
-
-  }(Results.ServerResult(EmptyAction))
+      state := state.now.copy(heartBeat = HeartBeat(None))
+  }
 
   val allActions: Var[Action] = Var(EmptyAction)
 
@@ -56,6 +64,20 @@ object CromwellWeb extends scala.App with Base {
     * Contains the state of the application, wrapped into Var for databinding purposes
     */
   val state: Var[State] = Var(State.empty)
+
+  val toServer: Var[WebsocketMessages.WebsocketMessage] = websocketClient.toSend
+
+  val fromServer: Rx[Results.ServerResult] = websocketClient.messages.collect{
+    case WebsocketMessages.WebsocketAction(a) =>
+      state := state.now.copy(heartBeat =  state.now.heartBeat.updatedLast)
+      Results.ServerResult(a)
+
+    case other=>
+      error("unexpected message from websocket!")
+      error(other)
+      Results.ServerResult(ExplainedError("unexpected message from websocket!", other.toString))
+
+  }(Results.ServerResult(EmptyAction))
 
   /**
     * All changes of the state happens in onReduce that is a partial function that is composed (for the sake of convenience) from several Reducers
@@ -84,12 +106,14 @@ object CromwellWeb extends scala.App with Base {
       Option(dom.window.localStorage.getItem(Commands.LoadLastUrl.key)).fold(
         previous)(url=>  previous.copy(client = CromwellClient(url)))
 
-    case (previos, Commands.UpdateStatus(status)) => previos.copy(status =  status)
-
+    case (previous, Commands.UpdateStatus(status)) => previous.copy(status =  status)
 
     case (previous, Commands.EvalJS(code)) =>
       scalajs.js.eval(code)
       previous
+
+    case (previous, Commands.CheckTime) =>
+      previous.copy(heartBeat = previous.heartBeat.updatedNow)
 
     case (previous, a @ Commands.Abort(id)) =>
       toServer := WebsocketMessages.WebsocketAction(a)
@@ -116,7 +140,7 @@ object CromwellWeb extends scala.App with Base {
           case c: Commands.Command => commands := c
           case r: Results.ActionResult => results := r
           case m: Messages.Message =>  messages := m
-          case EmptyAction | KeepAliveAction =>
+          case EmptyAction | _:KeepAlive =>
           case other =>  error(s"Unknown server message: \n ${other}")
         }
       }
@@ -137,12 +161,16 @@ object CromwellWeb extends scala.App with Base {
 
 
     case (previous, Results.UpdateClient(base)) => previous.copy(client = previous.client.copy(base = base), errors = Nil, infos = Nil)
-    case (previous, upd: Results.UpdatedMetadata) => previous.copy(metadata = upd.metadata, errors = Nil, infos = Nil)
+    case (previous, upd: Results.UpdatedMetadata) => previous.copy(results = previous.results.updated(upd), errors = Nil, infos = Nil)
+    case (previous, res: Results.QueryWorkflowResults) => {
+      previous.copy(results = res, errors = Nil, infos = Nil)
+    }
+
 
   }
 
   //AppCircuit.addProcessor(new LoggingProcessor[AppModel]())
-  val runner = new RunnerView(commands, messages, state.map(_.status), state.map(_.client.base))
+  val runner = new RunnerView(commands, messages, state.map(_.status), state.map(_.client.base), state.map(_.heartBeat))
 
 
   val workflows = new WorkflowsView(
