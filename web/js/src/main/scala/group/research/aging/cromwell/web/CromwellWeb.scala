@@ -35,7 +35,7 @@ object CromwellWeb extends scala.App with Base {
   import scala.scalajs.js.timers._
   import scala.concurrent.duration._
 
-  val checkDelaysInterval = 3 seconds
+  val checkDelaysInterval = 10 seconds
 
   setInterval(checkDelaysInterval){
     commands := Commands.CheckTime
@@ -89,6 +89,7 @@ object CromwellWeb extends scala.App with Base {
       previous
 
     case (previous, Commands.ChangeClient(url)) =>
+      debug(s"CHANGE CLIENT URL FROM ${previous.client.base} to $url")
       if (previous.client.base != url){
         dom.window.localStorage.setItem(Commands.LoadLastUrl.key, url)
         previous.copy(client = CromwellClient(url)).withEffect{() =>

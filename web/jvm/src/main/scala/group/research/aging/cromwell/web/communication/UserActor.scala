@@ -113,7 +113,7 @@ case class UserActor(username: String, initialClient: CromwellClientAkka) extend
       self ! Commands.GetAllMetadata(WorkflowStatus.AnyStatus, true)
 
     case ChangeClient(newURL) =>
-      //debug(s"CHANGE CLIENT to ${newURL}!")
+      debug(s"CHANGE CLIENT to ${newURL}!")
       val newClient = client.copy(base = newURL)
       this.context.become(operation(output, newClient))
 
