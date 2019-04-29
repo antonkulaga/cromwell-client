@@ -1,26 +1,26 @@
 package group.research.aging.cromwell.web.communication
-import akka.actor.{Actor, ActorRef}
+import akka.actor.ActorRef
 import akka.pattern.pipe
-import better.files.File
-import group.research.aging.cromwell.client.{CromwellClient, CromwellClientAkka, WorkflowStatus}
-import group.research.aging.cromwell.web.Commands.{ChangeClient, StreamMetadata}
-import group.research.aging.cromwell.web.{Commands, EmptyAction, Messages, Results}
-import wvlet.log.LogSupport
 import cats.implicits._
-
-import scala.concurrent.{ExecutionContextExecutor, Future}
-import scala.util.Failure
-import better.files._
+import group.research.aging.cromwell.client.{CromwellClientAkka, WorkflowStatus}
+import group.research.aging.cromwell.web.Commands.{ChangeClient, StreamMetadata}
 import group.research.aging.cromwell.web.Results.QueryWorkflowResults
 import group.research.aging.cromwell.web.common.BasicActor
+import group.research.aging.cromwell.web.{Commands, EmptyAction, Messages, Results}
+import wvlet.log.LogFormatter.SourceCodeLogFormatter
+import wvlet.log.Logger
 
 import scala.concurrent.duration._
+import scala.concurrent.{ExecutionContextExecutor, Future}
 
 /**
   * Actors that proccesses most of websocket messages from the users and back
   * @param username
   */
 case class UserActor(username: String, initialClient: CromwellClientAkka) extends BasicActor {
+
+  // Set the default log formatter
+  Logger.setDefaultFormatter(SourceCodeLogFormatter)
 
   lazy val heartBeatInterval = 10 seconds
 

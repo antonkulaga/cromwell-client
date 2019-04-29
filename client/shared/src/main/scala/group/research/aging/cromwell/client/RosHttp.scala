@@ -39,7 +39,7 @@ trait RosHttp {
 
   def postRequest(subpath: String)(multipart: MultiPartBody): Future[SimpleHttpResponse] = {
     val request = HttpRequest(base + subpath)
-    println(s"POST to ${request.longPath}")
+    println(s"POST to ${request.longPath}, base is ${base} subpath is ${subpath}")
     request.post(multipart)
   }
 

@@ -71,6 +71,8 @@ object Results {
     lazy val complete: Boolean = queryResults.ids == metadata.keySet
     lazy val missing: Set[String] = queryResults.ids.diff(metadata.keySet)
 
+    lazy val loaded: (Int, Int) = (metadata.size, queryResults.ids.size)
+
     def updated(upd: UpdatedMetadata): QueryWorkflowResults = {
       copy(metadata = metadata -- upd.metadata.keys ++ upd.metadata)
     }

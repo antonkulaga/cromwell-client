@@ -20,6 +20,7 @@ class RunnerView(
                   messages: Var[Messages.Message],
                   currentStatus: Rx[WorkflowStatus],
                   lastURL: Rx[String],
+                  loaded: Rx[(Int, Int)],
                   heartBeat: Rx[HeartBeat])
   extends Uploader{
 
@@ -193,6 +194,11 @@ class RunnerView(
         <input id ="wdl" onclick="this.value=null;" onchange = { uploadFilesHandler(dependencies) _ } accept=".wdl"  name="dependencies" type="file" multiple="multiple" />
       </div>
     </td>
+    <td>{loaded.map{ case (l, total) =>
+      <small>[<b>{l} of {total}</b>] loaded</small>
+       }
+      }
+    </td>
   </tr>
   <tr class="ui center aligned">
     <td>
@@ -219,18 +225,20 @@ class RunnerView(
         <div class="ui label">options</div>
         <input id ="inputs" onclick="this.value=null;" onchange = { uploadFileHandler(inputs) _ } accept=".json" name="options" type="file" />
       </div>
+    </td>
+    <td>
       <i class={
          heartBeat.map {
            case h => h.warning match {
 
              case None =>
                "big red ban icon"
-             case Some(true) => "big orange circle outline icon"
-             case Some(false) => "big green circle outline icon"
+             case Some(true) => "orange circle outline icon"
+             case Some(false) => "green circle outline icon"
            }
          }
          }></i><small>connection</small>
-  </td>
+    </td>
   </tr>
   </table>
 
