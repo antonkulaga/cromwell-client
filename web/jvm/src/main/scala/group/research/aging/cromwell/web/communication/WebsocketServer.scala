@@ -56,7 +56,7 @@ class WebsocketServer(http: HttpExt) extends LogSupport{
     // Integration point between Akka Streams and above actor
     val source: Source[Message, NotUsed] =
       Source
-        .actorRef(bufferSize = 500, overflowStrategy = OverflowStrategy.fail)
+        .actorRef(bufferSize = 10240, overflowStrategy = OverflowStrategy.fail)
         .map{ c: WebsocketMessages.WebsocketMessage =>
           import io.circe.syntax._
           val js = c.asJson

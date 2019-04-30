@@ -12,7 +12,7 @@ lazy val commonSettings = Seq(
 
 	scalaVersion :=  "2.12.8",
 
-	version := "0.1.5",
+	version := "0.1.6",
 
 	unmanagedClasspath in Compile ++= (unmanagedResources in Compile).value,
 
@@ -61,9 +61,9 @@ lazy val semanticUI = "2.4.1"
 
 lazy val webcomponents = "1.0.1"
 
-lazy val jquery = "3.3.1"
+lazy val jquery = "3.4.0"
 
-lazy val airframeLogVersion = "19.4.1"
+lazy val airframeLogVersion = "19.4.2"
 
 lazy val  cromwellClient = crossProject(JSPlatform, JVMPlatform)
   .crossType(CrossType.Full)
@@ -108,7 +108,7 @@ lazy val cromwellClientJVM = cromwellClient.jvm
 
 lazy val cromwellClientJS = cromwellClient.js
 
-lazy val akka = "2.5.21"
+lazy val akka = "2.5.22"
 lazy val akkaHttp = "10.1.8"
 
 lazy val cromwellWeb = crossProject(JSPlatform, JVMPlatform)
@@ -122,7 +122,7 @@ lazy val cromwellWeb = crossProject(JSPlatform, JVMPlatform)
 		name := "cromwell-web",
 
 		libraryDependencies  ++= Seq(
-			"com.github.japgolly.scalacss" % "core_2.12" % "0.5.5",
+			"com.github.japgolly.scalacss" % "core_2.12" % "0.5.6",
 			"org.wvlet.airframe" %%% "airframe-log" % airframeLogVersion
 		)
 	)
@@ -145,11 +145,11 @@ lazy val cromwellWeb = crossProject(JSPlatform, JVMPlatform)
 			"com.github.swagger-akka-http" %% "swagger-scala-module" % "2.0.3",
 			"com.vmunier" %% "scalajs-scripts" % "1.1.2",
       "de.heikoseeberger" %% "akka-http-circe" % "1.25.2",
-			"ch.megard" %% "akka-http-cors" % "0.3.4",
+			"ch.megard" %% "akka-http-cors" % "0.4.0",
 			"org.webjars" % "Semantic-UI" %  semanticUI,
 			"org.webjars" % "jquery" % jquery,
 			"org.webjars" % "webcomponentsjs" % webcomponents,
-			"org.webjars" % "swagger-ui" % "3.20.9" //Swagger UI
+			"org.webjars" % "swagger-ui" % "3.22.0" //Swagger UI
 		),
 		(managedClasspath in Runtime) += (packageBin in Assets).value,
 		//pipelineStages in Assets := Seq(scalaJSProd),
@@ -178,8 +178,8 @@ lazy val webJS = cromwellWeb.js
 lazy val webJVM = cromwellWeb.jvm.settings(
 	scalaJSProjects := Seq(webJS),
 	libraryDependencies ++= Seq(
-		"com.lihaoyi" %% "requests" % "0.1.7" % Test,
-		"com.lihaoyi" %% "ammonite-ops" % "1.6.5" % Test
+		"com.lihaoyi" %% "requests" % "0.1.8" % Test,
+		"com.lihaoyi" %% "ammonite-ops" % "1.6.6" % Test
 	)
 )
 
