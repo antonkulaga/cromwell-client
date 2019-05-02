@@ -67,7 +67,7 @@ object Results {
   object QueryWorkflowResults {
     lazy val empty = QueryWorkflowResults(QueryResults.empty, Map.empty)
   }
-  case class QueryWorkflowResults(queryResults: QueryResults, metadata: Map[String, Metadata], limit: Int = 50, offset: Int = 0) extends ActionResult {
+  case class QueryWorkflowResults(queryResults: QueryResults, metadata: Map[String, Metadata], limit: Int = 25, offset: Int = 0) extends ActionResult {
     lazy val complete: Boolean = queryResults.ids == metadata.keySet
     lazy val missing: Set[String] = queryResults.ids.diff(metadata.keySet)
 
@@ -82,7 +82,7 @@ object Results {
       val newResults = unstarted ++ started.sortWith{
         case (a, b) => a.start.get.isAfter(b.start.get)
       }
-      this.copy(queryResults.copy(results = newResults.slice(offset, limit)))
+      this.copy(queryResults.copy(results = newResults.slice(offset, offset + limit)), offset = offset, limit = limit)
     }
   }
 
@@ -101,6 +101,7 @@ object Commands{
   case class QueryWorkflows(status: WorkflowStatus, expandSubworkFlows: Boolean = true, limit: Int = 50, offset: Int = 0) extends Command
   case class GetQuery(statusS: WorkflowStatus, includeSubworkflows: Boolean = true) extends Command
   case class UpdateStatus(status: WorkflowStatus)  extends Command
+  //case class Paginate(limit: Int, offset: Int) extends Command
   case class ChangeClient(newURL: String) extends Command
   case class Run(wdl: String, input: String, options: String = "", dependencies: List[(String, String)] = Nil) extends Command
   object TestRun

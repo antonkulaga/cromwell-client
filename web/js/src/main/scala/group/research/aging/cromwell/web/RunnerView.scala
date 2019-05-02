@@ -11,7 +11,7 @@ import org.scalajs.dom.Event
 import org.scalajs.dom.html.Input
 
 import scala.scalajs.js
-import scala.util.{Failure, Success}
+import scala.util.{Failure, Success, Try}
 import scala.xml.Elem
 
 /**
@@ -55,7 +55,7 @@ class RunnerView(
 
   val url = Var("") //Var("http://agingkills.westeurope.cloudapp.azure.com") //"http://localhost:8000"
 
-  val limit = Var(50)
+  val limit = Var(25)
   val offset = Var(0)
 
   val lastStatus: Var[WorkflowStatus] = Var(WorkflowStatus.AnyStatus)
@@ -67,9 +67,10 @@ class RunnerView(
     currentStatus.impure.run{ s=>
       lastStatus := s
     }
-    limit.impure.run{ l =>
 
-    }
+    lastLimit.dropRepeats.impure.run(l=> limit:= l)
+    lastOffset.dropRepeats.impure.run(o=> offset := o)
+
   }
 
   def getURL(): String = url.now
@@ -106,13 +107,17 @@ class RunnerView(
   protected def limitHandler(event: Event): Unit = {
     val target = event.currentTarget//.value.asInstanceOf[String]
     val str: String = target.asInstanceOf[Input].value
-    url := str
+    Try{
+      limit := str.toInt
+    }
   }
 
   protected def offsetHandler(event: Event): Unit = {
     val target = event.currentTarget//.value.asInstanceOf[String]
     val str: String = target.asInstanceOf[Input].value
-    url := str
+    Try{
+      offset := str.toInt
+    }
   }
 
   val queryResults = Var(QueryResults.empty)
@@ -120,7 +125,7 @@ class RunnerView(
   protected def updateClick(event: Event): Unit = {
     //println("URL == "+getURL())
     commands := Commands.ChangeClient(getURL())
-    commands := Commands.QueryWorkflows(lastStatus.now)
+    commands := Commands.QueryWorkflows(lastStatus.now, offset = offset.now, limit = limit.now)
   }
 
   protected def updateStatus(event: Event): Unit = {
@@ -220,21 +225,15 @@ class RunnerView(
       </select>
       <datalist id="status" value={WorkflowStatus.AnyStatus.entryName}></datalist>
     </section>
-    <section>
       <section class="item">
         {lastLimit.dropRepeats.map{ u =>
-          <input id="url" type="number" placeholder="LIMIT"  oninput={ limitHandler _ } value={ u.toString } />
+          <input id="url" type="number" min="0" max="1000" style="max-width: 50px;" placeholder="LIMIT"  oninput={ limitHandler _ } value={ u.toString } />
       }}
-      </section>
-    </section>
-    <section>
-      <section class="item">
         {lastOffset.dropRepeats.map{ u =>
-          <input id="url" type="number" placeholder="OFFSET"  oninput={ offsetHandler _ } value={ u.toString } />
+          <input id="url" type="number" min="0" max="100000" style="max-width: 50px;" placeholder="OFFSET"  oninput={ offsetHandler _ } value={ u.toString } />
       }}
       </section>
-    </section>
-      <section class="item">{loaded.dropRepeats.map{ case (l, total) =>
+    <section class="item">{loaded.dropRepeats.map{ case (l, total) =>
         <small>[<b>{l} of {total}</b>] loaded</small>
       }
         }</section>
