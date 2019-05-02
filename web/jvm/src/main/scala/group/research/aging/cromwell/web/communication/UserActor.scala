@@ -54,10 +54,11 @@ case class UserActor(username: String, initialClient: CromwellClientAkka) extend
       self ! action
 
 
-    case Commands.GetAllMetadata(status, subworkflows) =>
+    case q @ Commands.QueryWorkflows(status, subworkflows, limit, offset) =>
       //debug("GET METADATA!")
       //val metaFut: Future[Results.UpdatedMetadata] = client.getAllMetadata(status, subworkflows).map(m=> Results.UpdatedMetadata(m)).unsafeToFuture()
-      val queryResults = client.getQuery(status, subworkflows).map(r=>QueryWorkflowResults(r, Map.empty)).unsafeToFuture()
+      val queryResults = client.getQuery(status, subworkflows)
+        .map(r=>QueryWorkflowResults(r, Map.empty).paginate(limit, offset)).unsafeToFuture()
       pipe(queryResults)(context.dispatcher) to self
 
     case r: Results.QueryWorkflowResults =>
@@ -110,7 +111,7 @@ case class UserActor(username: String, initialClient: CromwellClientAkka) extend
       pipe(postFut)(context.dispatcher) to self
 
     case Results.WorkflowSent(status) =>
-      self ! Commands.GetAllMetadata(WorkflowStatus.AnyStatus, true)
+      self ! Commands.QueryWorkflows(WorkflowStatus.AnyStatus, true)
 
     case ChangeClient(newURL) =>
       debug(s"CHANGE CLIENT to ${newURL}!")
@@ -118,7 +119,7 @@ case class UserActor(username: String, initialClient: CromwellClientAkka) extend
       this.context.become(operation(output, newClient))
 
     case Commands.Abort(id) =>
-      val ab: Future[Commands.GetAllMetadata] =  client.abort(id).map(_=>Commands.GetAllMetadata(WorkflowStatus.AnyStatus)).unsafeToFuture()
+      val ab: Future[Commands.QueryWorkflows] =  client.abort(id).map(_=>Commands.QueryWorkflows(WorkflowStatus.AnyStatus)).unsafeToFuture()
       pipe(ab)(context.system.dispatcher).pipeTo(self)
 
 

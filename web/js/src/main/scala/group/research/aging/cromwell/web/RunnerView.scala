@@ -20,6 +20,8 @@ class RunnerView(
                   messages: Var[Messages.Message],
                   currentStatus: Rx[WorkflowStatus],
                   lastURL: Rx[String],
+                  limit: Rx[Int],
+                  offset: Rx[Int],
                   loaded: Rx[(Int, Int)],
                   heartBeat: Rx[HeartBeat])
   extends Uploader{
@@ -85,12 +87,24 @@ class RunnerView(
     url := str
   }
 
+  protected def limitHandler(event: Event): Unit = {
+    val target = event.currentTarget//.value.asInstanceOf[String]
+    val str: String = target.asInstanceOf[Input].value
+    url := str
+  }
+
+  protected def offsetHandler(event: Event): Unit = {
+    val target = event.currentTarget//.value.asInstanceOf[String]
+    val str: String = target.asInstanceOf[Input].value
+    url := str
+  }
+
   val queryResults = Var(QueryResults.empty)
 
   protected def updateClick(event: Event): Unit = {
     //println("URL == "+getURL())
     commands := Commands.ChangeClient(getURL())
-    commands := Commands.GetAllMetadata(lastStatus.now)
+    commands := Commands.QueryWorkflows(lastStatus.now)
   }
 
   protected def updateStatus(event: Event): Unit = {
@@ -116,7 +130,7 @@ class RunnerView(
     val d = "http://localhost:8000"
     //url := d
     commands:= Commands.ChangeClient(d)
-    commands := Commands.GetAllMetadata(lastStatus.now)
+    commands := Commands.QueryWorkflows(lastStatus.now)
   }
 
   protected def uploadFileHandler(v: Var[Option[String]])(event: Event): Unit = {
@@ -172,63 +186,45 @@ class RunnerView(
     <option selected="selected" value={value}>{label}</option>
   else <option value={value}>{label}</option>
 
-  val component: Elem = <table class="ui collapsing very compact striped blue table">
-  <tr class="ui center aligned">
-    <td>
-      {lastURL.dropRepeats.map{ u =>
-        <input id="url" type="text" placeholder="Enter cromwell URL..."  oninput={ updateHandler _ } value={ u } />
-      }}
-    </td>
-    <td>
-        <button class={ enabledIf("ui primary button", validUpload) } onclick = { validateClick _}>Validate</button>
-    </td>
-    <td class="ui left aligned">
-      <div class="ui labeled input">
-        <div class="ui label">workflow WDL</div>
-        <input id ="wdl" onclick="this.value=null;" onchange = { uploadFileHandler(wdlFile) _ } accept=".wdl"  name="wdl" type="file" />
-      </div>
-    </td>
-    <td class="ui left aligned">
-      <div class="ui labeled input">
-        <div class="ui label">dependencies</div>
-        <input id ="wdl" onclick="this.value=null;" onchange = { uploadFilesHandler(dependencies) _ } accept=".wdl"  name="dependencies" type="file" multiple="multiple" />
-      </div>
-    </td>
-    <td>{loaded.map{ case (l, total) =>
-      <small>[<b>{l} of {total}</b>] loaded</small>
-       }
-      }
-    </td>
-  </tr>
-  <tr class="ui center aligned">
-    <td>
-      <div class={enabledIf("ui big primary button", validUrl)} onclick={ updateClick _}>Update workflows</div>
+  val menu: Elem = <div class="ui top big fixed menu">
+      <section class="item">
+        <div class={enabledIf("ui big primary button", validUrl)} onclick={ updateClick _}>Update workflows</div>
+
+      </section>
+      <section class="item">
+        {lastURL.dropRepeats.map{ u =>
+            <input id="url" type="text" placeholder="Enter cromwell URL..."  oninput={ updateHandler _ } value={ u } />
+        }}
+      </section>
+    <section class="item">
       <select id="status"  onclick={ updateStatus _}>
         { currentStatus.map{ status=>
         WorkflowStatus.values.map(s =>option(s.entryName, s.entryName, status.entryName))
       }  }
       </select>
       <datalist id="status" value={WorkflowStatus.AnyStatus.entryName}></datalist>
-    </td>
-    <td>
-      <button class={ enabledIf("ui big primary button", validUpload) } onclick = { runClick _}>Run</button>
-    </td>
-
-    <td class="ui left aligned">
-      <div class="ui labeled input">
-        <div class="ui label">inputs json</div>
-        <input id ="inputs" onclick="this.value=null;" onchange = { uploadFileHandler(inputs) _ } accept=".json" name="inputs" type="file" />
-      </div>
-    </td>
-    <td class="ui left aligned">
-      <div class="ui labeled input">
-        <div class="ui label">options</div>
-        <input id ="inputs" onclick="this.value=null;" onchange = { uploadFileHandler(inputs) _ } accept=".json" name="options" type="file" />
-      </div>
-    </td>
-    <td>
+    </section>
+    <section>
+      <section class="item">
+        {limit.dropRepeats.map{ u =>
+          <input id="url" type="text" placeholder="Enter cromwell URL..."  oninput={ limitHandler _ } value={ u.toString } />
+      }}
+      </section>
+    </section>
+    <section>
+      <section class="item">
+        {offset.dropRepeats.map{ u =>
+          <input id="url" type="text" placeholder="Enter cromwell URL..."  oninput={ offsetHandler _ } value={ u.toString } />
+      }}
+      </section>
+    </section>
+      <section class="item">{loaded.dropRepeats.map{ case (l, total) =>
+        <small>[<b>{l} of {total}</b>] loaded</small>
+      }
+        }</section>
+    <section class="item">
       <i class={
-         heartBeat.map {
+         heartBeat.dropRepeats.map {
            case h => h.warning match {
 
              case None =>
@@ -238,9 +234,34 @@ class RunnerView(
            }
          }
          }></i><small>connection</small>
-    </td>
-  </tr>
-  </table>
+    </section>
+    </div>
+
+  val component: Elem = <div class="ui bottom fixed menu">
+    <section class="item">
+      <button class={ enabledIf("ui big primary button", validUpload) } onclick = { runClick _}>Run</button>
+    </section>
+    <section class="item">
+      <button class={ enabledIf("ui primary button", validUpload) } onclick = { validateClick _}>Validate</button>
+    </section>
+    <section class="item">
+        <div class="ui label">workflow WDL</div>
+        <input id ="wdl" onclick="this.value=null;" onchange = { uploadFileHandler(wdlFile) _ } accept=".wdl"  name="wdl" type="file" />
+    </section>
+    <section class="item">
+        <div class="ui label">dependencies</div>
+        <input id ="wdl" onclick="this.value=null;" onchange = { uploadFilesHandler(dependencies) _ } accept=".wdl"  name="dependencies" type="file" multiple="multiple" />
+    </section>
+    <section class="item">
+        <div class="ui label">inputs json</div>
+        <input id ="inputs" onclick="this.value=null;" onchange = { uploadFileHandler(inputs) _ } accept=".json" name="inputs" type="file" />
+    </section>
+    <section class="item">
+        <div class="ui label">options</div>
+        <input id ="inputs" onclick="this.value=null;" onchange = { uploadFileHandler(inputs) _ } accept=".json" name="options" type="file" />
+    </section>
+  </div>
+
 
   init()
 

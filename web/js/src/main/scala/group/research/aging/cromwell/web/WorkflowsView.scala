@@ -24,16 +24,6 @@ class WorkflowsView(allMetadata: Rx[List[Metadata]], baseHost: Rx[String], comma
 
   def timingURL(base: String, id: String): String = base + s"/api/workflows/v1/${id}/timing"
 
-  /*
-  def onMetadataUpdate(reader: ModelRO[List[Metadata]]): Unit = {
-    allMetadata := (if(desc) reader.value.reverse else reader.value)
-  }
- colspan="3"
-  def onHostUpdate(reader: ModelRO[String]): Unit = {
-    host := reader.value
-  }
-  */
-
 
   """
     |  workflowName: String,
@@ -67,7 +57,7 @@ class WorkflowsView(allMetadata: Rx[List[Metadata]], baseHost: Rx[String], comma
       }
     }
     <tbody>
-      {allMetadata.map(meta=> meta.sortWith{
+      {allMetadata.dropRepeats.map(meta=> meta.sortWith{
       case (a, b) =>
         val isParent = b.parentWorkflowId.isDefined && b.parentWorkflowId.get == a.id || b.rootWorkflowId.isDefined && b.rootWorkflowId.get == a.id
         val notChild = a.parentWorkflowId.isEmpty || (a.parentWorkflowId.get != b.id && a.rootWorkflowId.isDefined && a.rootWorkflowId.get != b.id)

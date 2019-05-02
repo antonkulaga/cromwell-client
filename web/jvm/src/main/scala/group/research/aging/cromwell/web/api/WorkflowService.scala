@@ -38,7 +38,7 @@ class WorkflowService(val runner: ActorRef)(implicit val timeout: Timeout) exten
   def metaData: Route = pathPrefix("metadata" / Remaining) { id =>
     withServerExtended("gettings metadata"){
       (server, status, incl) =>
-        val comm = MessagesAPI.ServerCommand(Commands.GetAllMetadata(status, incl), server)
+        val comm = MessagesAPI.ServerCommand(Commands.QueryWorkflows(status, incl), server)
        (runner ? comm).mapTo[Results.UpdatedMetadata]
     }
   }

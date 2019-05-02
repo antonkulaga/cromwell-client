@@ -67,7 +67,7 @@ object Results {
   object QueryWorkflowResults {
     lazy val empty = QueryWorkflowResults(QueryResults.empty, Map.empty)
   }
-  case class QueryWorkflowResults(queryResults: QueryResults, metadata: Map[String, Metadata]) extends ActionResult {
+  case class QueryWorkflowResults(queryResults: QueryResults, metadata: Map[String, Metadata], limit: Int = 50, offset: Int = 0) extends ActionResult {
     lazy val complete: Boolean = queryResults.ids == metadata.keySet
     lazy val missing: Set[String] = queryResults.ids.diff(metadata.keySet)
 
@@ -75,6 +75,14 @@ object Results {
 
     def updated(upd: UpdatedMetadata): QueryWorkflowResults = {
       copy(metadata = metadata -- upd.metadata.keys ++ upd.metadata)
+    }
+
+    def paginate(limit: Int, offset: Int): QueryWorkflowResults = {
+      val (unstarted, started) = queryResults.results.partition(_.start.isEmpty)
+      val newResults = unstarted ++ started.sortWith{
+        case (a, b) => a.start.get.isAfter(b.start.get)
+      }
+      this.copy(queryResults.copy(results = newResults.slice(offset, limit)))
     }
   }
 
@@ -90,7 +98,7 @@ object Commands{
   case object CleanMessages extends Command
 
   case class StreamMetadata(status: WorkflowStatus = WorkflowStatus.AnyStatus, id: String = UUID.randomUUID().toString) extends Command
-  case class GetAllMetadata(status: WorkflowStatus, expandSubworkFlows: Boolean = true) extends Command
+  case class QueryWorkflows(status: WorkflowStatus, expandSubworkFlows: Boolean = true, limit: Int = 50, offset: Int = 0) extends Command
   case class GetQuery(statusS: WorkflowStatus, includeSubworkflows: Boolean = true) extends Command
   case class UpdateStatus(status: WorkflowStatus)  extends Command
   case class ChangeClient(newURL: String) extends Command

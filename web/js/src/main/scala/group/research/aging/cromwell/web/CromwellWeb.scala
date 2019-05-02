@@ -84,7 +84,7 @@ object CromwellWeb extends scala.App with Base {
     */
   lazy val commandsReducer: Reducer = {
 
-    case (previous, getMetadata: Commands.GetAllMetadata) =>
+    case (previous, getMetadata: Commands.QueryWorkflows) =>
       commands := Commands.SendToServer(getMetadata)
       previous
 
@@ -171,7 +171,7 @@ object CromwellWeb extends scala.App with Base {
   }
 
   //AppCircuit.addProcessor(new LoggingProcessor[AppModel]())
-  val runner = new RunnerView(commands, messages, state.map(_.status), state.map(_.client.base), state.map(_.results.loaded), state.map(_.heartBeat))
+  val runner = new RunnerView(commands, messages, state.map(_.status), state.map(_.client.base), state.map(_.results.limit), state.map(_.results.offset), state.map(_.results.loaded), state.map(_.heartBeat))
 
 
   val workflows = new WorkflowsView(
@@ -225,10 +225,13 @@ object CromwellWeb extends scala.App with Base {
 
   val component =
   <div id="cromwell">
+      { runner.menu }
       {  runner.component }
+    <section class="ui segment">
       {  errors.component }
       {  infos.component }
-    {  workflows.component }
+      {  workflows.component }
+    </section>
   </div>
 
   // Compute the new state given an action and a previous state:

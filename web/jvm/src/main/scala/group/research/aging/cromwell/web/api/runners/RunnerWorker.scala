@@ -141,7 +141,7 @@ class RunnerWorker(client: CromwellClientAkka) extends BasicActor {
       } pipeTo self
 
 
-    case Commands.GetAllMetadata(status, subworkflows) =>
+    case Commands.QueryWorkflows(status, subworkflows, _, _) => //here we do not have pagination at the moment
       val s = sender
       client.getAllMetadata(status, subworkflows).map(m=> Results.UpdatedMetadata(m.map(r=>r.id->r).toMap)).unsafeToFuture().pipeTo(s)
 

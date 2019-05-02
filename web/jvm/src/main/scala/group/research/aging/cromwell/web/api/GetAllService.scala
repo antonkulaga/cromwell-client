@@ -242,7 +242,7 @@ class GetAllService(val runner: ActorRef)(implicit val timeout: Timeout) extends
   )
   def getAllMeta: Route =
     withServerExtended("getting all metadata") { (server, status, sub) =>
-      val com = Commands.GetAllMetadata(status, sub)
+      val com = Commands.QueryWorkflows(status, sub)
       import io.circe.syntax._
       val comm = MessagesAPI.ServerCommand(com, server)
       val fut = (runner ? comm).mapTo[Results.UpdatedMetadata]

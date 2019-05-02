@@ -97,7 +97,8 @@ package object client {
     lazy val rootWorkflows: List[QueryResult] = results.filter(w=>w.parentWorkflowId.isEmpty && w.rootWorkflowId.isEmpty)
   }
 
-  @ConfiguredJsonCodec case class QueryResult(id: String, status: String, start: String = "", end: String = "", parentWorkflowId: Option[String] = None, rootWorkflowId: Option[String] = None) extends WorkflowResponse
+  @ConfiguredJsonCodec case class QueryResult(id: String, status: String,
+                                              start: Option[OffsetDateTime] = None, end: Option[OffsetDateTime] = None, parentWorkflowId: Option[String] = None, rootWorkflowId: Option[String] = None) extends WorkflowResponse
 
 
   //implicit val config: Configuration = Configuration.default.withSnakeCaseKeys
