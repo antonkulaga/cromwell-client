@@ -14,14 +14,24 @@ import scala.scalajs.js
 import scala.util.{Failure, Success}
 import scala.xml.Elem
 
-
+/**
+  * View for loading workflows and running workflows
+  * @param commands Var to run commands
+  * @param messages Var to send messages
+  * @param currentStatus
+  * @param lastURL last URL of Cromwell server
+  * @param lastLimit limit workflows that will be used
+  * @param lastOffset offset for the workflows
+  * @param loaded metadata of the loaded workflows
+  * @param heartBeat hearbeat signal to check that server is alive
+  */
 class RunnerView(
                   commands: Var[Commands.Command],
                   messages: Var[Messages.Message],
                   currentStatus: Rx[WorkflowStatus],
                   lastURL: Rx[String],
-                  limit: Rx[Int],
-                  offset: Rx[Int],
+                  lastLimit: Rx[Int],
+                  lastOffset: Rx[Int],
                   loaded: Rx[(Int, Int)],
                   heartBeat: Rx[HeartBeat])
   extends Uploader{
@@ -45,6 +55,9 @@ class RunnerView(
 
   val url = Var("") //Var("http://agingkills.westeurope.cloudapp.azure.com") //"http://localhost:8000"
 
+  val limit = Var(50)
+  val offset = Var(0)
+
   val lastStatus: Var[WorkflowStatus] = Var(WorkflowStatus.AnyStatus)
 
   def init() = {
@@ -53,6 +66,9 @@ class RunnerView(
     }
     currentStatus.impure.run{ s=>
       lastStatus := s
+    }
+    limit.impure.run{ l =>
+
     }
   }
 
@@ -206,15 +222,15 @@ class RunnerView(
     </section>
     <section>
       <section class="item">
-        {limit.dropRepeats.map{ u =>
-          <input id="url" type="text" placeholder="Enter cromwell URL..."  oninput={ limitHandler _ } value={ u.toString } />
+        {lastLimit.dropRepeats.map{ u =>
+          <input id="url" type="number" placeholder="LIMIT"  oninput={ limitHandler _ } value={ u.toString } />
       }}
       </section>
     </section>
     <section>
       <section class="item">
-        {offset.dropRepeats.map{ u =>
-          <input id="url" type="text" placeholder="Enter cromwell URL..."  oninput={ offsetHandler _ } value={ u.toString } />
+        {lastOffset.dropRepeats.map{ u =>
+          <input id="url" type="number" placeholder="OFFSET"  oninput={ offsetHandler _ } value={ u.toString } />
       }}
       </section>
     </section>
