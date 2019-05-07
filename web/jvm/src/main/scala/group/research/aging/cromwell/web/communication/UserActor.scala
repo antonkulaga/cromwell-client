@@ -54,11 +54,12 @@ case class UserActor(username: String, initialClient: CromwellClientAkka) extend
       self ! action
 
 
-    case q @ Commands.QueryWorkflows(status, subworkflows, limit, offset) =>
-      //debug("GET METADATA!")
+    case q @ Commands.QueryWorkflows(status, expandSubworkflows, limit, offset) =>
+      debug("=====Commands.QueryWorkflows=======")
+      debug(q)
       //val metaFut: Future[Results.UpdatedMetadata] = client.getAllMetadata(status, subworkflows).map(m=> Results.UpdatedMetadata(m)).unsafeToFuture()
-      val queryResults = client.getQuery(status, subworkflows)
-        .map(r=>QueryWorkflowResults(r, Map.empty).paginate(limit, offset)).unsafeToFuture()
+      val queryResults = client.getQuery(status, expandSubworkflows)
+        .map(r=>QueryWorkflowResults(r, Map.empty, status, expandSubworkflows, limit, offset).paginate(limit, offset)).unsafeToFuture()
       pipe(queryResults)(context.dispatcher) to self
 
     case r: Results.QueryWorkflowResults =>

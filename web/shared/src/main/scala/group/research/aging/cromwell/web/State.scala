@@ -7,6 +7,27 @@ import group.research.aging.cromwell.web.Results.QueryWorkflowResults
 
 import scala.collection.immutable._
 
+object WorkflowNode {
+
+  protected def sort(a: WorkflowNode, b: WorkflowNode): Boolean = {
+    a.data.start.isEmpty || b.data.start.nonEmpty && a.data.start.get.isAfter(b.data.start.get)
+  }
+
+  def fromMetadata(metadata: Map[String, Metadata]): List[WorkflowNode] = {
+    val (rootMap, others) = metadata.partition{ case (key, value) => value.rootWorkflowId.isEmpty || value.rootWorkflowId.get == key}
+    rootMap.values.map(root => tree(root, others.values.toList)).toList.sortWith(sort)
+  }
+
+  def tree(root: Metadata, meta: List[Metadata]): WorkflowNode = meta.partition(_.parentWorkflowId.contains(root.id)) match {
+    case (Nil, _) => WorkflowNode(root, Nil)
+    case (list, others) => WorkflowNode(root, list.map(l=>tree(l, others)).sortWith(sort))
+  }
+
+}
+case class WorkflowNode(data: Metadata, children: List[WorkflowNode])
+{
+  lazy val sortedMetadata: List[Metadata] = data::children.flatMap(_.sortedMetadata)
+}
 
 object State{
 
@@ -18,7 +39,6 @@ object State{
     override def combine(x: State, y: State): State = y //ugly TODO: rewrite
   }
 }
-
 
 case class State (client: CromwellClient,
                   results: QueryWorkflowResults,
@@ -33,9 +53,8 @@ case class State (client: CromwellClient,
 
   def withEffect(e: ()=>Unit): State = copy(effects = effects :+ e)
 
-  lazy val sortedMetadata: List[Metadata] = results.metadata.values.toList.sortWith{ case (a, b) =>
-    a.startDate > b.startDate || a.startDate =="" || a.startDate == b.startDate && a.startTime > b.startTime
-  }
+  def sortedMetadata: List[Metadata] =  WorkflowNode.fromMetadata(results.metadata).flatMap(_.sortedMetadata)
+
 }
 
 object HeartBeat

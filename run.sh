@@ -1,2 +1,2 @@
 #!/usr/bin/env bash
-docker run -p 8001:8001 quay.io/comp-bio-aging/cromwell-web:0.1.7
+docker run -p 8001:8001 quay.io/comp-bio-aging/cromwell-web:0.1.8

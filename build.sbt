@@ -12,7 +12,7 @@ lazy val commonSettings = Seq(
 
 	scalaVersion :=  "2.12.8",
 
-	version := "0.1.7",
+	version := "0.1.8",
 
 	unmanagedClasspath in Compile ++= (unmanagedResources in Compile).value,
 
@@ -61,9 +61,9 @@ lazy val semanticUI = "2.4.1"
 
 lazy val webcomponents = "1.0.1"
 
-lazy val jquery = "3.4.0"
+lazy val jquery = "3.4.1"
 
-lazy val airframeLogVersion = "19.4.2"
+lazy val airframeLogVersion = "19.5.0"
 
 lazy val  cromwellClient = crossProject(JSPlatform, JVMPlatform)
   .crossType(CrossType.Full)

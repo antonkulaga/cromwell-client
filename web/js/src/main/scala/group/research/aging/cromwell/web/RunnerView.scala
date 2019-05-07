@@ -4,11 +4,14 @@ import java.time.{Duration, OffsetDateTime, ZoneOffset}
 
 import cats.implicits._
 import group.research.aging.cromwell.client.{QueryResults, WorkflowStatus}
+import group.research.aging.cromwell.web.Commands.QueryWorkflows
 import group.research.aging.cromwell.web.utils.Uploader
 import mhtml._
 import org.scalajs.dom
 import org.scalajs.dom.Event
+import dom.ext._
 import org.scalajs.dom.html.Input
+import org.scalajs.dom.raw.HTMLInputElement
 
 import scala.scalajs.js
 import scala.util.{Failure, Success, Try}
@@ -18,20 +21,15 @@ import scala.xml.Elem
   * View for loading workflows and running workflows
   * @param commands Var to run commands
   * @param messages Var to send messages
-  * @param currentStatus
   * @param lastURL last URL of Cromwell server
-  * @param lastLimit limit workflows that will be used
-  * @param lastOffset offset for the workflows
   * @param loaded metadata of the loaded workflows
   * @param heartBeat hearbeat signal to check that server is alive
   */
 class RunnerView(
                   commands: Var[Commands.Command],
                   messages: Var[Messages.Message],
-                  currentStatus: Rx[WorkflowStatus],
+                  lastQuery: Rx[WorkflowQueryLike],
                   lastURL: Rx[String],
-                  lastLimit: Rx[Int],
-                  lastOffset: Rx[Int],
                   loaded: Rx[(Int, Int)],
                   heartBeat: Rx[HeartBeat])
   extends Uploader{
@@ -55,21 +53,31 @@ class RunnerView(
 
   val url = Var("") //Var("http://agingkills.westeurope.cloudapp.azure.com") //"http://localhost:8000"
 
-  val limit = Var(25)
-  val offset = Var(0)
+  //val limit = Var(25)
+  //val offset = Var(0)
+  //val expandSubworkflows = Var(true)
+  //val lastStatus: Var[WorkflowStatus] = Var(WorkflowStatus.AnyStatus)
 
-  val lastStatus: Var[WorkflowStatus] = Var(WorkflowStatus.AnyStatus)
+  val lastLimit: Rx[Int] = lastQuery.map(_.limit)
+  val lastOffset: Rx[Int] = lastQuery.map(_.offset)
+  val lastStatus: Rx[WorkflowStatus] = lastQuery.map(_.status)
+  val lastExpandSubworkflows: Rx[Boolean] = lastQuery.map(_.expandSubworkflows)
+
+  //val currentStatus: Var[WorkflowStatus] = Var(WorkflowStatus.AnyStatus)
+
+  val query: Var[Commands.QueryWorkflows] = Var(Commands.QueryWorkflows.default)
 
   def init() = {
-    lastURL.impure.run{ u=>
-      url := u
+    lastURL.impure.run{ u=> url := u }
+    lastQuery.dropRepeats.impure.run{ q=>
+      query := QueryWorkflows(q)
     }
-    currentStatus.impure.run{ s=>
-      lastStatus := s
-    }
-
+    /*
+    lastStatus.impure.run{ s=>   currentStatus := s}
     lastLimit.dropRepeats.impure.run(l=> limit:= l)
     lastOffset.dropRepeats.impure.run(o=> offset := o)
+    lastExpandSubworkflows.impure.run(s=> expandSubworkflows := s)
+    */
 
   }
 
@@ -108,7 +116,8 @@ class RunnerView(
     val target = event.currentTarget//.value.asInstanceOf[String]
     val str: String = target.asInstanceOf[Input].value
     Try{
-      limit := str.toInt
+      //limit := str.toInt
+      query := query.now.copy(limit = str.toInt)
     }
   }
 
@@ -116,16 +125,24 @@ class RunnerView(
     val target = event.currentTarget//.value.asInstanceOf[String]
     val str: String = target.asInstanceOf[Input].value
     Try{
-      offset := str.toInt
+      query := query.now.copy(offset = str.toInt)
     }
   }
 
+  protected def subworkflowsHandler(event: Event): Unit = {
+    val target = event.currentTarget//.value.asInstanceOf[String]
+    val str: String = target.asInstanceOf[Input].value
+    Try{
+      val checkbox = dom.document.getElementById("expand").asInstanceOf[HTMLInputElement]
+     query := query.now.copy(expandSubworkflows = checkbox.checked)
+    }
+  }
   val queryResults = Var(QueryResults.empty)
 
   protected def updateClick(event: Event): Unit = {
     //println("URL == "+getURL())
     commands := Commands.ChangeClient(getURL())
-    commands := Commands.QueryWorkflows(lastStatus.now, offset = offset.now, limit = limit.now)
+    commands := Commands.QueryWorkflows(query.now)
   }
 
   protected def updateStatus(event: Event): Unit = {
@@ -151,7 +168,7 @@ class RunnerView(
     val d = "http://localhost:8000"
     //url := d
     commands:= Commands.ChangeClient(d)
-    commands := Commands.QueryWorkflows(lastStatus.now)
+    commands := query.now
   }
 
   protected def uploadFileHandler(v: Var[Option[String]])(event: Event): Unit = {
@@ -219,8 +236,8 @@ class RunnerView(
       </section>
     <section class="item">
       <select id="status"  onclick={ updateStatus _}>
-        { currentStatus.map{ status=>
-        WorkflowStatus.values.map(s =>option(s.entryName, s.entryName, status.entryName))
+        { query.map{ q=>
+        WorkflowStatus.values.map(s =>option(s.entryName, s.entryName, q.status.entryName))
       }  }
       </select>
       <datalist id="status" value={WorkflowStatus.AnyStatus.entryName}></datalist>
@@ -233,17 +250,20 @@ class RunnerView(
           <input id="url" type="number" min="0" max="100000" style="max-width: 50px;" placeholder="OFFSET"  oninput={ offsetHandler _ } value={ u.toString } />
       }}
       </section>
+    <section class="item">
+      <div class="ui checked checkbox">
+        <input id="expand" name ="expand"  type="checkbox" checked={query.map(q=>q.expandSubworkflows.toString)} onclick = { subworkflowsHandler _}></input>
+          <label>expand subworkflows</label>
+        </div>
+    </section>
     <section class="item">{loaded.dropRepeats.map{ case (l, total) =>
         <small>[<b>{l} of {total}</b>] loaded</small>
       }
         }</section>
     <section class="item">
       <i class={
-         heartBeat.dropRepeats.map {
-           case h => h.warning match {
-
-             case None =>
-               "big red ban icon"
+         heartBeat.dropRepeats.map { h => h.warning match {
+             case None => "big red ban icon"
              case Some(true) => "orange circle outline icon"
              case Some(false) => "green circle outline icon"
            }

@@ -59,7 +59,8 @@ class WorkflowsView(allMetadata: Rx[List[Metadata]], baseHost: Rx[String], comma
     <tbody>
       {allMetadata.dropRepeats.map(meta=> meta.sortWith{
       case (a, b) =>
-        val isParent = b.parentWorkflowId.isDefined && b.parentWorkflowId.get == a.id || b.rootWorkflowId.isDefined && b.rootWorkflowId.get == a.id
+        val isParent = b.parentWorkflowId.isDefined &&
+          (b.parentWorkflowId.get == a.id || b.rootWorkflowId.get == a.id)
         val notChild = a.parentWorkflowId.isEmpty || (a.parentWorkflowId.get != b.id && a.rootWorkflowId.isDefined && a.rootWorkflowId.get != b.id)
           isParent ||
             (notChild &&
@@ -82,7 +83,9 @@ class WorkflowsView(allMetadata: Rx[List[Metadata]], baseHost: Rx[String], comma
 
   def metadataRow(r: Metadata): Elem = {
     <tr class={statusClass(r.status)}>
-      {if(r.parentWorkflowId.isDefined) <td style="border: 0px !important;"></td> else <!--no cell-->}
+      {if(r.parentWorkflowId.isDefined) <td style="border: 0px !important;">
+      <i class={if(r.rootWorkflowId.isDefined && r.rootWorkflowId.contains(r.parentWorkflowId.get)) "angle right icon" else "small angle double right icon"}></i>
+    </td> else <!--no cell-->}
       <td colspan={if(r.parentWorkflowId.isDefined) "1" else "2"} style={if(r.parentWorkflowId.isDefined) "border: 0px !important;" else ""}>{generalInfo(r)}{rowInputs(r)}{rowOutputs(r)}</td>
       <td style={if(r.parentWorkflowId.isDefined) "border: 0px !important;" else ""}>
         {rowFailures(r)}{rowCallsTable(r)}
@@ -119,7 +122,7 @@ class WorkflowsView(allMetadata: Rx[List[Metadata]], baseHost: Rx[String], comma
         </tr>
         {(if(r.parentWorkflowId.isDefined)
         <tr>
-        <th>parents</th> <td colspan="3"> {r.rootWorkflowId.map(v=>if(v == r.parentWorkflowId.get) "" else v + "/").getOrElse("") + r.parentWorkflowId.get}
+        <th>parents</th> <td colspan="3"> {r.rootWorkflowId.map(v=>if(v == r.parentWorkflowId.get) "" else v + " / ").getOrElse("") + r.parentWorkflowId.get}
         </td>
       </tr> else <br></br>)
         }

@@ -7,8 +7,17 @@ import java.util.UUID
 import cats.Monoid
 import group.research.aging.cromwell.client.WorkflowStatus.AnyStatus
 
+import scala.collection.SortedSet
+
 object Action
 @JsonCodec sealed trait Action
+
+trait WorkflowQueryLike {
+  def limit: Int
+  def offset: Int
+  def status: WorkflowStatus
+  def expandSubworkflows: Boolean
+}
 
 object KeepAlive {
   lazy val web: Action = KeepAlive("web")
@@ -65,9 +74,14 @@ object Results {
   case class WorkflowValidated(validation: ValidationResult) extends ActionResult
 
   object QueryWorkflowResults {
-    lazy val empty = QueryWorkflowResults(QueryResults.empty, Map.empty)
+    lazy val empty = QueryWorkflowResults(QueryResults.empty, Map.empty, WorkflowStatus.AnyStatus, true, 25, 0)
   }
-  case class QueryWorkflowResults(queryResults: QueryResults, metadata: Map[String, Metadata], limit: Int = 25, offset: Int = 0) extends ActionResult {
+  case class QueryWorkflowResults(queryResults: QueryResults,
+                                  metadata: Map[String, Metadata],
+                                  status: WorkflowStatus,
+                                  expandSubworkflows: Boolean,
+                                  limit: Int,
+                                  offset: Int) extends ActionResult with WorkflowQueryLike {
     lazy val complete: Boolean = queryResults.ids == metadata.keySet
     lazy val missing: Set[String] = queryResults.ids.diff(metadata.keySet)
 
@@ -82,8 +96,10 @@ object Results {
       val newResults = unstarted ++ started.sortWith{
         case (a, b) => a.start.get.isAfter(b.start.get)
       }
-      this.copy(queryResults.copy(results = newResults.slice(offset, offset + limit)), offset = offset, limit = limit)
+      this.copy(queryResults.copy(results = newResults.slice(offset, offset + limit)), limit = limit, offset = offset)
     }
+
+    lazy val workflowMetadataResults: List[WorkflowNode] = WorkflowNode.fromMetadata(metadata)
   }
 
 }
@@ -98,7 +114,19 @@ object Commands{
   case object CleanMessages extends Command
 
   case class StreamMetadata(status: WorkflowStatus = WorkflowStatus.AnyStatus, id: String = UUID.randomUUID().toString) extends Command
-  case class QueryWorkflows(status: WorkflowStatus, expandSubworkFlows: Boolean = true, limit: Int = 50, offset: Int = 0) extends Command
+  object QueryWorkflows {
+    lazy val default: QueryWorkflows = QueryWorkflows(WorkflowStatus.AnyStatus, expandSubworkflows = true, 25, 0)
+    def apply(query: WorkflowQueryLike): QueryWorkflows = QueryWorkflows(
+      status = query.status, expandSubworkflows = query.expandSubworkflows, limit = query.limit, offset = query.offset
+    )
+
+    implicit def monoid: cats.Monoid[QueryWorkflows] = new Monoid[QueryWorkflows] {
+      override def empty: QueryWorkflows = QueryWorkflows.default
+
+      override def combine(x: QueryWorkflows, y: QueryWorkflows): QueryWorkflows = y //ugly but works
+    }
+  }
+  case class QueryWorkflows(status: WorkflowStatus, expandSubworkflows: Boolean = true, limit: Int = 25, offset: Int = 0) extends Command with WorkflowQueryLike
   case class GetQuery(statusS: WorkflowStatus, includeSubworkflows: Boolean = true) extends Command
   case class UpdateStatus(status: WorkflowStatus)  extends Command
   //case class Paginate(limit: Int, offset: Int) extends Command
