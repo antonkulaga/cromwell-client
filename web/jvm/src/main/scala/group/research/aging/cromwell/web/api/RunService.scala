@@ -22,11 +22,6 @@ import wvlet.log.LogSupport
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 
-
-/**
-  * Service to run cromwell pipelines
-  * @param materializer
-  */
 @Path("/api")
 class RunService(val runner: ActorRef)(implicit val timeout: Timeout) extends CromwellClientService with LocalWorkflows {
 
@@ -88,7 +83,10 @@ class RunService(val runner: ActorRef)(implicit val timeout: Timeout) extends Cr
             debug(js)
             val toRun = Commands.Run(wdl, js, "", deps) //TODO: fix problem
             val headers = authOpt.fold(Map.empty[String, String])(a=>Map("Authorization" -> a))
-            val serverMessage = MessagesAPI.ServerCommand(toRun, serverURL, callBackOpt.map(Set(_)).getOrElse(Set.empty[String]),_, headers)
+            val cbs = callBackOpt.map(Set(_)).getOrElse(Set.empty[String])
+            val serverMessage: MessagesAPI.ServerCommand =
+              MessagesAPI.ServerCommand(toRun, serverURL, cbs, false, headers)
+            debug(s"sending a message ${serverMessage}")
             completeOrRecoverWith((runner ? serverMessage).mapTo[StatusInfo]) { extraction =>
               debug(s"running pipeline failed with ${extraction}")
               failWith(extraction) // not executed.

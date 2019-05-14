@@ -9,11 +9,7 @@ import wvlet.log.LogSupport
 
 import scala.concurrent.duration._
 
-/**
-  * Actors that proccesses most of websocket messages from the users and back
- *
-  * @param username
-  */
+
 case class RunnerManager(http: HttpExt) extends BasicActor {
 
   protected def operation(workers: Map[String, ActorRef]): Receive = {

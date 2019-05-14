@@ -91,7 +91,7 @@ lazy val  cromwellClient = crossProject(JSPlatform, JVMPlatform)
 	.disablePlugins(RevolverPlugin)
   .jvmSettings(
     libraryDependencies ++= Seq(
-			"com.github.pathikrit" %% "better-files" % "3.7.1",
+			"com.github.pathikrit" %% "better-files" % "3.8.0",
 			"com.pepegar" %% "hammock-apache-http" % hammockVersion,
 			"com.pepegar" %% "hammock-akka-http" % hammockVersion
     )
@@ -142,14 +142,14 @@ lazy val cromwellWeb = crossProject(JSPlatform, JVMPlatform)
 			"com.typesafe.akka" %% "akka-http-xml" % akkaHttp,
 			"javax.ws.rs" % "javax.ws.rs-api" % "2.1.1", //for extra annotations
 			"com.github.swagger-akka-http" %% "swagger-akka-http" % "2.0.2",
-			"com.github.swagger-akka-http" %% "swagger-scala-module" % "2.0.3",
+			"com.github.swagger-akka-http" %% "swagger-scala-module" % "2.0.4",
 			"com.vmunier" %% "scalajs-scripts" % "1.1.2",
       "de.heikoseeberger" %% "akka-http-circe" % "1.25.2",
 			"ch.megard" %% "akka-http-cors" % "0.4.0",
 			"org.webjars" % "Semantic-UI" %  semanticUI,
 			"org.webjars" % "jquery" % jquery,
 			"org.webjars" % "webcomponentsjs" % webcomponents,
-			"org.webjars" % "swagger-ui" % "3.22.0" //Swagger UI
+			"org.webjars" % "swagger-ui" % "3.22.1" //Swagger UI
 		),
 		(managedClasspath in Runtime) += (packageBin in Assets).value,
 		//pipelineStages in Assets := Seq(scalaJSProd),

@@ -42,7 +42,18 @@ object MessagesAPI {
     }
   }
 
-  case class ServerCommand(command: Commands.Command, serverURL: String, callbackURLs: Set[String] = Set.empty, withInputs: Boolean = false, extraHeaders: Map[String, String] = Map.empty) extends MessageAPI
+  /**
+    * The command to execute on a server and callback the result to appropriate place
+    * @param command
+    * @param serverURL
+    * @param callbackURLs
+    * @param withInputs
+    * @param extraHeaders
+    */
+  case class ServerCommand(command: Commands.Command, serverURL: String,
+                           callbackURLs: Set[String] = Set.empty,
+                           withInputs: Boolean = false,
+                           extraHeaders: Map[String, String] = Map.empty) extends MessageAPI
   {
     def callbacks(id: String): Set[CallBack] = callbackURLs.map(u=>
       CallBack(u, id, serverURL, CallBack.defaultUpdateOnStrings, withInputs, DateTime.now, defaultDuration, extraHeaders))

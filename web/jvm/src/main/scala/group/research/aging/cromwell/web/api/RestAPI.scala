@@ -12,9 +12,13 @@ import com.github.swagger.akka.{CustomMediaTypes, SwaggerHttpService}
 import com.github.swagger.akka.SwaggerHttpService.apiDocsBase
 import com.github.swagger.akka.model.Info
 
+/**
+  * RestAPI service
+  * @param http
+  */
 class RestAPI(http: HttpExt) extends SwaggerHttpService with Directives {
 
-  implicit val timeout: Timeout = 10 seconds
+  implicit val timeout: Timeout = 15 seconds
 
   implicit val system = http.system
 
