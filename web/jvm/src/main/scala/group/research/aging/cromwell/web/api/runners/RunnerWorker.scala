@@ -124,7 +124,7 @@ class RunnerWorker(client: CromwellClientAkka) extends BasicActor {
 
     case mes @ MessagesAPI.ServerCommand(Commands.Run(wdl, input, options, dependencies), _, _, _, _) =>
           val source: ActorRef = sender()
-          val statusUpdate = client.postWorkflowStrings(wdl, input, options, dependencies)
+          val statusUpdate = client.postWorkflowStrings(wdl, input.replace("\t", "  "), options, dependencies)
           statusUpdate pipeTo source
           statusUpdate.map(s=>mes.promise(s)) pipeTo self
 

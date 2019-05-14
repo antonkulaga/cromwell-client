@@ -70,7 +70,9 @@ class TestService(val runner: ActorRef)(implicit val timeout: Timeout) extends C
             val toRun = Commands.TestRun(wdl, json, (getPipelineFile(pipeline) / "test.json").lines.mkString("\n"), deps) //TODO: fix problem
 
             val headers = authOpt.fold(Map.empty[String, String])(a=>Map("Authorization" -> a))
-            val serverMessage = MessagesAPI.ServerCommand(toRun, serverURL, callBackOpt.map(Set(_)).getOrElse(Set.empty[String]), _, headers)
+            val cbs = callBackOpt.map(Set(_)).getOrElse(Set.empty[String])
+            val serverMessage: MessagesAPI.ServerCommand = MessagesAPI.ServerCommand(toRun, serverURL,
+              cbs, false, headers)
             completeOrRecoverWith((runner ? serverMessage).mapTo[StatusInfo]) { extraction =>
               debug(s"running pipeline failed with ${extraction}")
               failWith(extraction) // not executed.
