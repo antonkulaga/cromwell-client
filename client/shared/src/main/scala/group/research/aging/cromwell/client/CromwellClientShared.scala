@@ -10,6 +10,8 @@ import hammock.circe.implicits._
 import hammock.marshalling._
 import io.circe.generic.auto._
 
+import scala.concurrent.Future
+
 trait CromwellClientShared extends RosHttp with CromwellClientLike {
 
   def base: String
@@ -44,6 +46,12 @@ trait CromwellClientShared extends RosHttp with CromwellClientLike {
   def get(subpath: String, headers: Map[String, String]): Free[HttpF, HttpResponse] =
     Hammock.request(Method.GET, Uri.unsafeParse(base + subpath), headers)
 
+  def post(subpath: String, headers: Map[String, String]): Free[HttpF, HttpResponse] =
+    Hammock.request(Method.POST, Uri.unsafeParse(base + subpath), headers)
+
+  def patch(subpath: String, headers: Map[String, String]): Free[HttpF, HttpResponse] =
+    Hammock.request(Method.PATCH, Uri.unsafeParse(base + subpath), headers)
+
   //def post[T](subpath: String, headers: Map[String, String], body: T): Free[HttpF, HttpResponse] = Hammock.request(Method.POST, Uri.unsafeParse(base + subpath), headers,
   //  Some(Entity.ByteArrayEntity)
 
@@ -53,6 +61,12 @@ trait CromwellClientShared extends RosHttp with CromwellClientLike {
 
   def getAPI[T](subpath: String, headers: Map[String, String] = Map.empty)(implicit D: Decoder[T], M: MarshallC[HammockF]): IO[T] =
     getIO[T](api + subpath, headers)(D, M)
+
+  def postIO[T](subpath: String, headers: Map[String, String])(implicit D: Decoder[T], M: MarshallC[HammockF]): IO[T] =
+    post(subpath, headers).as[T](D, M).exec[IO]
+
+  def postAPIsimple[T](subpath: String, headers: Map[String, String] = Map.empty)(implicit D: Decoder[T], M: MarshallC[HammockF]): IO[T] =
+    postIO[T](api + subpath, headers)(D, M)
 
   def getStats: IO[Stats] = getIO[Stats](s"/engine/${version}/stats", Map.empty)
 
@@ -70,9 +84,15 @@ trait CromwellClientShared extends RosHttp with CromwellClientLike {
     * 500
     * Internal Error
     */
-  def abort(id: String): IO[group.research.aging.cromwell.client.StatusInfo] =  getAPI[group.research.aging.cromwell.client.StatusInfo](s"/workflows/${version}/${id}/abort")
+  def abort(id: String): IO[group.research.aging.cromwell.client.StatusInfo] =
+    {
+      println(s"abborting ${id}")
+      postAPIsimple[group.research.aging.cromwell.client.StatusInfo](s"/workflows/${version}/${id}/abort")
+    }
 
   def getOutput(id: String): IO[CallOutputs] = getAPI[CallOutputs](s"/workflows/${version}/${id}/outputs")
+
+  def getLabels(id: String): IO[WorkflowLabels] = getAPI[WorkflowLabels](s"/workflows/${version}/{id}/labels")
 
   protected def queryString(status: WorkflowStatus = WorkflowStatus.AnyStatus, includeSubworkflows: Boolean = false): String = status match {
     case WorkflowStatus.AnyStatus => s"/workflows/${version}/query?includeSubworkflows=${includeSubworkflows}"

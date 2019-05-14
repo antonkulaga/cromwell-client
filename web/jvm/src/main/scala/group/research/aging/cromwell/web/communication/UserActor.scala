@@ -120,15 +120,25 @@ case class UserActor(username: String, initialClient: CromwellClientAkka) extend
       this.context.become(operation(output, newClient))
 
     case Commands.Abort(id) =>
-      val ab: Future[Commands.QueryWorkflows] =  client.abort(id).map(_=>Commands.QueryWorkflows(WorkflowStatus.AnyStatus)).unsafeToFuture()
-      pipe(ab)(context.system.dispatcher).pipeTo(self)
+      debug(s"aborting ${id}")
+      val abortion =  client.abort(id)
+        .map(s=>Messages.Infos(List(Messages.Info("abortion", s"aborting ${s.id}, current status: ${s.status}")))).unsafeToFuture()
+        //.map(_=>Commands.QueryWorkflows(WorkflowStatus.AnyStatus))
+      pipe(abortion)(context.system.dispatcher).pipeTo(self)
+      //val update = akka.pattern.after(3 seconds, context.system.scheduler)(abortion.map(_ => Commands.QueryWorkflows(WorkflowStatus.AnyStatus, true)))(context.system.dispatcher)
+      //pipe(update)(context.system.dispatcher).pipeTo(self)
 
+
+    case s : Messages.Infos =>
+      output.foreach(o=>o ! WebsocketMessages.WebsocketAction(s))
 
     case e: Messages.Errors =>
       output.foreach(o=>o ! WebsocketMessages.WebsocketAction(e))
 
     case akka.actor.Status.Failure(th) =>
-      self !  Messages.Errors(Messages.ExplainedError(s"running workflow at ${client.base} failed", Option(th.getMessage).getOrElse(""))::Nil)
+      val er =  Messages.Errors(Messages.ExplainedError(s"running workflow at ${client.base} failed", Option(th.getMessage).getOrElse(""))::Nil)
+      debug(er)
+      self !  er
 
 
     case stream @ StreamMetadata(status, id) =>

@@ -18,7 +18,7 @@ import com.github.swagger.akka.model.Info
   */
 class RestAPI(http: HttpExt) extends SwaggerHttpService with Directives {
 
-  implicit val timeout: Timeout = 15 seconds
+  implicit val timeout: Timeout = 25 seconds
 
   implicit val system = http.system
 
