@@ -1,4 +1,7 @@
 package group.research.aging.cromwell.web.communication
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+
 import akka.actor.ActorRef
 import akka.pattern.pipe
 import cats.implicits._
@@ -8,7 +11,7 @@ import group.research.aging.cromwell.web.Results.QueryWorkflowResults
 import group.research.aging.cromwell.web.common.BasicActor
 import group.research.aging.cromwell.web.{Commands, EmptyAction, Messages, Results}
 import wvlet.log.LogFormatter.SourceCodeLogFormatter
-import wvlet.log.Logger
+import wvlet.log.{LogRotationHandler, Logger}
 
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContextExecutor, Future}
@@ -25,6 +28,19 @@ case class UserActor(username: String, initialClient: CromwellClientAkka) extend
   lazy val heartBeatInterval = 10 seconds
 
   debug(s"user actor ${username}")
+
+  val startTime = LocalDateTime.now(); // gets the current date and time
+
+  val formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy_HH:mm");
+
+  logger.addHandler(new LogRotationHandler(
+    fileName = s"logs/cromwell-client_${username}_started_${startTime.format(formatter)}.log",
+    maxNumberOfFiles = 100, // rotate up to 100 log files
+    maxSizeInBytes = 100 * 1024 * 1024, // 100MB
+    SourceCodeLogFormatter // Any log formatter you like
+  ))
+  debug(s"writing log to cromwell-client_${username}_started_${startTime.format(formatter)}")
+
 
   implicit def executionContext: ExecutionContextExecutor = this.context.dispatcher
 

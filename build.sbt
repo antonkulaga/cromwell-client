@@ -12,7 +12,7 @@ lazy val commonSettings = Seq(
 
 	scalaVersion :=  "2.12.8",
 
-	version := "0.2.0",
+	version := "0.2.1",
 
 	unmanagedClasspath in Compile ++= (unmanagedResources in Compile).value,
 
@@ -179,7 +179,7 @@ lazy val webJVM = cromwellWeb.jvm.settings(
 	scalaJSProjects := Seq(webJS),
 	libraryDependencies ++= Seq(
 		"com.lihaoyi" %% "requests" % "0.1.8" % Test,
-		"com.lihaoyi" %% "ammonite-ops" % "1.6.6" % Test
+		"com.lihaoyi" %% "ammonite-ops" % "1.6.7" % Test
 	)
 )
 
