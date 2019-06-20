@@ -59,7 +59,8 @@ object WebServer extends HttpApp with FailFastCirceSupport with LogSupport {
         <body id="main">
 
         </body>
-        <script src="/public/cromwell-web-fastopt.js" type="text/javascript"></script>
+        <!--<script src="/public/cromwell-web-fastopt.js" type="text/javascript"></script>-->
+        <script src="/public/cromwell-web-opt.js" type="text/javascript"></script>
       </html>
     }
   }

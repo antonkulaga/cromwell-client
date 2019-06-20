@@ -1,7 +1,7 @@
 version: '3'
 services:
   cromwell:
-    image: "quay.io/comp-bio-aging/cromwell:latest"
+    image: "quay.io/comp-bio-aging/cromwell:master"
     volumes:
       - /data:/data
       - /var/run/docker.sock:/var/run/docker.sock
@@ -19,7 +19,7 @@ services:
     ports:
       - "3307:3306"
   cromwell-client:
-    image: quay.io/comp-bio-aging/cromwell-web:0.2.1
+    image: quay.io/comp-bio-aging/cromwell-web:0.2.2
     environment:
       - CROMWELL=http://cromwell:8000
     ports:
