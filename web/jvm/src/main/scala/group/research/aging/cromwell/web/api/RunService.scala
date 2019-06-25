@@ -43,7 +43,7 @@ class RunService(val runner: ActorRef)(implicit val timeout: Timeout) extends Cr
       content = Array(new Content(
         mediaType = "application/json",
         schema = new Schema(
-          example = """{"quantification.samples": [ "GSM1698568","GSM1698570","GSM2927683","GSM2927750","GSM2042593","GSM2042596"]}"""))), description = "input JSON"),
+          example = """{"quantification.samples": [ "GSM1698568","GSM1698570"]}"""))), description = "input JSON"),
     parameters = Array(
       new Parameter(name = "pipeline", in = ParameterIn.PATH, required = true,
         example = "quantification", style = ParameterStyle.DEFAULT, allowReserved = true,

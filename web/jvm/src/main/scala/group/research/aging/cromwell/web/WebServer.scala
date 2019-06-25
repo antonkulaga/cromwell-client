@@ -1,6 +1,6 @@
 package group.research.aging.cromwell.web
 
-import akka.actor.ActorSystem
+import akka.actor.{ActorSystem, OneForOneStrategy, SupervisorStrategy}
 import akka.http.scaladsl.marshallers.xml.ScalaXmlSupport._
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.server._
@@ -19,6 +19,7 @@ import wvlet.log.{LogLevel, LogSupport, Logger}
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.xml.Unparsed
+import scala.concurrent.duration._
 
 /**
   * Cromwell UI webserver
@@ -55,7 +56,9 @@ object WebServer extends HttpApp with FailFastCirceSupport with LogSupport {
           <link rel="stylesheet" href="/lib/Semantic-UI/semantic.css"/>
           <script type="text/javascript" src="/lib/Semantic-UI/semantic.js"></script>
           <link rel="stylesheet" href="/styles/mystyles.css"/>
-        </head>
+          <!-- Include from a free CDN -->
+          <script src="https://cdn.rawgit.com/caldwell/renderjson/master/renderjson.js"></script>
+          </head>
         <body id="main">
 
         </body>

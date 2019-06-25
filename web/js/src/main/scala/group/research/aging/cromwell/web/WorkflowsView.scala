@@ -4,10 +4,16 @@ import group.research.aging.cromwell.client.{LogCall, Metadata, WorkflowFailure}
 import mhtml._
 import org.scalajs.dom
 import org.scalajs.dom.Event
-
+import scalajs.js
 import scala.xml.Elem
 
 import java.time.format.DateTimeFormatter
+
+@js.native
+@js.annotation.JSGlobalScope
+object Global extends js.Object {
+  def renderjson(obj: js.Any): dom.html.Element = js.native
+}
 
 class WorkflowsView(allMetadata: Rx[List[Metadata]], baseHost: Rx[String], commands: Var[Commands.Command])
 {
@@ -137,9 +143,12 @@ class WorkflowsView(allMetadata: Rx[List[Metadata]], baseHost: Rx[String], comma
       <div class="header">Inputs:</div>
       <div class="ui list">
         {
-          <code class="item">
-            { r.inputs.spaces4 }
-          </code>
+
+            <pre class="item" style="max-height: 60vh; overflow-y:scroll;">
+              {
+              r.inputs.spaces4
+              }
+            </pre>
         }
       </div>
     </div>

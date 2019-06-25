@@ -29,6 +29,8 @@ object MessagesAPI {
       WorkflowStatus.Succeeded
     )
     val defaultUpdateOnStrings = defaultUpdateOn.map(_.entryName)
+
+    lazy val empty = CallBack("", "", "", Set.empty, true)
   }
   case class CallBack(backURL: String, workflowId: String, serverURL: String,
                       updateOn: Set[String] = CallBack.defaultUpdateOnStrings, giveInputs: Boolean,

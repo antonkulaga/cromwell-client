@@ -8,6 +8,7 @@ import group.research.aging.cromwell.client
 import group.research.aging.cromwell.client.{CallOutput, CromwellClientAkka, QueryResult, StatusInfo}
 import group.research.aging.cromwell.web.Commands.TestRun
 import group.research.aging.cromwell.web.WebServer.http
+import group.research.aging.cromwell.web.api.runners.MessagesAPI.CallBack
 import group.research.aging.cromwell.web.common.BasicActor
 import group.research.aging.cromwell.web.{Commands, Results}
 import hammock.akka.AkkaInterpreter
@@ -63,60 +64,13 @@ class RunnerWorker(client: CromwellClientAkka) extends BasicActor {
 
     case MessagesAPI.Poll =>
       //debug(s"polling the callbacks, currently ${callbacks.mkString(",")} are avaliable")
-      val results: immutable.Seq[QueryResult] = client.getQuery(includeSubworkflows = true).unsafeRunSync().results
-      val toDelete: Seq[(String, MessagesAPI.CallBack)] = for{
-        r <- results
-        if callbacks.contains(r.id)
-        cb: MessagesAPI.CallBack <- callbacks(r.id)
-        if cb.updateOn.contains(r.status)
-        outputs = client.getOutput(r.id).unsafeRunSync()
-        json: Json = MessagesAPI.PipelineResult(r.id, r.status, outputs.outputs).asJson
-        //debug(s"sending reesults back to ${cb.backURL}")
-        headers = Map("Content-Type"->"application/json") ++ cb.headers
-        resultTry = Try{
-          val req = Hammock.request[Json](Method.POST, Uri.unsafeParse(s"${cb.backURL}"), headers, Some(json))
-          req.exec[IO].unsafeRunSync()
-        }
-        if (resultTry match {
-          case scala.util.Success(_) => true
-          case scala.util.Failure(th) =>
-            error(
-              s"""
-                |Failed to run ${cb.backURL} with the following error:
-                |${th}
-              """.stripMargin)
-            false
-        })
-      }
-      yield {
-        debug(s"sending reesults back to ${cb.backURL}")
-        val result: HttpResponse = resultTry.get
-        debug(s"calling back ${cb.backURL} with request:")
-        debug(json)
-        debug("and result")
-        debug(result)
-        debug("with headers = " + headers.mkString(";"))
-        debug(s"deleting callback ${cb.backURL} from the list")
-        r.id -> cb
-      }
-      val g: Map[String, Set[MessagesAPI.CallBack]] = toDelete.groupBy(_._1).mapValues(_.map(_._2).toSet)
+      val queryResults: immutable.Seq[QueryResult] = client.getQuery(includeSubworkflows = true).unsafeRunSync().results
+      val toDelete: scala.Seq[(String, MessagesAPI.CallBack)] = runForDeletion(callbacks, queryResults)
+      val g: Map[String, Set[CallBack]] = toDelete.groupBy(_._1).mapValues(_.map(_._2).toSet)
       if(g.nonEmpty || callbacks.contains(TestRun.id)) {
-        for {
-          cbs <- callbacks.get(TestRun.id)
-          cb <- cbs
-        } {
-          val headers = Map("Content-Type"->"application/json") ++ cb.headers
-          import io.circe._, io.circe.parser._
-          val res: Option[Json] = parse(cb.updateOn.head).right.map(j=>Some(j)).getOrElse(None)
-          val u = Uri.unsafeParse(cb.backURL)
-          debug(s"SENDING TEST RESULT TO ${u}:\n ${res}")
-          val req = Hammock.request[Json](Method.POST, u, Map("Content-Type"->"application/json"), res)
-          val result: HttpResponse = req.exec[IO].unsafeRunSync()
-          debug(s"calling back ${cb.backURL} with request:")
-          println("RESULT RECEIVED: " + result.toString)
-          debug("with headers = " + headers.mkString(";"))
-        }
-        val updCallbacks = callbacks.filter(_._1 != TestRun.id).map{ case (i, cbs) => if(g.contains(i)) (i, cbs -- g(i)) else (i, cbs)}.filter(_._2.nonEmpty)
+        if(callbacks.contains(TestRun.id)) testResponse(callbacks)
+        val updCallbacks = callbacks.filter(c => c._1 != TestRun.id)
+          .map{ case (i, cbs) => if(g.contains(i)) (i, cbs -- g(i)) else (i, cbs.filter(_!=CallBack.empty))}.filter(_._2.nonEmpty)
         //debug(s"deleting ${callbacks.size - updCallbacks.size} callbacks after execution!")
         context.become(operation(updCallbacks))
       }
@@ -164,6 +118,77 @@ class RunnerWorker(client: CromwellClientAkka) extends BasicActor {
       }
   }
 
+
+  private def runForDeletion(callbacks: Map[String, Set[CallBack]], results: immutable.Seq[QueryResult]) = {
+    val toDelete: Seq[(String, CallBack)] = for {
+      r <- results
+      if callbacks.contains(r.id)
+      cb: CallBack <- callbacks(r.id)
+      if cb.updateOn.contains(r.status)
+      outputs = client.getOutput(r.id).unsafeRunSync()
+      json: Json = MessagesAPI.PipelineResult(r.id, r.status, outputs.outputs).asJson
+      //debug(s"sending reesults back to ${cb.backURL}")
+      headers = Map("Content-Type" -> "application/json") ++ cb.headers
+    }
+      yield {
+        debug(s"sending reesults back to ${cb.backURL}")
+
+        //val result: HttpResponse = resultTry.get
+        //val result: HttpResponse = resultTry.get
+        debug(s"calling back ${cb.backURL} with request:")
+        debug(json)
+        debug("and result")
+        //WARNING EFFECT!!!
+        val resultTry = Try {
+          val req = Hammock.request[Json](Method.POST, Uri.unsafeParse(s"${cb.backURL}"), headers, Some(json))
+          req.exec[IO].unsafeRunSync()
+        }
+        debug(resultTry)
+        debug("with headers = " + headers.mkString(";"))
+        debug(s"deleting callback ${cb.backURL} from the list")
+        r.id -> (resultTry match {
+          case scala.util.Success(h) => cb
+          case scala.util.Failure(th) =>
+            error(
+              s"""
+                 |Failed to run ${cb.backURL} callback with the following error:
+                 |${th}
+              """.stripMargin)
+            CallBack.empty
+        })
+      }
+    toDelete
+  }
+
+  /**
+    * Method to process only test responses
+    *
+    * @param callbacks
+    */
+  protected def testResponse(callbacks: Map[String, Set[MessagesAPI.CallBack]]): Unit = {
+    for {
+      cbs <- callbacks.get(TestRun.id)
+      cb <- cbs
+      if cb != CallBack.empty
+    } {
+      val headers = Map("Content-Type" -> "application/json") ++ cb.headers
+      import io.circe._, io.circe.parser._
+      val res: Option[Json] = parse(cb.updateOn.head).right.map(j => Some(j)).getOrElse(None)
+      val u = Uri.unsafeParse(cb.backURL)
+      debug(s"SENDING TEST RESULT TO ${u}:\n ${res}")
+      Try{
+        val req = Hammock.request[Json](Method.POST, u, Map("Content-Type" -> "application/json"), res)
+        req.exec[IO].unsafeRunSync()
+
+      } match {
+        case  scala.util.Failure(e) => error(s"failed to callback to ${cb.backURL} with the following error ${e}")
+        case scala.util.Success(result) =>debug(s"calling back ${cb.backURL} with request:")
+          println("RESULT RECEIVED: " + result.toString)
+          debug("with headers = " + headers.mkString(";"))
+      }
+
+    }
+  }
 
   override def receive: Receive = operation(Map.empty)
 }

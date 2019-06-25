@@ -10,7 +10,9 @@ trait BasicActor extends Actor with LogSupport {
   override val supervisorStrategy: SupervisorStrategy =
     OneForOneStrategy(maxNrOfRetries = 10, withinTimeRange = 1 minute) {
       case _: ArithmeticException      ⇒ akka.actor.SupervisorStrategy.Resume
-      case _: NullPointerException     ⇒ akka.actor.SupervisorStrategy.Restart
+      case _: NullPointerException     ⇒ akka.actor.SupervisorStrategy.Resume
+      case _: hammock.CodecException => akka.actor.SupervisorStrategy.Resume
+      case _: java.nio.file.FileSystemException  => akka.actor.SupervisorStrategy.Resume
       case _: Exception                ⇒ akka.actor.SupervisorStrategy.Restart
     }
 

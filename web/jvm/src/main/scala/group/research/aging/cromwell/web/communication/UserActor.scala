@@ -25,16 +25,17 @@ case class UserActor(username: String, initialClient: CromwellClientAkka) extend
   // Set the default log formatter
   Logger.setDefaultFormatter(SourceCodeLogFormatter)
 
-  lazy val heartBeatInterval = 10 seconds
+  lazy val heartBeatInterval = 15 seconds
 
   debug(s"user actor ${username}")
 
   val startTime = LocalDateTime.now(); // gets the current date and time
 
-  val formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy_HH:mm");
+  val formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy_HH:mm")
 
+  lazy val logDir = Option(System.getenv("CROMWELL_LOGS")).getOrElse("logs")
   logger.addHandler(new LogRotationHandler(
-    fileName = s"logs/cromwell-client_${username}_started_${startTime.format(formatter)}.log",
+    fileName = logDir + s"/cromwell-client_${username}_started_${startTime.format(formatter)}.log",
     maxNumberOfFiles = 100, // rotate up to 100 log files
     maxSizeInBytes = 100 * 1024 * 1024, // 100MB
     SourceCodeLogFormatter // Any log formatter you like
@@ -119,7 +120,8 @@ case class UserActor(username: String, initialClient: CromwellClientAkka) extend
       debug("INPUT: ")
       debug(input)
       debug("=================================")
-      val postFut = client.postWorkflowStrings(wdl, input.replace("\t", "  "), options, dependencies).map[Results.ActionResult](s=>Results.WorkflowSent(s))(context.dispatcher).recover{
+      val postFut = client.postWorkflowStrings(wdl, input.replace("\t", "  "), options, dependencies)
+        .map[Results.ActionResult](s=>Results.WorkflowSent(s))(context.dispatcher).recover{
         case th =>
           error(s"WORKFLOW could not be executed because of: \n ${th}")
           val m = Option(th.getMessage).combine(Option(th.getCause).map(_.getMessage)).getOrElse(th.toString)
@@ -128,7 +130,7 @@ case class UserActor(username: String, initialClient: CromwellClientAkka) extend
       pipe(postFut)(context.dispatcher) to self
 
     case Results.WorkflowSent(status) =>
-      self ! Commands.QueryWorkflows(WorkflowStatus.AnyStatus, true)
+      context.system.scheduler.scheduleOnce(3 seconds, self, Commands.QueryWorkflows(WorkflowStatus.AnyStatus, true))
 
     case ChangeClient(newURL) =>
       debug(s"CHANGE CLIENT to ${newURL}!")
