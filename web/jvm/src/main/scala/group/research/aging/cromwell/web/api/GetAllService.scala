@@ -1,34 +1,18 @@
 package group.research.aging.cromwell.web.api
 
 import akka.actor.ActorRef
-import akka.http.scaladsl.server._
-import group.research.aging.cromwell.client
-import group.research.aging.cromwell.web.{Commands, Results}
-import group.research.aging.cromwell.web.api.runners.MessagesAPI
-import io.swagger.v3.oas.annotations._
-import io.swagger.v3.oas.annotations.enums.{ParameterIn, ParameterStyle}
-import io.swagger.v3.oas.annotations.responses._
-import javax.ws.rs._
-import akka.pattern._
-import io.circe.Json
-import io.circe.syntax._
-import akka.actor.ActorRef
 import akka.http.scaladsl.server.Route
 import akka.pattern.ask
 import akka.util.Timeout
-import group.research.aging.cromwell.client
-import group.research.aging.cromwell.client.{CallOutputs, CromwellClient, QueryResults, WorkflowStatus}
-import group.research.aging.cromwell.web.{Commands, Results}
+import group.research.aging.cromwell.client.QueryResults
 import group.research.aging.cromwell.web.api.runners.MessagesAPI
+import group.research.aging.cromwell.web.{Commands, Results}
 import io.circe.generic.auto._
 import io.swagger.v3.oas.annotations._
-import io.swagger.v3.oas.annotations.enums.ParameterIn
+import io.swagger.v3.oas.annotations.enums.{ParameterIn, ParameterStyle}
 import io.swagger.v3.oas.annotations.media._
 import io.swagger.v3.oas.annotations.responses._
 import javax.ws.rs._
-
-import scala.concurrent.Future
-import scala.concurrent.duration._
 @Path("/api")
 class GetAllService(val runner: ActorRef)(implicit val timeout: Timeout) extends CromwellClientService {
 
@@ -243,7 +227,6 @@ class GetAllService(val runner: ActorRef)(implicit val timeout: Timeout) extends
   def getAllMeta: Route =
     withServerExtended("getting all metadata") { (server, status, sub) =>
       val com = Commands.QueryWorkflows(status, sub)
-      import io.circe.syntax._
       val comm = MessagesAPI.ServerCommand(com, server)
       val fut = (runner ? comm).mapTo[Results.UpdatedMetadata]
       fut
@@ -270,7 +253,6 @@ class GetAllService(val runner: ActorRef)(implicit val timeout: Timeout) extends
     pathPrefix("status"){
       withServerExtended("getting all statuses") { (server, status, sub) =>
         val com = Commands.GetQuery(status, sub)
-        import io.circe.syntax._
         val comm = MessagesAPI.ServerCommand(com, server)
         val fut = (runner ? comm).mapTo[QueryResults]
         fut

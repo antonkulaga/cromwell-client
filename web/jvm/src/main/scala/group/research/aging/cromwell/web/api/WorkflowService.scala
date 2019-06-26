@@ -5,18 +5,15 @@ import akka.http.scaladsl.server.Route
 import akka.pattern.ask
 import akka.util.Timeout
 import group.research.aging.cromwell.client
-import group.research.aging.cromwell.client.{CallOutputs, CromwellClient, WorkflowStatus}
-import group.research.aging.cromwell.web.{Commands, Results}
+import group.research.aging.cromwell.client.StatusAndOutputs
 import group.research.aging.cromwell.web.api.runners.MessagesAPI
+import group.research.aging.cromwell.web.{Commands, Results}
 import io.circe.generic.auto._
 import io.swagger.v3.oas.annotations._
 import io.swagger.v3.oas.annotations.enums.{ParameterIn, ParameterStyle}
 import io.swagger.v3.oas.annotations.media._
 import io.swagger.v3.oas.annotations.responses._
 import javax.ws.rs._
-
-import scala.concurrent.Future
-import scala.concurrent.duration._
 
 @Path("/api")
 class WorkflowService(val runner: ActorRef)(implicit val timeout: Timeout) extends CromwellClientService {
@@ -48,7 +45,7 @@ class WorkflowService(val runner: ActorRef)(implicit val timeout: Timeout) exten
   @Operation(summary = "Return outputs", description = "Return outputs of specific workflow", tags = Array("workflow"),
     parameters = Array(
       new Parameter(name = "id", in = ParameterIn.PATH, description = "ID of the workflow which returns the metadata",   style = ParameterStyle.SIMPLE, allowReserved = true),
-      new Parameter(name = "host", in = ParameterIn.QUERY, description = "url to the cromwell server",   style = ParameterStyle.SIMPLE, allowReserved = true)
+      new Parameter(name = "server", in = ParameterIn.QUERY, description = "url to the cromwell server",   style = ParameterStyle.SIMPLE, allowReserved = true)
     ),
     responses = Array(
       new ApiResponse(responseCode = "200", description = "Outputs for specific workflow",
@@ -166,7 +163,8 @@ class WorkflowService(val runner: ActorRef)(implicit val timeout: Timeout) exten
             }
               ]
             },
-            "id": "fa6d098a-4986-4aca-9562-86fdd4adf37c"
+            "id": "fa6d098a-4986-4aca-9562-86fdd4adf37c",
+            "status": "Succeeded"
           }""")))
       ),
       new ApiResponse(responseCode = "500", description = "Internal server error"))
@@ -176,7 +174,7 @@ class WorkflowService(val runner: ActorRef)(implicit val timeout: Timeout) exten
       server =>
         val g = Commands.SingleWorkflow.GetOutput(id)
         val comm = MessagesAPI.ServerCommand(g, server)
-        val fut = (runner ? comm).mapTo[CallOutputs]
+        val fut = (runner ? comm).mapTo[StatusAndOutputs]
         fut
     }
   }
@@ -185,7 +183,7 @@ class WorkflowService(val runner: ActorRef)(implicit val timeout: Timeout) exten
   @Operation(summary = "Return status", description = "Return status of specific workflow", tags = Array("workflow"),
     parameters = Array(
       new Parameter(name = "id", in = ParameterIn.PATH, description = "ID of the workflow which returns the status",  style = ParameterStyle.SIMPLE, allowReserved = true),
-      new Parameter(name = "host", in = ParameterIn.QUERY, description = "url to the cromwell server",   style = ParameterStyle.SIMPLE, allowReserved = true)
+      new Parameter(name = "server", in = ParameterIn.QUERY, description = "url to the cromwell server",   style = ParameterStyle.SIMPLE, allowReserved = true)
     ),
     responses = Array(
       new ApiResponse(responseCode = "200", description = "Outputs for specific workflow",
@@ -197,7 +195,7 @@ class WorkflowService(val runner: ActorRef)(implicit val timeout: Timeout) exten
       server =>
         val g = Commands.SingleWorkflow.GetStatus(id)
         val comm = MessagesAPI.ServerCommand(g, server)
-        val fut = (runner ? comm).mapTo[CallOutputs]
+        val fut = (runner ? comm).mapTo[group.research.aging.cromwell.client.StatusInfo]
         fut
     }
   }

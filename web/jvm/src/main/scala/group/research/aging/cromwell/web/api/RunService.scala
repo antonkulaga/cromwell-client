@@ -6,21 +6,15 @@ import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.unmarshalling.PredefinedFromEntityUnmarshallers._
 import akka.pattern.ask
 import akka.util.Timeout
-import better.files.File
 import group.research.aging.cromwell.client.{CromwellClient, StatusInfo}
 import group.research.aging.cromwell.web.Commands
 import group.research.aging.cromwell.web.api.runners.MessagesAPI
-import io.circe.generic.auto._
 import io.swagger.v3.oas.annotations._
 import io.swagger.v3.oas.annotations.enums.{ParameterIn, ParameterStyle}
 import io.swagger.v3.oas.annotations.media._
 import io.swagger.v3.oas.annotations.parameters.RequestBody
 import io.swagger.v3.oas.annotations.responses._
 import javax.ws.rs._
-import wvlet.log.LogSupport
-
-import scala.concurrent.duration._
-import scala.concurrent.{ExecutionContext, Future}
 
 @Path("/api")
 class RunService(val runner: ActorRef)(implicit val timeout: Timeout) extends CromwellClientService with LocalWorkflows {

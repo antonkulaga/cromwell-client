@@ -138,6 +138,15 @@ package object client {
 
   //@ConfiguredJsonCodec case class WorkflowOutputs(outputs: Map[String, String]) extends CromwellResponse
 
+  object StatusAndOutputs {
+    def apply(statusInfo: StatusInfo, outputs: CallOutputs): StatusAndOutputs = {
+      require(statusInfo.id == outputs.id, "Status info and the outputs should belong to the same workflow")
+      StatusAndOutputs(statusInfo.id, statusInfo.status, outputs.outputs)
+    }
+  }
+  @ConfiguredJsonCodec case class StatusAndOutputs(id: String, status: String, outputs: Map[String,  CallOutput]) extends WorkflowResponse
+
+
   @ConfiguredJsonCodec case class CallOutputs(outputs: Map[String,  CallOutput], id: String) extends WorkflowResponse
   @ConfiguredJsonCodec case class WorkflowLabels(id: String, labels: List[String]) extends WorkflowResponse
 

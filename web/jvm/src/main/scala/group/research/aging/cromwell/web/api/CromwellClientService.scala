@@ -58,7 +58,8 @@ trait CromwellClientService extends BasicPipelineService  {
 
   def withServer[T](operationName: String)(fun: String => Future[T])(implicit m: ToResponseMarshaller[T]): Route =  parameters("server".?) {
     serverOpt =>
-      val server: String = serverOpt.getOrElse(CromwellClient.defaultURL)
+      val s: String = serverOpt.getOrElse(CromwellClient.defaultURL)
+      val server = if(s.endsWith("/")) s.dropRight(1) else s
       completeOrRecoverWith(fun(server)) { extraction =>
         debug(s"running operation $operationName with server ${server} failed with ${extraction}")
         failWith(extraction) // not executed.

@@ -5,7 +5,7 @@ import akka.pattern._
 import akka.stream._
 import cats.effect.IO
 import group.research.aging.cromwell.client
-import group.research.aging.cromwell.client.{CallOutput, CromwellClientAkka, QueryResult, StatusInfo}
+import group.research.aging.cromwell.client.{CallOutput, CromwellClientAkka, QueryResult, StatusAndOutputs, StatusInfo}
 import group.research.aging.cromwell.web.Commands.TestRun
 import group.research.aging.cromwell.web.WebServer.http
 import group.research.aging.cromwell.web.api.runners.MessagesAPI.CallBack
@@ -76,13 +76,15 @@ class RunnerWorker(client: CromwellClientAkka) extends BasicActor {
       }
 
 
-    case mes @ MessagesAPI.ServerCommand(Commands.Run(wdl, input, options, dependencies), _, _, _, _) =>
+    case mes @ MessagesAPI.ServerCommand(Commands.Run(wdl, input, options, dependencies), serverURL, _, _, _) =>
           val source: ActorRef = sender()
-          val statusUpdate = client.postWorkflowStrings(wdl, input.replace("\t", "  "), options, dependencies)
+          val serv = if(serverURL.endsWith("/")) serverURL.dropRight(1) else serverURL
+          val cl: CromwellClientAkka = if(client.base.contains(serv)) client else client.copy(base = serv)
+          val statusUpdate = cl.postWorkflowStrings(wdl, input.replace("\t", "  "), options, dependencies)
           statusUpdate pipeTo source
           statusUpdate.map(s=>mes.promise(s)) pipeTo self
 
-    case mes @ MessagesAPI.ServerCommand(Commands.TestRun(wdl, input, results, dependencies), _, _, _, _) =>
+    case mes @ MessagesAPI.ServerCommand(Commands.TestRun(wdl, input, results, dependencies), serverURL, _, _, _) =>
       val source: ActorRef = sender()
       val statusUpdate: Future[StatusInfo] = Future{
         StatusInfo("e442e52a-9de1-47f0-8b4f-e6e565008cf1-TEST", "Submitted")
@@ -105,7 +107,13 @@ class RunnerWorker(client: CromwellClientAkka) extends BasicActor {
 
     case Commands.SingleWorkflow.GetOutput(id) =>
       val s = sender()
-      client.getOutput(id).unsafeToFuture().pipeTo(s)
+      val st = client.getStatus(id).unsafeToFuture()
+      val o = client.getOutput(id).unsafeToFuture()
+      val r: Future[StatusAndOutputs] = for{
+        stat <-st
+        out <- o
+      } yield StatusAndOutputs(stat, out)
+      r.pipeTo(s)
 
     case Commands.SingleWorkflow.GetStatus(id) =>
       val s = sender()
