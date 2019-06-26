@@ -4,6 +4,7 @@ import java.time.format.DateTimeFormatter
 
 import akka.actor.ActorRef
 import akka.pattern.pipe
+import better.files.File
 import cats.implicits._
 import group.research.aging.cromwell.client.{CromwellClientAkka, WorkflowStatus}
 import group.research.aging.cromwell.web.Commands.{ChangeClient, StreamMetadata}
@@ -33,7 +34,7 @@ case class UserActor(username: String, initialClient: CromwellClientAkka) extend
 
   val formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy_HH:mm")
 
-  lazy val logDir = Option(System.getenv("CROMWELL_LOGS")).getOrElse("logs")
+  lazy val logDir = Option(System.getenv("CROMWELL_LOGS")).filter(File(_).exists).getOrElse("logs")
   logger.addHandler(new LogRotationHandler(
     fileName = logDir + s"/cromwell-client_${username}_started_${startTime.format(formatter)}.log",
     maxNumberOfFiles = 100, // rotate up to 100 log files
