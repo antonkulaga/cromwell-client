@@ -7,6 +7,7 @@ import akka.util.Timeout
 import better.files.File
 import de.heikoseeberger.akkahttpcirce._
 import group.research.aging.cromwell.client.{CromwellClient, WorkflowStatus}
+import group.research.aging.cromwell.web.util.PipelinesExtractor
 import wvlet.log.LogSupport
 
 import scala.concurrent.Future
@@ -28,7 +29,7 @@ trait BasicService extends Directives with FailFastCirceSupport with LogSupport 
 /**
   * Basic trait for services that have to deal with CromwellServer
   */
-trait CromwellClientService extends BasicPipelineService  {
+trait CromwellClientService extends BasicService with PipelinesExtractor  {
 
   def runner: ActorRef
   implicit def timeout: Timeout
@@ -83,7 +84,3 @@ trait CromwellClientService extends BasicPipelineService  {
 
 }
 
-trait BasicPipelineService extends BasicService {
-  lazy val pipelinesRoot: File = File(scala.util.Properties.envOrElse("PIPELINES", if(File("/data/pipelines").exists) "/data/pipelines" else if(File("./pipelines").exists) "./pipelines" else
-  if(File("./workflows").exists) "./workflows" else "."))
-}

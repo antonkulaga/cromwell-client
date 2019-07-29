@@ -4,6 +4,7 @@ import java.time.{OffsetDateTime, ZoneOffset}
 import cats.kernel.Monoid
 import group.research.aging.cromwell.client.{CromwellClient, CromwellClientLike, Metadata, WorkflowStatus}
 import group.research.aging.cromwell.web.Results.QueryWorkflowResults
+import io.circe.generic.JsonCodec
 
 import scala.collection.immutable._
 
@@ -40,12 +41,14 @@ object State{
   }
 }
 
+
 case class State (client: CromwellClient,
                   results: QueryWorkflowResults,
                   status: WorkflowStatus = WorkflowStatus.AnyStatus,
                   errors: List[Messages.ExplainedError] = Nil,
                   infos: List[Messages.Info] = Nil,
                   effects: List[()=>Unit] = Nil,
+                  pipelines: Pipelines = Pipelines.empty,
                   heartBeat: HeartBeat = HeartBeat(None)
                  )
 {
@@ -79,3 +82,10 @@ case class HeartBeat(last: Option[OffsetDateTime], now: OffsetDateTime, maxDelay
 
   def updatedNow = this.copy(now = currentTime)
 }
+
+object Pipelines{
+  lazy val empty = Pipelines(Nil)
+}
+@JsonCodec case class Pipelines(pipelines: List[Pipeline])
+
+@JsonCodec case class Pipeline(name: String, main: String,  dependencies: List[(String,String)], defaults: String)

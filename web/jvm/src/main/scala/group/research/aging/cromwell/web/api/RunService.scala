@@ -7,8 +7,9 @@ import akka.http.scaladsl.unmarshalling.PredefinedFromEntityUnmarshallers._
 import akka.pattern.ask
 import akka.util.Timeout
 import group.research.aging.cromwell.client.{CromwellClient, StatusInfo}
-import group.research.aging.cromwell.web.Commands
+import group.research.aging.cromwell.web.{Commands, Pipeline}
 import group.research.aging.cromwell.web.api.runners.MessagesAPI
+import group.research.aging.cromwell.web.util.PipelinesExtractor
 import io.swagger.v3.oas.annotations._
 import io.swagger.v3.oas.annotations.enums.{ParameterIn, ParameterStyle}
 import io.swagger.v3.oas.annotations.media._
@@ -17,7 +18,7 @@ import io.swagger.v3.oas.annotations.responses._
 import javax.ws.rs._
 
 @Path("/api")
-class RunService(val runner: ActorRef)(implicit val timeout: Timeout) extends CromwellClientService with LocalWorkflows {
+class RunService(val runner: ActorRef)(implicit val timeout: Timeout) extends CromwellClientService with PipelinesExtractor {
 
   private def concatJson(defaults: String, json: String) = {
     val d = defaults.trim
@@ -63,11 +64,11 @@ class RunService(val runner: ActorRef)(implicit val timeout: Timeout) extends Cr
   def runAPI: Route = pathPrefix("run" / Remaining) { pipeline =>
     debug(s"BEFORE PARAMETER EXTRACTION FOR ${pipeline}")
     extractPipeline(pipeline) match {
-      case (None, _, _) =>
+      case None =>
         error(s"CANNOT FIND ${pipeline}")
         reject(PipelinesRejections.PipelineNotFound(pipeline))
 
-      case (Some(wdl), deps, defs) =>
+      case Some(Pipeline(name,wdl, deps, defs)) =>
         parameters("server".?, "callback".?, "authorization".?) { (serverOpt, callBackOpt, authOpt) =>
           debug(s"FOUND PARAMETERS FOR RUNNING ${pipeline}")
           //val c = serverOpt.map(CromwellClient(_)).getOrElse(CromwellClient.default)

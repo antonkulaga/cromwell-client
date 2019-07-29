@@ -172,7 +172,7 @@ object CromwellWeb extends scala.App with Base {
 
   //AppCircuit.addProcessor(new LoggingProcessor[AppModel]())
   val runner = new RunnerView(commands, messages,
-    state.map(_.results).dropRepeats, state.map(_.client.base).dropRepeats, state.map(_.results.loaded).dropRepeats, state.map(_.heartBeat)
+    state.map(_.results).dropRepeats, state.map(_.client.base).dropRepeats, state.map(_.results.loaded).dropRepeats, state.map(_.pipelines), state.map(_.heartBeat)
   )
 
 

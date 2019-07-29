@@ -16,7 +16,7 @@ import org.scalajs.dom.raw.HTMLInputElement
 import scala.scalajs.js
 import scala.util.{Failure, Success, Try}
 import scala.xml.Elem
-
+import org.querki.jquery.$
 /**
   * View for loading workflows and running workflows
   * @param commands Var to run commands
@@ -31,8 +31,9 @@ class RunnerView(
                   lastQuery: Rx[WorkflowQueryLike],
                   lastURL: Rx[String],
                   loaded: Rx[(Int, Int)],
+                  pipelines: Rx[Pipelines],
                   heartBeat: Rx[HeartBeat])
-  extends Uploader{
+  extends Uploader with BasicView {
 
 
   var interval: js.UndefOr[js.timers.SetIntervalHandle] = js.undefined
@@ -72,6 +73,7 @@ class RunnerView(
     lastQuery.dropRepeats.impure.run{ q=>
       query := QueryWorkflows(q)
     }
+
     /*
     lastStatus.impure.run{ s=>   currentStatus := s}
     lastLimit.dropRepeats.impure.run(l=> limit:= l)
@@ -174,7 +176,8 @@ class RunnerView(
   protected def uploadFileHandler(v: Var[Option[String]])(event: Event): Unit = {
     uploadHandler(event){
       case Success((f, str)) => v := Some(str)
-      case Failure(th)=> dom.console.error(th.getMessage)
+      case Failure(th)=>
+        messages := Messages.ExplainedError("failed uploading files", th.getMessage)
     }
   }
 
@@ -199,6 +202,11 @@ class RunnerView(
     }
   }
 
+  protected def activeClick(tb: String)(event: dom.Event): Unit = {
+    tab := tb
+  }
+
+
   protected def validateClick(event: js.Dynamic): Unit = {
     wdlFile.now match {
       case Some(wdl: String) =>
@@ -212,17 +220,12 @@ class RunnerView(
     }
   }
 
-  def enabledIf(str: String, condition: Rx[Boolean]): Rx[String] =
-    condition.map(u=>
-      if (u) {
-        str
-      } else s"$str disabled"
-    )
-
 
   def option(value: String, label: String, default: String): Elem = if(default ==value)
     <option selected="selected" value={value}>{label}</option>
   else <option value={value}>{label}</option>
+
+  val tab = Var("manual")
 
   val menu: Elem = <div class="ui top big fixed menu">
       <section class="item">
@@ -272,30 +275,53 @@ class RunnerView(
     </section>
     </div>
 
-  val component: Elem = <div class="ui bottom fixed menu">
-    <section class="item">
-      <button class={ enabledIf("ui big primary button", validUpload) } onclick = { runClick _}>Run</button>
-    </section>
-    <section class="item">
-      <button class={ enabledIf("ui primary button", validUpload) } onclick = { validateClick _}>Validate</button>
-    </section>
-    <section class="item">
-        <div class="ui label">workflow WDL</div>
-        <input id ="wdl" onclick="this.value=null;" onchange = { uploadFileHandler(wdlFile) _ } accept=".wdl"  name="wdl" type="file" />
-    </section>
-    <section class="item">
-        <div class="ui label">dependencies</div>
-        <input id ="wdl" onclick="this.value=null;" onchange = { uploadFilesHandler(dependencies) _ } accept=".wdl"  name="dependencies" type="file" multiple="multiple" />
-    </section>
-    <section class="item">
-        <div class="ui label">inputs json</div>
-        <input id ="inputs" onclick="this.value=null;" onchange = { uploadFileHandler(inputs) _ } accept=".json" name="inputs" type="file" />
-    </section>
-    <section class="item">
-        <div class="ui label">options</div>
-        <input id ="inputs" onclick="this.value=null;" onchange = { uploadFileHandler(inputs) _ } accept=".json" name="options" type="file" />
-    </section>
-  </div>
+  val inManualTab: Rx[Boolean] = tab.map(t=>t=="manual")
+  val hasPipelines: Rx[Boolean] = pipelines.map(_.pipelines.nonEmpty)
+  val inPipelinesTab: Rx[Boolean] = tab.zip(hasPipelines).map{ case (t, p)=> p && t=="pipelines" }
+
+
+  val component =
+    <div class="ui bottom fixed tabular menu">
+      <section class="item">
+        <button class={ enabledIf("ui big primary button", validUpload) } onclick = { runClick _}>Run</button>
+      </section>
+        <section class="item">
+          <button class={ enabledIf("ui primary button", validUpload) } onclick = { validateClick _}>Validate</button>
+        </section>
+        <div class={stringIfElse(inManualTab, "active tab item", "tab item")} data-tab="manual" onmousedown ={ activeClick("manual") _ }>Manual</div>
+        <div style={stringIfElse(hasPipelines, "display:flex", "display:none")} class={stringIfElse(inPipelinesTab, "active tab item", "item")} data-tab="pipelines" onmousedown ={ activeClick("pipelines") _ }>Pipelines</div>
+      <div class="menu" id ="manual_menu" style={stringIfElse(inManualTab, "display:flex", "display:none")}>
+        <section class="item tab segment active"  data-tab="manual">
+          <div class="ui label">workflow WDL</div>
+          <input id ="wdl" onclick="this.value=null;" onchange = { uploadFileHandler(wdlFile) _ } accept=".wdl"  name="wdl" type="file" />
+        </section>
+        <section class="item tab segment active" data-tab="manual">
+          <div class="ui label">dependencies</div>
+          <input id ="wdl" onclick="this.value=null;" onchange = { uploadFilesHandler(dependencies) _ } accept=".wdl"  name="dependencies" type="file" multiple="multiple" />
+        </section>
+        <section class="item tab segment active" data-tab="manual">
+          <div class="ui label">inputs json</div>
+          <input id ="inputs" onclick="this.value=null;" onchange = { uploadFileHandler(inputs) _ } accept=".json" name="inputs" type="file" />
+        </section>
+        <section class="item tab segment active" data-tab="manual">
+          <div class="ui label">options</div>
+          <input id ="inputs" onclick="this.value=null;" onchange = { uploadFileHandler(options) _ } accept=".json" name="options" type="file" />
+        </section>
+      </div>
+
+      <div class="menu" id ="pipelines_menu" style={stringIfElse(inPipelinesTab, "display:flex", "display:none")}>
+        <section class="item tab segment" data-tab="pipelines">
+          <select id="pipelines">
+            { pipelines.map{ ps=> ps.pipelines.map{p =>
+                option(p.name, p.name, ps.pipelines.headOption.map(_.name).getOrElse(""))
+                }
+              }
+            }
+          </select>
+        </section>
+      </div>
+
+    </div>
 
 
   init()

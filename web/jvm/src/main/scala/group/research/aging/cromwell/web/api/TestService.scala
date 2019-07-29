@@ -7,8 +7,9 @@ import akka.http.scaladsl.unmarshalling.PredefinedFromEntityUnmarshallers._
 import akka.pattern.ask
 import akka.util.Timeout
 import group.research.aging.cromwell.client.{CromwellClient, StatusInfo}
-import group.research.aging.cromwell.web.Commands
+import group.research.aging.cromwell.web.{Commands, Pipeline}
 import group.research.aging.cromwell.web.api.runners.MessagesAPI
+import group.research.aging.cromwell.web.util.PipelinesExtractor
 import io.swagger.v3.oas.annotations._
 import io.swagger.v3.oas.annotations.enums.{ParameterIn, ParameterStyle}
 import io.swagger.v3.oas.annotations.media._
@@ -17,7 +18,7 @@ import io.swagger.v3.oas.annotations.responses._
 import javax.ws.rs._
 
 @Path("/api")
-class TestService(val runner: ActorRef)(implicit val timeout: Timeout) extends CromwellClientService with LocalWorkflows {
+class TestService(val runner: ActorRef)(implicit val timeout: Timeout) extends CromwellClientService with PipelinesExtractor{
 
 
   @POST
@@ -54,11 +55,11 @@ class TestService(val runner: ActorRef)(implicit val timeout: Timeout) extends C
   def testRun: Route = pathPrefix("test" / Remaining) { pipeline =>
     debug(s"BEFORE PARAMETER EXTRACTION FOR ${pipeline}")
     extractPipeline(pipeline) match {
-      case (None, _, _) =>
+      case None =>
         error(s"CANNOT FIND ${pipeline}")
         reject(PipelinesRejections.PipelineNotFound(pipeline))
 
-      case (Some(wdl), deps, _) =>
+      case Some(Pipeline(name, wdl, deps, _)) =>
         parameters("server".?, "callback".?, "authorization".?) { (serverOpt, callBackOpt, authOpt) =>
           debug(s"FOUND PARAMETERS FOR RUNNING ${pipeline}")
           //val c = serverOpt.map(CromwellClient(_)).getOrElse(CromwellClient.default)
@@ -67,7 +68,7 @@ class TestService(val runner: ActorRef)(implicit val timeout: Timeout) extends C
             debug("Input JSON used:")
             debug(json)
 
-            val toRun = Commands.TestRun(wdl, json, (getPipelineFile(pipeline) / "test.json").lines.mkString("\n"), deps) //TODO: fix problem
+            val toRun = Commands.TestRun(wdl, json, (getPipelineFile(pipeline).get / "test.json").lines.mkString("\n"), deps) //TODO: fix problem
 
             val headers = authOpt.fold(Map.empty[String, String])(a=>Map("Authorization" -> a))
             val cbs = callBackOpt.map(Set(_)).getOrElse(Set.empty[String])

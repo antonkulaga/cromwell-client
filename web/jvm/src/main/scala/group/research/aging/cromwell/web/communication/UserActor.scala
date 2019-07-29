@@ -10,6 +10,7 @@ import group.research.aging.cromwell.client.{CromwellClientAkka, WorkflowStatus}
 import group.research.aging.cromwell.web.Commands.{ChangeClient, StreamMetadata}
 import group.research.aging.cromwell.web.Results.QueryWorkflowResults
 import group.research.aging.cromwell.web.common.BasicActor
+import group.research.aging.cromwell.web.util.PipelinesExtractor
 import group.research.aging.cromwell.web.{Commands, EmptyAction, Messages, Results}
 import wvlet.log.LogFormatter.SourceCodeLogFormatter
 import wvlet.log.{LogRotationHandler, Logger}
@@ -21,7 +22,7 @@ import scala.concurrent.{ExecutionContextExecutor, Future}
   * Actors that proccesses most of websocket messages from the users and back
   * @param username
   */
-case class UserActor(username: String, initialClient: CromwellClientAkka) extends BasicActor {
+case class UserActor(username: String, initialClient: CromwellClientAkka) extends BasicActor with PipelinesExtractor {
 
   // Set the default log formatter
   Logger.setDefaultFormatter(SourceCodeLogFormatter)
@@ -30,11 +31,11 @@ case class UserActor(username: String, initialClient: CromwellClientAkka) extend
 
   debug(s"user actor ${username}")
 
-  val startTime = LocalDateTime.now(); // gets the current date and time
+  val startTime: LocalDateTime = LocalDateTime.now(); // gets the current date and time
 
-  val formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy_HH:mm")
+  val formatter: DateTimeFormatter = DateTimeFormatter.ofPattern("dd-MM-yyyy_HH:mm")
 
-  lazy val logDir = Option(System.getenv("CROMWELL_LOGS")).filter(File(_).exists).getOrElse("logs")
+  lazy val logDir: String = Option(System.getenv("CROMWELL_LOGS")).filter(File(_).exists).getOrElse("logs")
   logger.addHandler(new LogRotationHandler(
     fileName = logDir + s"/cromwell-client_${username}_started_${startTime.format(formatter)}.log",
     maxNumberOfFiles = 100, // rotate up to 100 log files
@@ -70,7 +71,6 @@ case class UserActor(username: String, initialClient: CromwellClientAkka) extend
     case WebsocketMessages.WebsocketAction(action) =>
       //debug(s"WebsocketAction: \n ${action}")
       self ! action
-
 
     case q @ Commands.QueryWorkflows(status, expandSubworkflows, limit, offset) =>
       debug("=====Commands.QueryWorkflows=======")
