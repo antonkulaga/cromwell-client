@@ -4,7 +4,9 @@ import java.time.{OffsetDateTime, ZoneOffset}
 import cats.kernel.Monoid
 import group.research.aging.cromwell.client.{CromwellClient, CromwellClientLike, Metadata, WorkflowStatus}
 import group.research.aging.cromwell.web.Results.QueryWorkflowResults
+import io.circe.{Json, ParsingFailure}
 import io.circe.generic.JsonCodec
+import io.circe.parser.parse
 
 import scala.collection.immutable._
 
@@ -53,7 +55,6 @@ case class State (client: CromwellClient,
                  )
 {
 
-
   def withEffect(e: ()=>Unit): State = copy(effects = effects :+ e)
 
   def sortedMetadata: List[Metadata] =  WorkflowNode.fromMetadata(results.metadata).flatMap(_.sortedMetadata)
@@ -88,4 +89,15 @@ object Pipelines{
 }
 @JsonCodec case class Pipelines(pipelines: List[Pipeline])
 
-@JsonCodec case class Pipeline(name: String, main: String,  dependencies: List[(String,String)], defaults: String)
+@JsonCodec case class Pipeline(name: String, main: String,  dependencies: List[(String,String)], defaults: String = ""){
+
+  def concatJson(js: String): Either[ParsingFailure, Json] = {
+    import io.circe.parser._
+    import io.circe.syntax._
+    parse(defaults).flatMap(d=>parse(js).map(j=>d.deepMerge(j)))
+  }
+
+  def to_run(input: String, options: String = ""): Commands.Run = concatJson(input).map{
+    case js => Commands.Run(main, js.spaces2, options, dependencies)
+  }.toTry.getOrElse(Commands.Run(main, input, options, dependencies) )
+}

@@ -19,17 +19,6 @@ import javax.ws.rs._
 
 @Path("/api")
 class RunService(val runner: ActorRef)(implicit val timeout: Timeout) extends CromwellClientService with PipelinesExtractor {
-
-  private def concatJson(defaults: String, json: String) = {
-    val d = defaults.trim
-    if(d.endsWith("}"))
-      d.replaceFirst("}$", ",") + json.trim.replaceAll("^\\{", "\n")
-      else
-    {
-      d + json
-    }
-
-  }
   
   @POST
   @Path("/run/{pipeline}")
@@ -68,15 +57,13 @@ class RunService(val runner: ActorRef)(implicit val timeout: Timeout) extends Cr
         error(s"CANNOT FIND ${pipeline}")
         reject(PipelinesRejections.PipelineNotFound(pipeline))
 
-      case Some(Pipeline(name,wdl, deps, defs)) =>
+      case Some(p) =>
         parameters("server".?, "callback".?, "authorization".?) { (serverOpt, callBackOpt, authOpt) =>
           debug(s"FOUND PARAMETERS FOR RUNNING ${pipeline}")
           //val c = serverOpt.map(CromwellClient(_)).getOrElse(CromwellClient.default)
           val serverURL = serverOpt.getOrElse(CromwellClient.defaultURL)
           entity(as[String]) { json =>
-            val js = concatJson(defs, json)
-            debug(js)
-            val toRun = Commands.Run(wdl, js, "", deps) //TODO: fix problem
+            val toRun =  p.to_run(json)
             val headers = authOpt.fold(Map.empty[String, String])(a=>Map("Authorization" -> a))
             val cbs = callBackOpt.map(Set(_)).getOrElse(Set.empty[String])
             val serverMessage: MessagesAPI.ServerCommand =
@@ -90,9 +77,9 @@ class RunService(val runner: ActorRef)(implicit val timeout: Timeout) extends Cr
         } ~ {
           debug("POST REQUEST!")
           debug("WDL FOUND!")
-          debug(s"WDL IS: ${wdl}")
-          if(deps.nonEmpty) debug(s"Found dependencies [${deps.map(_._1).mkString(", ")}]!")
-          complete(HttpResponse(StatusCodes.OK, Nil, wdl))
+          debug(s"WDL IS: ${p.main}")
+          if(p.dependencies.nonEmpty) debug(s"Found dependencies [${p.dependencies.map(_._1).mkString(", ")}]!")
+          complete(HttpResponse(StatusCodes.OK, Nil, p.main))
         }
     }
   }

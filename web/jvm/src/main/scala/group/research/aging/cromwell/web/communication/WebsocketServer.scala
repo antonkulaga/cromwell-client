@@ -15,7 +15,10 @@ import io.circe.parser.decode
 import wvlet.log.LogFormatter.SourceCodeLogFormatter
 import wvlet.log.{LogSupport, Logger}
 
-
+/**
+  * The class that handlers websocker interactions
+  * @param http
+  */
 class WebsocketServer(http: HttpExt) extends LogSupport{
 
   // Set the default log formatter

@@ -162,6 +162,7 @@ object CromwellWeb extends scala.App with Base {
 
 
     case (previous, Results.UpdateClient(base)) => previous.copy(client = previous.client.copy(base = base), errors = Nil, infos = Nil)
+    case (previous, Results.UpdatePipelines(pipelines)) =>  previous.copy(pipelines = pipelines)
     case (previous, upd: Results.UpdatedMetadata) => previous.copy(results = previous.results.updated(upd), errors = Nil, infos = Nil)
     case (previous, res: Results.QueryWorkflowResults) => {
       previous.copy(results = res, errors = Nil, infos = Nil)

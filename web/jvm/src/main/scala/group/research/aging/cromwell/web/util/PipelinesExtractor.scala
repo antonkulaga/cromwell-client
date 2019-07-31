@@ -10,7 +10,7 @@ import wvlet.log.LogSupport
 trait PipelinesExtractor {
   self: LogSupport =>
 
-  protected def fileOption(file: File, str: String): Option[File] = Option(file / "str").filter(_.exists)
+  protected def fileOption(file: File, str: String): Option[File] = Option(file / str).filter(_.exists)
 
   protected def fileOption(str: String): Option[File] = Option(File(str)).filter(_.exists)
 
@@ -42,8 +42,12 @@ trait PipelinesExtractor {
       }.trim
   }
 
-  lazy val allPipelines = {
-    val p = pipelinesRoot.map{ root => root.children.toList.map(n=>extractPipeline(n.name)).collect{ case Some(v) => v}}.getOrElse(Nil)
+  lazy val allPipelines: Pipelines = {
+    val p = pipelinesRoot.map{ root => root.children
+      .filter(f=> f.extension.contains("wdl") || f.isDirectory)
+      .toList.map(n=>extractPipeline(n.name))
+      .collect{ case Some(v) => v}}
+      .getOrElse(Nil)
     Pipelines(p)
   }
 
@@ -68,7 +72,7 @@ trait PipelinesExtractor {
           inputDefaults
         ))
 
-      case file if file.exists =>
+      case file if file.exists && file.isRegularFile =>
         val defs = getDefaults(file.parent, file.nameWithoutExtension + "_defaults")
         //(Some(file.lines.mkString("\n")), Nil, defs)
         Some(Pipeline(file.name, file.lines.mkString("\n"), Nil, defs))

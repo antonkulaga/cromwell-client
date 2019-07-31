@@ -64,6 +64,9 @@ case class UserActor(username: String, initialClient: CromwellClientAkka) extend
     case WebsocketMessages.ConnectWsHandle(ref) =>
       this.context.become(operation(output :+ ref, client))
       ref ! WebsocketMessages.WebsocketAction(Results.UpdateClient(client.base))
+      info("PIPELINES ROOT: "+ this.pipelinesRoot)
+      info("SENDING PIPELINES: " + this.allPipelines)
+      ref ! WebsocketMessages.WebsocketAction(Results.UpdatePipelines(this.allPipelines))
 
     case WebsocketMessages.WsHandleDropped =>
       info("Websocket HANDLER DROP!")

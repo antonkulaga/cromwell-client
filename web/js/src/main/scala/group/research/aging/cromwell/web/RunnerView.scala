@@ -281,15 +281,14 @@ class RunnerView(
 
 
   val component =
-    <div class="ui bottom fixed tabular menu">
+    <div class="ui bottom fixed pointing menu">
       <section class="item">
         <button class={ enabledIf("ui big primary button", validUpload) } onclick = { runClick _}>Run</button>
       </section>
         <section class="item">
           <button class={ enabledIf("ui primary button", validUpload) } onclick = { validateClick _}>Validate</button>
         </section>
-        <div class={stringIfElse(inManualTab, "active tab item", "tab item")} data-tab="manual" onmousedown ={ activeClick("manual") _ }>Manual</div>
-        <div style={stringIfElse(hasPipelines, "display:flex", "display:none")} class={stringIfElse(inPipelinesTab, "active tab item", "item")} data-tab="pipelines" onmousedown ={ activeClick("pipelines") _ }>Pipelines</div>
+        <div style={stringIfElse(hasPipelines, "display:flex", "display:none")} class={stringIfElse(inManualTab, "active tab item", "tab item")} data-tab="manual" onmousedown ={ activeClick("manual") _ }>Manual</div>
       <div class="menu" id ="manual_menu" style={stringIfElse(inManualTab, "display:flex", "display:none")}>
         <section class="item tab segment active"  data-tab="manual">
           <div class="ui label">workflow WDL</div>
@@ -308,7 +307,7 @@ class RunnerView(
           <input id ="inputs" onclick="this.value=null;" onchange = { uploadFileHandler(options) _ } accept=".json" name="options" type="file" />
         </section>
       </div>
-
+      <div style={stringIfElse(hasPipelines, "display:flex", "display:none")} class={stringIfElse(inPipelinesTab, "active tab item", "item")} data-tab="pipelines" onmousedown ={ activeClick("pipelines") _ }>Pipelines</div>
       <div class="menu" id ="pipelines_menu" style={stringIfElse(inPipelinesTab, "display:flex", "display:none")}>
         <section class="item tab segment" data-tab="pipelines">
           <select id="pipelines">
