@@ -107,7 +107,24 @@ object CromwellWeb extends scala.App with Base {
       Option(dom.window.localStorage.getItem(Commands.LoadLastUrl.key)).fold(
         previous)(url=>  previous.copy(client = CromwellClient(url)))
 
-    case (previous, Commands.UpdateStatus(status)) => previous.copy(status =  status)
+    case (previous, Commands.SelectPipeline(name)) =>
+      previous.pipelines.pipelines.find(p=>p.name == name) match {
+        case Some(p) =>
+          val ps = previous.pipelines
+          println(s"SELECTING $p")
+          previous.copy(pipelines = ps.copy(pipelines = p::ps.pipelines.filterNot(_!=p)))
+
+        case None =>
+          previous.copy(errors = ExplainedError("pipeline selection error", s"cannot find pipeline ${name}")::previous.errors)
+      }
+
+    case (previous, Commands.UpdateStatus(status)) =>
+      previous.copy(status = status).withEffect{() =>
+        if(status != previous.status){
+          val query = Commands.QueryWorkflows(status, previous.results.expandSubworkflows)
+          toServer := WebsocketMessages.WebsocketAction(query)
+        }
+      }
 
     case (previous, Commands.EvalJS(code)) =>
       scalajs.js.eval(code)
@@ -146,10 +163,11 @@ object CromwellWeb extends scala.App with Base {
         }
       }
 
+      /*
     case (previous, Results.UpdatedStatus(md)) =>
       println(s"not yet sure what to do with updated status: ${md}")
       previous
-
+       */
     case (previous, Results.WorkflowValidated(ers)) =>
       if(ers.errors.nonEmpty)
       {

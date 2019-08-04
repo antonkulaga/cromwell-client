@@ -59,6 +59,7 @@ object Results {
   case object EmptyResult extends ActionResult with EmptyAction
   case class GeneratedSequence(sequence: String) extends ActionResult
 
+  /*
   object UpdatedStatus {
     implicit def monoid: cats.Monoid[UpdatedStatus] = new Monoid[UpdatedStatus] {
       override def empty: UpdatedStatus = UpdatedStatus(WorkflowStatus.AnyStatus)
@@ -67,6 +68,7 @@ object Results {
     }
   }
   case class UpdatedStatus(info: WorkflowStatus) extends ActionResult
+  */
   case class UpdatedMetadata(metadata: Map[String, Metadata]) extends ActionResult
   case class UpdateClient(serverURL: String) extends ActionResult
   case class UpdatePipelines(pipelines: Pipelines) extends ActionResult
@@ -128,8 +130,9 @@ object Commands{
     }
   }
   case class QueryWorkflows(status: WorkflowStatus, expandSubworkflows: Boolean = true, limit: Int = 50, offset: Int = 0) extends Command with WorkflowQueryLike
-  case class GetQuery(statusS: WorkflowStatus, includeSubworkflows: Boolean = true) extends Command
+  case class GetQuery(status: WorkflowStatus, includeSubworkflows: Boolean = true) extends Command
   case class UpdateStatus(status: WorkflowStatus)  extends Command
+  case class SelectPipeline(name: String) extends Command
   //case class Paginate(limit: Int, offset: Int) extends Command
   case class ChangeClient(newURL: String) extends Command
   case class Run(wdl: String, input: String, options: String = "", dependencies: List[(String, String)] = Nil) extends Command

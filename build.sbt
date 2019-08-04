@@ -13,7 +13,7 @@ lazy val commonSettings = Seq(
 
 	scalaVersion :=  "2.12.8",
 
-	version := "0.2.3",
+	version := "0.2.4",
 
 	unmanagedClasspath in Compile ++= (unmanagedResources in Compile).value,
 
@@ -64,7 +64,7 @@ lazy val webcomponents = "1.0.1"
 
 lazy val jquery = "3.4.1"
 
-lazy val airframeLogVersion = "19.7.5"
+lazy val airframeLogVersion = "19.7.6"
 
 lazy val  cromwellClient = crossProject(JSPlatform, JVMPlatform)
   .crossType(CrossType.Full)
@@ -144,14 +144,14 @@ lazy val cromwellWeb = crossProject(JSPlatform, JVMPlatform)
 			"javax.ws.rs" % "javax.ws.rs-api" % "2.1.1", //for extra annotations
 			"com.github.swagger-akka-http" %% "swagger-akka-http" % "2.0.3",
 			"com.github.swagger-akka-http" %% "swagger-scala-module" % "2.0.4",
-			"com.vmunier" %% "scalajs-scripts" % "1.1.3",
+			"com.vmunier" %% "scalajs-scripts" % "1.1.4",
       "de.heikoseeberger" %% "akka-http-circe" % "1.27.0",
 			"ch.megard" %% "akka-http-cors" % "0.4.1",
 			"org.webjars" % "Semantic-UI" %  semanticUI,
 			"org.webjars.bowergithub.fomantic" % "fomantic-ui" % "2.7.6",
 			"org.webjars" % "jquery" % jquery,
 			"org.webjars" % "webcomponentsjs" % webcomponents,
-			"org.webjars" % "swagger-ui" % "3.23.0" //Swagger UI
+			"org.webjars" % "swagger-ui" % "3.23.2" //Swagger UI
 		),
 		(managedClasspath in Runtime) += (packageBin in Assets).value,
 		pipelineStages in Assets := Seq(scalaJSProd),

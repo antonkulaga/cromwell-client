@@ -13,7 +13,7 @@ reStart
 ```
 It is also published as a Docker container. You can run it as:
 ```bash
-docker run -p 8001:8001 quay.io/comp-bio-aging/cromwell-web:0.2.3
+docker run -p 8001:8001 quay.io/comp-bio-aging/cromwell-web:0.2.4
 ```
 
 ![Screenshot](/screenshot.png?raw=true "CromwellWeb screenshot")

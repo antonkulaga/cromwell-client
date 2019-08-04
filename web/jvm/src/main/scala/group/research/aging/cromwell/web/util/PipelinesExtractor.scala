@@ -77,8 +77,11 @@ trait PipelinesExtractor {
         //(Some(file.lines.mkString("\n")), Nil, defs)
         Some(Pipeline(file.name, file.lines.mkString("\n"), Nil, defs))
 
+      case d if d.name.startsWith(".") =>
+        None
+
       case other =>
-        error(s"no pipeline found for ${other}!")
+        warn(s"no pipeline found for ${other}!")
         None
     }
   }

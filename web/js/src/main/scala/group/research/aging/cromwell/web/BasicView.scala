@@ -17,4 +17,11 @@ trait BasicView {
     )
   }
 
+  def visibleIf(condition: Rx[Boolean]) = stringIfElse(condition,"display:flex", "display:none")
+  def visibleIfDefined(condition: Rx[Option[_]]) = stringIfElse(condition.map(_.isDefined),"display:flex", "display:none")
+  def visibleIfHasElements(condition: Rx[List[_]]) = stringIfElse(condition.map(_.nonEmpty),"display:flex", "display:none")
+
+  def visibleIfEmpty(condition: Rx[Option[_]]) = stringIfElse(condition.map(_.isEmpty),"display:flex", "display:none")
+
+
 }

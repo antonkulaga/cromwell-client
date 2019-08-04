@@ -72,7 +72,7 @@ class WebsocketServer(http: HttpExt) extends LogSupport{
           // don't expose the wsHandle anymore
           NotUsed
         }
-        .keepAlive(maxIdle = 10.seconds, () => {
+        .keepAlive(maxIdle = 20.seconds, () => {
           import io.circe.syntax._
           val m: WebsocketMessages.WebsocketMessage = WebsocketMessages.WebsocketAction(KeepAlive.web)//
           val js = m.asJson

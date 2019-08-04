@@ -89,6 +89,16 @@ object Pipelines{
 }
 @JsonCodec case class Pipelines(pipelines: List[Pipeline])
 
+object Pipeline {
+  lazy val empty = Pipeline("", "", Nil)
+
+  implicit def monoid: cats.Monoid[Pipeline] = new Monoid[Pipeline] {
+    override def empty = Pipeline.empty
+
+    override def combine(x: Pipeline, y: Pipeline): Pipeline = y //ugly TODO: rewrite
+  }
+}
+
 @JsonCodec case class Pipeline(name: String, main: String,  dependencies: List[(String,String)], defaults: String = ""){
 
   def concatJson(js: String): Either[ParsingFailure, Json] = {

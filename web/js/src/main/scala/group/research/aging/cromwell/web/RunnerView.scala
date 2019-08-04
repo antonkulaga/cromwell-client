@@ -68,12 +68,16 @@ class RunnerView(
 
   val query: Var[Commands.QueryWorkflows] = Var(Commands.QueryWorkflows.default)
 
+  val currentPipeline: Var[Pipeline] = Var(Pipeline.empty)
+
   def init() = {
     lastURL.impure.run{ u=> url := u }
     lastQuery.dropRepeats.impure.run{ q=>
       query := QueryWorkflows(q)
     }
-
+    pipelines.impure.run{ ps=>
+      currentPipeline :=  ps.pipelines.headOption.getOrElse(Pipeline.empty)
+    }
     /*
     lastStatus.impure.run{ s=>   currentStatus := s}
     lastLimit.dropRepeats.impure.run(l=> limit:= l)
@@ -152,6 +156,13 @@ class RunnerView(
     commands := Commands.UpdateStatus(WorkflowStatus.withName(value))
   }
 
+  protected def selectPipeline(event: Event): Unit = {
+    val value = dom.document.getElementById("pipelines").asInstanceOf[dom.html.Select].value
+    commands := Commands.SelectPipeline(value)
+    println(commands)
+    println(value)
+  }
+
   /*
   protected def proxyClick(event: Event): Unit = {
     val u: String = url.now
@@ -189,7 +200,7 @@ class RunnerView(
         messages := Messages.ExplainedError("failed uploading files", th.getMessage)
     }
   }
-  protected def runClick(event: js.Dynamic): Unit = {
+  protected def runClick(event: js.Dynamic): Unit = if(tab.now == "manual" || currentPipeline.now == Pipeline.empty){
     wdlFile.now match {
       case Some(wdl: String) =>
         val toRun = Commands.Run(wdl,
@@ -200,6 +211,9 @@ class RunnerView(
         commands := toRun
       case None => messages := Messages.ExplainedError("No WLD file uploaded!" ,"")
     }
+  } else {
+    val p = currentPipeline.now
+    commands := p.to_run(inputs.now.getOrElse(""),options.now.getOrElse(""))
   }
 
   protected def activeClick(tb: String)(event: dom.Event): Unit = {
@@ -207,7 +221,7 @@ class RunnerView(
   }
 
 
-  protected def validateClick(event: js.Dynamic): Unit = {
+  protected def validateClick(event: js.Dynamic): Unit = if(tab.now == "manual" || currentPipeline.now == Pipeline.empty){
     wdlFile.now match {
       case Some(wdl: String) =>
         val validate = Commands.Validate(wdl,
@@ -218,6 +232,21 @@ class RunnerView(
         commands := validate
       case None => messages := Messages.ExplainedError("No WLD file uploaded!" ,"")
     }
+  } else {
+    commands := Commands.Validate(currentPipeline.now.main,
+      inputs.now.getOrElse(""),
+      options.now.getOrElse(""),
+      currentPipeline.now.dependencies
+    )
+  }
+
+  protected def cleaner(id: String, fun: ()=>Unit)(event: Event): Unit =  if(event.target == event.currentTarget){
+    dom.document.getElementById(id) match {
+      case inp: HTMLInputElement =>
+        inp.value = null
+        fun()
+      case v => dom.console.log(s"click on ${id}"+ v.toString)
+    }
   }
 
 
@@ -226,6 +255,21 @@ class RunnerView(
   else <option value={value}>{label}</option>
 
   val tab = Var("manual")
+
+  val inManualTab: Rx[Boolean] = tab.map(t=>t=="manual")
+  val hasPipelines: Rx[Boolean] = pipelines.map(_.pipelines.nonEmpty)
+  val inPipelinesTab: Rx[Boolean] = tab.zip(hasPipelines).map{ case (t, p)=> p && t=="pipelines" }
+
+
+  val canRun: Rx[Boolean] = for{
+    u <- validUrl
+    i <- inputs
+    m <- inManualTab
+    w <- wdlFile
+    p <- hasPipelines
+  } yield (u && i.isDefined) && (m && w.isDefined || p)
+
+
 
   val menu: Elem = <div class="ui top big fixed menu">
       <section class="item">
@@ -275,42 +319,52 @@ class RunnerView(
     </section>
     </div>
 
-  val inManualTab: Rx[Boolean] = tab.map(t=>t=="manual")
-  val hasPipelines: Rx[Boolean] = pipelines.map(_.pipelines.nonEmpty)
-  val inPipelinesTab: Rx[Boolean] = tab.zip(hasPipelines).map{ case (t, p)=> p && t=="pipelines" }
-
 
   val component =
     <div class="ui bottom fixed pointing menu">
       <section class="item">
-        <button class={ enabledIf("ui big primary button", validUpload) } onclick = { runClick _}>Run</button>
+        <button class={ enabledIf("ui big primary button", canRun) } onclick = { runClick _}>Run</button>
       </section>
         <section class="item">
-          <button class={ enabledIf("ui primary button", validUpload) } onclick = { validateClick _}>Validate</button>
+          <button class={ enabledIf("ui primary button", canRun) } onclick = { validateClick _}>Validate</button>
         </section>
-        <div style={stringIfElse(hasPipelines, "display:flex", "display:none")} class={stringIfElse(inManualTab, "active tab item", "tab item")} data-tab="manual" onmousedown ={ activeClick("manual") _ }>Manual</div>
-      <div class="menu" id ="manual_menu" style={stringIfElse(inManualTab, "display:flex", "display:none")}>
+        <div style={visibleIf(hasPipelines)} class={stringIfElse(inManualTab, "active tab item", "tab item")} data-tab="manual" onmousedown ={ activeClick("manual") _ }>Manual</div>
+      <div class="menu" id ="manual_menu" style={visibleIf(inManualTab)}>
         <section class="item tab segment active"  data-tab="manual">
           <div class="ui label">workflow WDL</div>
-          <input id ="wdl" onclick="this.value=null;" onchange = { uploadFileHandler(wdlFile) _ } accept=".wdl"  name="wdl" type="file" />
+          <input id ="wdl" onchange = { uploadFileHandler(wdlFile) _ } accept=".wdl"  name="wdl" type="file" >
+          </input>
+          <i class="remove icon" style={visibleIfDefined(wdlFile)} onclick={cleaner("wdl", ()=>wdlFile := None) _}></i>
         </section>
         <section class="item tab segment active" data-tab="manual">
           <div class="ui label">dependencies</div>
-          <input id ="wdl" onclick="this.value=null;" onchange = { uploadFilesHandler(dependencies) _ } accept=".wdl"  name="dependencies" type="file" multiple="multiple" />
-        </section>
-        <section class="item tab segment active" data-tab="manual">
-          <div class="ui label">inputs json</div>
-          <input id ="inputs" onclick="this.value=null;" onchange = { uploadFileHandler(inputs) _ } accept=".json" name="inputs" type="file" />
+          <input id ="dependencies"
+                 onchange = { uploadFilesHandler(dependencies) _ }
+                 accept=".wdl"  name="dependencies" type="file" multiple="multiple" >
+            </input>
+          <i class="remove icon" style={visibleIfHasElements(dependencies)} onclick={cleaner("dependencies", ()=> dependencies := List.empty) _}></i>
         </section>
         <section class="item tab segment active" data-tab="manual">
           <div class="ui label">options</div>
-          <input id ="inputs" onclick="this.value=null;" onchange = { uploadFileHandler(options) _ } accept=".json" name="options" type="file" />
+          <input id ="options" onchange = { uploadFileHandler(options) _ } accept=".json" name="options" type="file" >
+          </input>
+          <i class="remove icon"  style={visibleIfDefined(options)} onclick={cleaner("options", ()=>options := None) _}></i>
         </section>
       </div>
-      <div style={stringIfElse(hasPipelines, "display:flex", "display:none")} class={stringIfElse(inPipelinesTab, "active tab item", "item")} data-tab="pipelines" onmousedown ={ activeClick("pipelines") _ }>Pipelines</div>
-      <div class="menu" id ="pipelines_menu" style={stringIfElse(inPipelinesTab, "display:flex", "display:none")}>
+      <section class="item tab segment active" data-tab="manual">
+        <div class="ui label">inputs json</div>
+        <input id ="inputs" onchange = { uploadFileHandler(inputs) _ } accept=".json" name="inputs" type="file" >
+        </input>
+        <i class="remove icon" style={visibleIfDefined(inputs)} onclick={cleaner("inputs", ()=>inputs := None) _}></i>
+      </section>
+      <div style={visibleIf(hasPipelines)}
+           class={stringIfElse(inPipelinesTab, "active tab item", "item")} data-tab="pipelines"
+           onmousedown ={ activeClick("pipelines") _ }>
+        Pipelines
+      </div>
+      <div class="menu" id ="pipelines_menu" style={visibleIf(inPipelinesTab)}>
         <section class="item tab segment" data-tab="pipelines">
-          <select id="pipelines">
+          <select id="pipelines" onclick={selectPipeline _}>
             { pipelines.map{ ps=> ps.pipelines.map{p =>
                 option(p.name, p.name, ps.pipelines.headOption.map(_.name).getOrElse(""))
                 }
