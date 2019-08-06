@@ -108,11 +108,12 @@ object CromwellWeb extends scala.App with Base {
         previous)(url=>  previous.copy(client = CromwellClient(url)))
 
     case (previous, Commands.SelectPipeline(name)) =>
-      previous.pipelines.pipelines.find(p=>p.name == name) match {
+      val ps = previous.pipelines
+      ps.pipelines.find(p=>p.name == name) match {
         case Some(p) =>
-          val ps = previous.pipelines
+          val pipes = previous.pipelines.pipelines.filter(v=>v!=p)
           println(s"SELECTING $p")
-          previous.copy(pipelines = ps.copy(pipelines = p::ps.pipelines.filterNot(_!=p)))
+          previous.copy(pipelines = ps.copy(pipelines = p::pipes))
 
         case None =>
           previous.copy(errors = ExplainedError("pipeline selection error", s"cannot find pipeline ${name}")::previous.errors)
@@ -246,8 +247,10 @@ object CromwellWeb extends scala.App with Base {
 
   val component =
   <div id="cromwell">
-      { runner.menu }
-      {  runner.component }
+      { runner.topMenu }
+      {  runner.rightMenu }
+      {  runner.bottomMenu }
+
     <section class="ui segment">
       {  errors.component }
       {  infos.component }

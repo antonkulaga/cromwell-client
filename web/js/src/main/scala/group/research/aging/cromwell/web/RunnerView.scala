@@ -261,6 +261,9 @@ class RunnerView(
   val inPipelinesTab: Rx[Boolean] = tab.zip(hasPipelines).map{ case (t, p)=> p && t=="pipelines" }
 
 
+  val alwaysFalse = Var(false)
+
+
   val canRun: Rx[Boolean] = for{
     u <- validUrl
     i <- inputs
@@ -271,7 +274,7 @@ class RunnerView(
 
 
 
-  val menu: Elem = <div class="ui top big fixed menu">
+  val topMenu: Elem = <div class="ui top big fixed menu">
       <section class="item">
         <div class={enabledIf("ui big primary button", validUrl)} onclick={ updateClick _}>Update workflows</div>
 
@@ -320,7 +323,7 @@ class RunnerView(
     </div>
 
 
-  val component =
+  val bottomMenu =
     <div class="ui bottom fixed pointing menu">
       <section class="item">
         <button class={ enabledIf("ui big primary button", canRun) } onclick = { runClick _}>Run</button>
@@ -328,8 +331,19 @@ class RunnerView(
         <section class="item">
           <button class={ enabledIf("ui primary button", canRun) } onclick = { validateClick _}>Validate</button>
         </section>
-        <div style={visibleIf(hasPipelines)} class={stringIfElse(inManualTab, "active tab item", "tab item")} data-tab="manual" onmousedown ={ activeClick("manual") _ }>Manual</div>
-      <div class="menu" id ="manual_menu" style={visibleIf(inManualTab)}>
+        <div class="menu" id ="input_menu">
+          <section class="item tab segment active">
+            <div class="ui label">inputs json</div>
+            <input id ="inputs" onchange = { uploadFileHandler(inputs) _ } accept=".json" name="inputs" type="file" >
+            </input>
+            <i class="remove icon" style={visibleIfDefined(inputs)} onclick={cleaner("inputs", ()=>inputs := None) _}></i>
+          </section>
+        </div>
+        <div style={visibleIf(hasPipelines)} class={stringIfElse(inManualTab, "active blue tab item", "blue tab item")}
+             data-tab="manual" onmousedown ={ activeClick("manual") _ }>
+          Manual
+        </div>
+      <div class="ui blue menu" id ="manual_menu" style={visibleIf(inManualTab)}>
         <section class="item tab segment active"  data-tab="manual">
           <div class="ui label">workflow WDL</div>
           <input id ="wdl" onchange = { uploadFileHandler(wdlFile) _ } accept=".wdl"  name="wdl" type="file" >
@@ -351,18 +365,12 @@ class RunnerView(
           <i class="remove icon"  style={visibleIfDefined(options)} onclick={cleaner("options", ()=>options := None) _}></i>
         </section>
       </div>
-      <section class="item tab segment active" data-tab="manual">
-        <div class="ui label">inputs json</div>
-        <input id ="inputs" onchange = { uploadFileHandler(inputs) _ } accept=".json" name="inputs" type="file" >
-        </input>
-        <i class="remove icon" style={visibleIfDefined(inputs)} onclick={cleaner("inputs", ()=>inputs := None) _}></i>
-      </section>
       <div style={visibleIf(hasPipelines)}
-           class={stringIfElse(inPipelinesTab, "active tab item", "item")} data-tab="pipelines"
+           class={stringIfElse(inPipelinesTab, "active blue tab item", "blue tab item")} data-tab="pipelines"
            onmousedown ={ activeClick("pipelines") _ }>
         Pipelines
       </div>
-      <div class="menu" id ="pipelines_menu" style={visibleIf(inPipelinesTab)}>
+      <div class="ui blue menu" id ="pipelines_menu" style={visibleIf(inPipelinesTab)}>
         <section class="item tab segment" data-tab="pipelines">
           <select id="pipelines" onclick={selectPipeline _}>
             { pipelines.map{ ps=> ps.pipelines.map{p =>
@@ -375,6 +383,17 @@ class RunnerView(
       </div>
 
     </div>
+  val rightMenu =
+    <section class="ui right fixed vertical blue menu" style={visibleIf(alwaysFalse)}>
+      <div class="item">
+        WDL:
+        <div contenteditable="true">{wdlFile}</div>
+      </div>
+      <div class="item">
+        Inputs:
+        <div contenteditable="true">{inputs}</div>
+      </div>
+    </section>
 
 
   init()
