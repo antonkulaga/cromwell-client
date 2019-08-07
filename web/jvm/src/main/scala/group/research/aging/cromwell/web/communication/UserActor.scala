@@ -47,11 +47,6 @@ case class UserActor(username: String, initialClient: CromwellClientAkka) extend
 
   implicit def executionContext: ExecutionContextExecutor = this.context.dispatcher
 
-  //This will schedule to check the connection each
-  //to the tickActor after 0ms repeating every 50ms
-  //val cancellable = context.system.scheduler.schedule(5 seconds, 50 milliseconds, self, Commands.CheckTime)
-
-  //  val generator = new CentromereGenerator
 
   /**
     * Key functions that generates Recieve function based on outputs and server client

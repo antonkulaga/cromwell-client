@@ -130,7 +130,8 @@ lazy val cromwellWeb = crossProject(JSPlatform, JVMPlatform)
 	.jsSettings(
 		libraryDependencies ++= Seq(
 			"in.nvilla" %%% "monadic-html" % "0.4.0-RC1",
-			"org.akka-js" %%% "akkajsactorstream" % "1.2.5.23"
+			"org.akka-js" %%% "akkajsactorstream" % "1.2.5.23",
+			//"com.thoughtworks.binding" %%% "dom" % "11.8.1"
 		),
 		jsEnv := new org.scalajs.jsenv.jsdomnodejs.JSDOMNodeJSEnv,
 		scalaJSUseMainModuleInitializer := true
@@ -151,7 +152,7 @@ lazy val cromwellWeb = crossProject(JSPlatform, JVMPlatform)
 			"org.webjars.bowergithub.fomantic" % "fomantic-ui" % "2.7.6",
 			"org.webjars" % "jquery" % jquery,
 			"org.webjars" % "webcomponentsjs" % webcomponents,
-			"org.webjars" % "swagger-ui" % "3.23.2" //Swagger UI
+			"org.webjars" % "swagger-ui" % "3.23.4" //Swagger UI
 		),
 		(managedClasspath in Runtime) += (packageBin in Assets).value,
 		pipelineStages in Assets := Seq(scalaJSProd),
@@ -160,7 +161,7 @@ lazy val cromwellWeb = crossProject(JSPlatform, JVMPlatform)
 		(emitSourceMaps in fullOptJS) := true,
 		fork in run := true,
 		maintainer in Docker := "Anton Kulaga <antonkulaga@gmail.com>",
-		dockerBaseImage := "oracle/graalvm-ce:19.0.2",
+		dockerBaseImage := "oracle/graalvm-ce:19.1.1",
 		daemonUserUid in Docker := None,
 		daemonUser in Docker := "root",
 		dockerExposedVolumes := Seq("/data"),
