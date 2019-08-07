@@ -13,7 +13,7 @@ lazy val commonSettings = Seq(
 
 	scalaVersion :=  "2.12.9",
 
-	version := "0.2.4",
+	version := "0.2.5",
 
 	unmanagedClasspath in Compile ++= (unmanagedResources in Compile).value,
 
@@ -131,7 +131,7 @@ lazy val cromwellWeb = crossProject(JSPlatform, JVMPlatform)
 		libraryDependencies ++= Seq(
 			"in.nvilla" %%% "monadic-html" % "0.4.0-RC1",
 			"org.akka-js" %%% "akkajsactorstream" % "1.2.5.23",
-			//"com.thoughtworks.binding" %%% "dom" % "11.8.1"
+			"com.thoughtworks.binding" %%% "dom" % "11.8.1" excludeAll ExclusionRule(organization = "org.scala-lang.modules")
 		),
 		jsEnv := new org.scalajs.jsenv.jsdomnodejs.JSDOMNodeJSEnv,
 		scalaJSUseMainModuleInitializer := true

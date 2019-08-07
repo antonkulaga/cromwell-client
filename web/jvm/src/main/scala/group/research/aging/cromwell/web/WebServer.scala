@@ -58,9 +58,11 @@ object WebServer extends HttpApp with FailFastCirceSupport with LogSupport {
           <link rel="stylesheet" href="/styles/mystyles.css"/>
           <!-- Include from a free CDN -->
           <script src="https://cdn.rawgit.com/caldwell/renderjson/master/renderjson.js"></script>
-          </head>
-        <body id="main">
-
+        </head>
+        <body>
+          <main  id="main">
+          </main>
+          <div id="test">test</div>
         </body>
         <!--<script src="/public/cromwell-web-fastopt.js" type="text/javascript"></script>-->
         <script src="/public/cromwell-web-opt.js" type="text/javascript"></script>

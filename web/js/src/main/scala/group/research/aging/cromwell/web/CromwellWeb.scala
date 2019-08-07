@@ -290,6 +290,8 @@ object CromwellWeb extends scala.App with Base {
     //workaround to avoid foldp issues
     allActions.impure.run(onAction)
     mount(div, component)
+    Test.init(org.scalajs.dom.document.getElementById("test"))
+
   }
 
   activate()

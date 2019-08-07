@@ -27,7 +27,7 @@ class WebsocketSubscriber(url: String)
   def send(message: ArrayBuffer): Unit = w.send(message)
   def send(message: Blob): Unit = w.send(message)
 
-  protected def subscribe(w: WebSocket) = {
+  protected def subscribe(w: WebSocket): Unit = {
     w.onopen = { event: Event ⇒ onOpen := event}
     w.onerror = { event: Event ⇒ onError := event}
     w.onmessage = { event: MessageEvent ⇒ onMessage := event}
