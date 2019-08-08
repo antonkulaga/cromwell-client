@@ -65,6 +65,7 @@ object CromwellWeb extends scala.App with Base {
     */
   val state: Var[State] = Var(State.empty)
 
+
   val toServer: Var[WebsocketMessages.WebsocketMessage] = websocketClient.toSend
 
   val fromServer: Rx[Results.ServerResult] = websocketClient.messages.collect{
@@ -251,7 +252,7 @@ object CromwellWeb extends scala.App with Base {
       {  runner.rightMenu }
       {  runner.bottomMenu }
 
-    <section class="ui segment">
+    <section id="main part" class="ui segment">
       {  errors.component }
       {  infos.component }
       {  workflows.component }
@@ -280,6 +281,9 @@ object CromwellWeb extends scala.App with Base {
 
   val div = dom.document.getElementById("main")
 
+
+  val stateBinding = com.thoughtworks.binding.Binding.Vars.empty[State]
+
   /**
     * Mounts everything together, start data binding of the HTML part
     * @return
@@ -290,8 +294,7 @@ object CromwellWeb extends scala.App with Base {
     //workaround to avoid foldp issues
     allActions.impure.run(onAction)
     mount(div, component)
-    Test.init(org.scalajs.dom.document.getElementById("test"))
-
+    //Test.init(org.scalajs.dom.document.getElementById("test"), state)
   }
 
   activate()
