@@ -48,6 +48,15 @@ trait PipelinesExtractor {
       .toList.map(n=>extractPipeline(n.name))
       .collect{ case Some(v) => v}}
       .getOrElse(Nil)
+    for(v <- p) {
+      println("FOUND PIPELINE:")
+      println(v.name)
+      if(v.defaults!=""){
+        println("with default INTPUT values: ")
+        println(v.defaults)
+      }
+      println("--------------------------------")
+    }
     Pipelines(p)
   }
 

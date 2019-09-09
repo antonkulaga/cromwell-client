@@ -64,7 +64,7 @@ lazy val webcomponents = "1.0.1"
 
 lazy val jquery = "3.4.1"
 
-lazy val airframeLogVersion = "19.7.6"
+lazy val airframeLogVersion = "19.9.3"
 
 lazy val  cromwellClient = crossProject(JSPlatform, JVMPlatform)
   .crossType(CrossType.Full)
@@ -109,7 +109,7 @@ lazy val cromwellClientJVM = cromwellClient.jvm
 
 lazy val cromwellClientJS = cromwellClient.js
 
-lazy val akka = "2.5.23"
+lazy val akka = "2.5.25"
 lazy val akkaHttp = "10.1.9"
 
 lazy val cromwellWeb = crossProject(JSPlatform, JVMPlatform)
@@ -149,10 +149,10 @@ lazy val cromwellWeb = crossProject(JSPlatform, JVMPlatform)
       "de.heikoseeberger" %% "akka-http-circe" % "1.27.0",
 			"ch.megard" %% "akka-http-cors" % "0.4.1",
 			"org.webjars" % "Semantic-UI" %  semanticUI,
-			"org.webjars.bowergithub.fomantic" % "fomantic-ui" % "2.7.6",
+			"org.webjars.bowergithub.fomantic" % "fomantic-ui" % "2.7.8",
 			"org.webjars" % "jquery" % jquery,
 			"org.webjars" % "webcomponentsjs" % webcomponents,
-			"org.webjars" % "swagger-ui" % "3.23.4" //Swagger UI
+			"org.webjars" % "swagger-ui" % "3.23.8" //Swagger UI
 		),
 		(managedClasspath in Runtime) += (packageBin in Assets).value,
 		pipelineStages in Assets := Seq(scalaJSProd),

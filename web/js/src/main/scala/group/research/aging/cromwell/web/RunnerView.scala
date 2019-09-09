@@ -12,7 +12,7 @@ import org.scalajs.dom.Event
 import dom.ext._
 import org.scalajs.dom.html.Input
 import org.scalajs.dom.raw.HTMLInputElement
-
+import com.thoughtworks.binding.Binding.BindingInstances.monadSyntax._
 import scala.scalajs.js
 import scala.util.{Failure, Success, Try}
 import scala.xml.Elem
@@ -54,10 +54,6 @@ class RunnerView(
 
   val url = Var("") //Var("http://agingkills.westeurope.cloudapp.azure.com") //"http://localhost:8000"
 
-  //val limit = Var(25)
-  //val offset = Var(0)
-  //val expandSubworkflows = Var(true)
-  //val lastStatus: Var[WorkflowStatus] = Var(WorkflowStatus.AnyStatus)
 
   val lastLimit: Rx[Int] = lastQuery.map(_.limit)
   val lastOffset: Rx[Int] = lastQuery.map(_.offset)
@@ -159,8 +155,6 @@ class RunnerView(
   protected def selectPipeline(event: Event): Unit = {
     val value = dom.document.getElementById("pipelines").asInstanceOf[dom.html.Select].value
     commands := Commands.SelectPipeline(value)
-    println(commands)
-    println(value)
   }
 
   /*
@@ -213,6 +207,7 @@ class RunnerView(
     }
   } else {
     val p = currentPipeline.now
+
     commands := p.to_run(inputs.now.getOrElse(""),options.now.getOrElse(""))
   }
 
@@ -324,14 +319,14 @@ class RunnerView(
 
 
   val bottomMenu =
-    <div class="ui bottom fixed pointing menu">
+    <div class="ui bottom fixed pointing menu" style="overflow-x:scroll;">
       <section class="item">
         <button class={ enabledIf("ui big primary button", canRun) } onclick = { runClick _}>Run</button>
       </section>
         <section class="item">
           <button class={ enabledIf("ui primary button", canRun) } onclick = { validateClick _}>Validate</button>
         </section>
-        <div class="menu" id ="input_menu">
+        <div class="ui stackable menu" id ="input_menu">
           <section class="item tab segment active">
             <div class="ui label">inputs json</div>
             <input id ="inputs" onchange = { uploadFileHandler(inputs) _ } accept=".json" name="inputs" type="file" >
@@ -343,7 +338,7 @@ class RunnerView(
              data-tab="manual" onmousedown ={ activeClick("manual") _ }>
           Manual
         </div>
-      <div class="ui blue menu" id ="manual_menu" style={visibleIf(inManualTab)}>
+      <div class="ui stackable blue menu" id ="manual_menu" style={visibleIf(inManualTab)}>
         <section class="item tab segment active"  data-tab="manual">
           <div class="ui label">workflow WDL</div>
           <input id ="wdl" onchange = { uploadFileHandler(wdlFile) _ } accept=".wdl"  name="wdl" type="file" >
@@ -370,7 +365,7 @@ class RunnerView(
            onmousedown ={ activeClick("pipelines") _ }>
         Pipelines
       </div>
-      <div class="ui blue menu" id ="pipelines_menu" style={visibleIf(inPipelinesTab)}>
+      <div class="ui stackable blue menu" id ="pipelines_menu" style={visibleIf(inPipelinesTab)}>
         <section class="item tab segment" data-tab="pipelines">
           <select id="pipelines" onclick={selectPipeline _}>
             { pipelines.map{ ps=> ps.pipelines.map{p =>

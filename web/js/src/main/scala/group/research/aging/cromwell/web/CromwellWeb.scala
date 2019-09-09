@@ -2,12 +2,13 @@ package group.research.aging.cromwell.web
 
 import java.time.{OffsetDateTime, ZoneOffset}
 
+import com.thoughtworks.binding.Binding
 import group.research.aging.cromwell.client.CromwellClient
 import group.research.aging.cromwell.web.Messages.ExplainedError
 import group.research.aging.cromwell.web.communication.{WebsocketClient, WebsocketMessages}
 import org.querki.jquery._
 import wvlet.log.LogLevel
-
+import com.thoughtworks.binding.Binding.BindingInstances.monadSyntax._
 import scala.util.Random
 
 /**
@@ -196,6 +197,8 @@ object CromwellWeb extends scala.App with Base {
     state.map(_.results).dropRepeats, state.map(_.client.base).dropRepeats, state.map(_.results.loaded).dropRepeats, state.map(_.pipelines), state.map(_.heartBeat)
   )
 
+  val v = stateBinding.map(_.client.base)
+
 
   val workflows = new WorkflowsView(
     state.map(_.sortedMetadata),
@@ -275,6 +278,7 @@ object CromwellWeb extends scala.App with Base {
     if(newState != currentState) {
       val effects = newState.effects
       state := newState.copy(effects  = Nil)
+      stateBinding.value = state.now
       effects.foreach(e=> e()) //ugly workaround for effects
     }
   }
@@ -282,7 +286,8 @@ object CromwellWeb extends scala.App with Base {
   val div = dom.document.getElementById("main")
 
 
-  val stateBinding = com.thoughtworks.binding.Binding.Vars.empty[State]
+  lazy val stateBinding: Binding.Var[State] = com.thoughtworks.binding.Binding.Var(this.state.now)
+
 
   /**
     * Mounts everything together, start data binding of the HTML part
@@ -294,7 +299,7 @@ object CromwellWeb extends scala.App with Base {
     //workaround to avoid foldp issues
     allActions.impure.run(onAction)
     mount(div, component)
-    //Test.init(org.scalajs.dom.document.getElementById("test"), state)
+    Test.init(org.scalajs.dom.document.getElementById("test"), state)
   }
 
   activate()

@@ -9,6 +9,7 @@ import io.circe.generic.JsonCodec
 import io.circe.parser.parse
 
 import scala.collection.immutable._
+import scala.util.{Failure, Success}
 
 object WorkflowNode {
 
@@ -108,6 +109,14 @@ object Pipeline {
   }
 
   def to_run(input: String, options: String = ""): Commands.Run = concatJson(input).map{
-    case js => Commands.Run(main, js.spaces2, options, dependencies)
-  }.toTry.getOrElse(Commands.Run(main, input, options, dependencies) )
+    js => Commands.Run(main, js.spaces2, options, dependencies)
+  }.toTry match {
+    case Success(value) =>
+      //println(s"""MERGED JSON = \n ${value}""")
+      value
+    case Failure(exception) =>
+      println("INPUT JSONG MERGING ERROR:")
+      println(exception.toString)
+      Commands.Run(main, input, options, dependencies)
+  }
 }

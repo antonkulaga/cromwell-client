@@ -9,10 +9,12 @@ import org.scalajs.dom.html.{Table, TableRow}
 import org.scalajs.dom.raw.{Event, Node}
 import scalaz.std.list._
 import scalaz.std._
+import com.thoughtworks.binding.Binding.BindingInstances.monadSyntax._
 
 object Test {
 
   val state = Var(State.empty)
+  //val meta = state.map(s=>
 
   @dom
   def metaRow(m: client.Metadata): Binding[Node]=
