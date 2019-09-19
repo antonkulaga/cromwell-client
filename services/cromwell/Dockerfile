@@ -14,7 +14,6 @@ COPY ./app-config /app-config
 
 RUN useradd -r -u 1002 cromwell
 RUN usermod -aG docker cromwell
-RUN groupadd -r cromwell && useradd -r -g cromwell cromwell
 ENV EUID=1002
 
 ENTRYPOINT ["/bin/sh", "-c"]
