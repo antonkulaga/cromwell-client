@@ -64,7 +64,7 @@ lazy val webcomponents = "1.0.1"
 
 lazy val jquery = "3.4.1"
 
-lazy val airframeLogVersion = "19.9.3"
+lazy val airframeLogVersion = "19.9.7"
 
 lazy val  cromwellClient = crossProject(JSPlatform, JVMPlatform)
   .crossType(CrossType.Full)
@@ -146,7 +146,7 @@ lazy val cromwellWeb = crossProject(JSPlatform, JVMPlatform)
 			"com.github.swagger-akka-http" %% "swagger-akka-http" % "2.0.3",
 			"com.github.swagger-akka-http" %% "swagger-scala-module" % "2.0.4",
 			"com.vmunier" %% "scalajs-scripts" % "1.1.4",
-      "de.heikoseeberger" %% "akka-http-circe" % "1.27.0",
+      "de.heikoseeberger" %% "akka-http-circe" % "1.28.0",
 			"ch.megard" %% "akka-http-cors" % "0.4.1",
 			"org.webjars" % "Semantic-UI" %  semanticUI,
 			"org.webjars.bowergithub.fomantic" % "fomantic-ui" % "2.7.8",
@@ -161,7 +161,7 @@ lazy val cromwellWeb = crossProject(JSPlatform, JVMPlatform)
 		(emitSourceMaps in fullOptJS) := true,
 		fork in run := true,
 		maintainer in Docker := "Anton Kulaga <antonkulaga@gmail.com>",
-		dockerBaseImage := "oracle/graalvm-ce:19.1.1",
+		dockerBaseImage := "oracle/graalvm-ce:19.2.0",
 		daemonUserUid in Docker := None,
 		daemonUser in Docker := "root",
 		dockerExposedVolumes := Seq("/data"),
