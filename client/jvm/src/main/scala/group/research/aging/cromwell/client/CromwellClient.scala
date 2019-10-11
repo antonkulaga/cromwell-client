@@ -1,16 +1,14 @@
 package group.research.aging.cromwell.client
 
-import java.net.{URI, URL}
+import java.net.URI
 
-import akka.http.scaladsl.HttpExt
-import cats.effect.IO
+import _root_.akka.http.scaladsl.HttpExt
+import akka.stream.ActorMaterializer
+import cats.effect.{ContextShift, IO}
+import hammock.InterpTrans
 import hammock.akka.AkkaInterpreter
 import hammock.apache.ApacheInterpreter
 import io.circe.generic.JsonCodec
-import akka.stream.ActorMaterializer
-import cats.effect.IO
-import cats.free.Free
-import hammock.Hammock._
 
 import scala.concurrent.ExecutionContext
 
@@ -34,16 +32,14 @@ object CromwellClient {
 }
 
 @JsonCodec case class CromwellClient(base: String, version: String = "v1") extends CromwellClientShared with CromwellClientJVMSpecific{
-  implicit override protected def getInterpreter: ApacheInterpreter[IO] = ApacheInterpreter[IO]
+  implicit override protected def getInterpreter: InterpTrans[IO] = ApacheInterpreter.instance
 }
 
-case class CromwellClientAkka(base: String, version: String = "v1", http: HttpExt)
+case class CromwellClientAkka(base: String, version: String = "v1")(implicit val http: HttpExt, val materializer: ActorMaterializer)
                              extends CromwellClientShared with CromwellClientJVMSpecific{
-
-  import  implicits._
-  implicit val materializer: ActorMaterializer = ActorMaterializer()(http.system)
   implicit val executionContext: ExecutionContext = http.system.dispatcher
+  implicit val cs: ContextShift[IO] = IO.contextShift(executionContext)
 
-  implicit override protected def getInterpreter: AkkaInterpreter[IO] = new AkkaInterpreter[IO](http)
+  implicit override protected def getInterpreter: InterpTrans[IO] = AkkaInterpreter.instance[IO]//(http)
 
 }

@@ -6,11 +6,12 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.server._
 import akka.http.scaladsl.{Http, HttpExt, model}
 import akka.stream.{ActorMaterializer, ActorMaterializerSettings, Supervision}
-import cats.effect.IO
+import cats.effect.{ContextShift, IO}
 import ch.megard.akka.http.cors.scaladsl.CorsDirectives._
 import de.heikoseeberger.akkahttpcirce._
 import group.research.aging.cromwell.web.api.RestAPI
 import group.research.aging.cromwell.web.communication.WebsocketServer
+import hammock.InterpTrans
 import hammock.akka.AkkaInterpreter
 import io.circe.generic.auto._
 import scalacss.DevDefaults._
@@ -94,7 +95,9 @@ object WebServer extends HttpApp with FailFastCirceSupport with LogSupport {
   implicit def actorSystem = http.system
   implicit lazy val materializer: ActorMaterializer = ActorMaterializer(ActorMaterializerSettings(http.system).withSupervisionStrategy(decider))
   implicit lazy val executionContext: ExecutionContext = http.system.dispatcher
-  implicit protected def getInterpreter: AkkaInterpreter[IO] = new AkkaInterpreter[IO](http)
+  implicit lazy val cs: ContextShift[IO] = IO.contextShift(executionContext)
+
+  implicit protected def getInterpreter: InterpTrans[IO] = AkkaInterpreter.instance[IO]
 
   def proxy(request: HttpRequest, url: model.Uri): Future[RouteResult] = {
     println("url to send is: " + url.toString())
@@ -127,9 +130,9 @@ object WebServer extends HttpApp with FailFastCirceSupport with LogSupport {
     get(subpath, headers).as[T](D, M).exec[IO]
 */
 
-  lazy val websocketServer: WebsocketServer = new WebsocketServer(http)
+  lazy val websocketServer: WebsocketServer = new WebsocketServer()
 
-  lazy val restAPI = new RestAPI(http)
+  lazy val restAPI = new RestAPI()
 
   override def routes: Route = cors(){
     index~

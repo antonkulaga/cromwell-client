@@ -23,6 +23,6 @@ trait Base extends LogSupport
     value := updateValue
   }
 
-  def un(str: String) = scala.xml.Unparsed(str)
+  //def un(str: String) = scala.xml.Unparsed(str)
 
 }

@@ -7,7 +7,7 @@ import akka.http.scaladsl.HttpExt
 import akka.http.scaladsl.model.ws.{Message, TextMessage}
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
-import akka.stream.OverflowStrategy
+import akka.stream.{ActorMaterializer, OverflowStrategy}
 import akka.stream.scaladsl._
 import group.research.aging.cromwell.client.{CromwellClient, CromwellClientAkka}
 import group.research.aging.cromwell.web.KeepAlive
@@ -19,7 +19,7 @@ import wvlet.log.{LogSupport, Logger}
   * The class that handlers websocker interactions
   * @param http
   */
-class WebsocketServer(http: HttpExt) extends LogSupport{
+class WebsocketServer(implicit http: HttpExt, materializer: ActorMaterializer ) extends LogSupport{
 
   // Set the default log formatter
   Logger.setDefaultFormatter(SourceCodeLogFormatter)
@@ -38,7 +38,7 @@ class WebsocketServer(http: HttpExt) extends LogSupport{
 
     info(s"adding user ${username}")
     val serverURL = CromwellClient.defaultURL
-    val client  = CromwellClientAkka(serverURL, "v1", http)
+    val client  = CromwellClientAkka(serverURL, "v1")
     val wsUser: ActorRef = http.system.actorOf(Props(UserActor(username, client)), name = username)
 
 

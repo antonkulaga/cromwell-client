@@ -133,7 +133,7 @@ case class UserActor(username: String, initialClient: CromwellClientAkka) extend
 
     case ChangeClient(newURL) =>
       debug(s"CHANGE CLIENT to ${newURL}!")
-      val newClient = client.copy(base = newURL)
+      val newClient = client.copy(base = newURL)(initialClient.http, initialClient.materializer)
       this.context.become(operation(output, newClient))
 
     case Commands.Abort(id) =>

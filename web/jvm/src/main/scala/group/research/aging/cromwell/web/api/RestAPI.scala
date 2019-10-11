@@ -4,6 +4,7 @@ import akka.actor.{ActorRef, Props}
 import akka.http.scaladsl.HttpExt
 import akka.http.scaladsl.model.{HttpEntity, MediaTypes, StatusCodes, Uri}
 import akka.http.scaladsl.server.{Directives, Route, StandardRoute}
+import akka.stream.ActorMaterializer
 import group.research.aging.cromwell.web.api.runners.RunnerManager
 
 import scala.concurrent.duration._
@@ -16,7 +17,7 @@ import com.github.swagger.akka.model.Info
   * RestAPI service
   * @param http
   */
-class RestAPI(http: HttpExt) extends SwaggerHttpService with Directives {
+class RestAPI( implicit val http: HttpExt, materializer: ActorMaterializer ) extends SwaggerHttpService with Directives {
 
   implicit val timeout: Timeout = 25 seconds
 
@@ -32,7 +33,7 @@ class RestAPI(http: HttpExt) extends SwaggerHttpService with Directives {
   override val unwantedDefinitions = Seq("Function1", "Function1RequestContextFutureRouteResult")
 
 
-  lazy val runnerManager: ActorRef = system.actorOf(Props(new RunnerManager(http)), name = "manager")
+  lazy val runnerManager: ActorRef = system.actorOf(Props(new RunnerManager()), name = "manager")
 
   //def swagger: Route = path("swagger")  { toSwagger }
 

@@ -11,7 +11,7 @@ lazy val commonSettings = Seq(
 
 	organization := "group.research.aging",
 
-	scalaVersion :=  "2.12.9",
+	scalaVersion :=  "2.12.10",
 
 	version := "0.2.5",
 
@@ -56,7 +56,7 @@ lazy val commonSettings = Seq(
 
 commonSettings
 
-lazy val hammockVersion = "0.9.0"
+lazy val hammockVersion = "0.10.0"
 
 lazy val semanticUI = "2.4.1"
 
@@ -64,7 +64,7 @@ lazy val webcomponents = "1.0.1"
 
 lazy val jquery = "3.4.1"
 
-lazy val airframeLogVersion = "19.9.7"
+lazy val airframeLogVersion = "19.10.1"
 
 lazy val  cromwellClient = crossProject(JSPlatform, JVMPlatform)
   .crossType(CrossType.Full)
@@ -83,8 +83,8 @@ lazy val  cromwellClient = crossProject(JSPlatform, JVMPlatform)
 			"com.lihaoyi" %%% "pprint" % "0.5.5",
 			//"org.typelevel" %%% "cats-core"      % "1.3.1",
 			//"org.typelevel" %%% "cats-effect"     % "1.0.0",
-			"io.circe" %%% "circe-java8" % "0.11.1",
-			"io.circe" %%% "circe-generic-extras" % "0.11.1",
+			"io.circe" %%% "circe-java8" % "0.12.0-M1",
+			"io.circe" %%% "circe-generic-extras" % "0.12.2",
 			"com.pepegar" %%% "hammock-circe" % hammockVersion,
 			"org.wvlet.airframe" %%% "airframe-log" % airframeLogVersion
     )
@@ -110,7 +110,7 @@ lazy val cromwellClientJVM = cromwellClient.jvm
 lazy val cromwellClientJS = cromwellClient.js
 
 lazy val akka = "2.5.25"
-lazy val akkaHttp = "10.1.9"
+lazy val akkaHttp = "10.1.10"
 
 lazy val cromwellWeb = crossProject(JSPlatform, JVMPlatform)
 	.crossType(CrossType.Full)
@@ -144,9 +144,9 @@ lazy val cromwellWeb = crossProject(JSPlatform, JVMPlatform)
 			"com.typesafe.akka" %% "akka-http-xml" % akkaHttp,
 			"javax.ws.rs" % "javax.ws.rs-api" % "2.1.1", //for extra annotations
 			"com.github.swagger-akka-http" %% "swagger-akka-http" % "2.0.3",
-			"com.github.swagger-akka-http" %% "swagger-scala-module" % "2.0.4",
+			"com.github.swagger-akka-http" %% "swagger-scala-module" % "2.0.5",
 			"com.vmunier" %% "scalajs-scripts" % "1.1.4",
-      "de.heikoseeberger" %% "akka-http-circe" % "1.28.0",
+      "de.heikoseeberger" %% "akka-http-circe" % "1.29.1",
 			"ch.megard" %% "akka-http-cors" % "0.4.1",
 			"org.webjars" % "Semantic-UI" %  semanticUI,
 			"org.webjars.bowergithub.fomantic" % "fomantic-ui" % "2.7.8",
@@ -154,14 +154,15 @@ lazy val cromwellWeb = crossProject(JSPlatform, JVMPlatform)
 			"org.webjars" % "webcomponentsjs" % webcomponents,
 			"org.webjars" % "swagger-ui" % "3.23.8" //Swagger UI
 		),
-		(managedClasspath in Runtime) += (packageBin in Assets).value,
+		//(managedClasspath in Runtime) += (packageBin in Assets).value,
+		(fullClasspath in Runtime) += (packageBin in Assets).value,
 		pipelineStages in Assets := Seq(scalaJSProd),
 		//pipelineStages in Assets := Seq(scalaJSDev), //to make compilation faster
 		//compile in Compile := ((compile in Compile) dependsOn scalaJSProd).value,
 		(emitSourceMaps in fullOptJS) := true,
 		fork in run := true,
 		maintainer in Docker := "Anton Kulaga <antonkulaga@gmail.com>",
-		dockerBaseImage := "oracle/graalvm-ce:19.2.0",
+		dockerBaseImage := "oracle/graalvm-ce:19.2.0.1",
 		daemonUserUid in Docker := None,
 		daemonUser in Docker := "root",
 		dockerExposedVolumes := Seq("/data"),
@@ -182,7 +183,7 @@ lazy val webJVM = cromwellWeb.jvm.settings(
 	scalaJSProjects := Seq(webJS),
 	libraryDependencies ++= Seq(
 		"com.lihaoyi" %% "requests" % "0.2.0" % Test,
-		"com.lihaoyi" %% "ammonite-ops" % "1.6.9" % Test
+		"com.lihaoyi" %% "ammonite-ops" % "1.7.4" % Test
 	)
 )
 

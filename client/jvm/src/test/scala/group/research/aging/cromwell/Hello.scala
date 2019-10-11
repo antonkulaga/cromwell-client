@@ -6,7 +6,7 @@ import hammock.apache.ApacheInterpreter
 
 object Hello extends App {
 
-  implicit val getInterpreter = ApacheInterpreter[IO]
+  implicit val getInterpreter = ApacheInterpreter.instance[IO]
 
   //val host: String = "agingkills.westeurope.cloudapp.azure.com"
 

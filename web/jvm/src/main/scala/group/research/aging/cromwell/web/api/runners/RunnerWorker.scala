@@ -3,7 +3,7 @@ package group.research.aging.cromwell.web.api.runners
 import akka.actor._
 import akka.pattern._
 import akka.stream._
-import cats.effect.IO
+import cats.effect.{ContextShift, IO}
 import group.research.aging.cromwell.client
 import group.research.aging.cromwell.client.{CallOutput, CromwellClientAkka, QueryResult, StatusAndOutputs, StatusInfo}
 import group.research.aging.cromwell.web.Commands.TestRun
@@ -51,8 +51,9 @@ class RunnerWorker(client: CromwellClientAkka) extends BasicActor {
   implicit val materializer: ActorMaterializer = ActorMaterializer( ActorMaterializerSettings(context.system).withSupervisionStrategy(decider))
 
   //implicit  protected def getInterpreter: Interpreter[IO] = Interpreter[IO]
-  implicit protected def getInterpreter: AkkaInterpreter[IO] =
-    new AkkaInterpreter[IO](http)
+  implicit val cs: ContextShift[IO] = IO.contextShift(http.system.dispatcher)
+
+  implicit protected def getInterpreter: InterpTrans[IO] = AkkaInterpreter.instance[IO]
 
   /**
     * Recieve generating functions
