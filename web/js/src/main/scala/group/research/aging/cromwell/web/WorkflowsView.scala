@@ -10,22 +10,72 @@ import scala.xml.Elem
 import java.time.format.DateTimeFormatter
 import com.thoughtworks.binding.Binding.BindingInstances.monadSyntax._
 
-@js.native
-@js.annotation.JSGlobalScope
-object Global extends js.Object {
-  def renderjson(obj: js.Any): dom.html.Element = js.native
-}
 
-class WorkflowsView(allMetadata: Rx[List[Metadata]], baseHost: Rx[String], commands: Var[Commands.Command])
+class WorkflowsView(allMetadata: Rx[List[Metadata]], baseHost: Rx[String], commands: Var[Commands.Command]) extends WorkflowViewBase
 {
 
-  def clientPort = dom.window.location.port match {
-    case "" => ""
-    case v => ":" + v
-  }
 
   val host: Rx[String] = baseHost.map(h => dom.window.location.protocol +"//"+ h + clientPort)
   //val allMetadata: Var[List[Metadata]]  = Var(initialMetadata)
+
+
+  def metadataRow(r: Metadata): Elem = {
+    <tr class={statusClass(r.status)}>
+      {if(r.parentWorkflowId.isDefined) <td style="border: 0px !important;">
+      <i class={if(r.rootWorkflowId.isDefined && r.rootWorkflowId.contains(r.parentWorkflowId.get)) "angle right icon" else "small angle double right icon"}></i>
+    </td> else <!--no cell-->}
+      <td colspan={if(r.parentWorkflowId.isDefined) "1" else "2"} style={if(r.parentWorkflowId.isDefined) "border: 0px !important;" else ""}>{generalInfo(r)}{rowInputs(r)}{rowOutputs(r)}</td>
+      <td style={if(r.parentWorkflowId.isDefined) "border: 0px !important;" else ""}>
+        {rowFailures(r)}{rowCallsTable(r)}
+      </td>
+    </tr>
+  }
+
+
+  def rowInputs(r: Metadata): Elem =
+    <div class={messageClass(r, "info")}>
+      <div class="header">Inputs:</div>
+      <div class="ui list">
+        {
+
+        <pre class="item" style="max-height: 60vh; overflow-y:scroll;">
+          {
+          r.inputs.spaces4
+          }
+        </pre>
+        }
+      </div>
+    </div>
+
+
+  def rowOutputs(r: Metadata): Elem = if(r.outputs.isNull) <br/> else
+    <div class={messageClass(r)}>
+      <div class="header">Outputs:</div>
+      <code class="ui list">
+        {  r.outputs.spaces4 }
+      </code>
+    </div>
+
+
+  def callRow(name: String, calls: List[LogCall], fileHost: Rx[String]): List[Elem] =
+    calls.map(c=>
+      <tr>
+        <td><a href={fileHost.map(h=> h + c.callRoot)} target="_blank">{name}</a></td>
+        <td class={statusClass(c.executionStatus)}>{c.executionStatus}</td>
+        <td><a href={fileHost.map(h=> h + c.stdout)}  target ="_blank">{c.stdout}</a></td>
+        <td><a href={fileHost.map(h=> h + c.stderr)} target ="_blank">{c.stderr}</a></td>
+        <td>{c.callCaching.fold("")(r=>r.result)}</td>
+        <td>{c.shardIndex}</td>
+      </tr>
+    )
+
+  def rowFailures(r: Metadata): List[Elem] = r.failures.map(f=>
+    <div class="ui negative message">
+      {f.message}
+      <p> {f.causedBy.mkString}</p>
+    </div>)
+
+
 
   var desc = true
 
@@ -81,24 +131,7 @@ class WorkflowsView(allMetadata: Rx[List[Metadata]], baseHost: Rx[String], comma
     </tbody>
   </table>
 
-  def statusClass(str: String): String = str.toLowerCase match {
-    case "succeeded" | "done" => "positive"
-    case "failed" | "aborted" => "negative"
-    case _ => "warning"
-  }
 
-
-  def metadataRow(r: Metadata): Elem = {
-    <tr class={statusClass(r.status)}>
-      {if(r.parentWorkflowId.isDefined) <td style="border: 0px !important;">
-      <i class={if(r.rootWorkflowId.isDefined && r.rootWorkflowId.contains(r.parentWorkflowId.get)) "angle right icon" else "small angle double right icon"}></i>
-    </td> else <!--no cell-->}
-      <td colspan={if(r.parentWorkflowId.isDefined) "1" else "2"} style={if(r.parentWorkflowId.isDefined) "border: 0px !important;" else ""}>{generalInfo(r)}{rowInputs(r)}{rowOutputs(r)}</td>
-      <td style={if(r.parentWorkflowId.isDefined) "border: 0px !important;" else ""}>
-        {rowFailures(r)}{rowCallsTable(r)}
-      </td>
-    </tr>
-  }
   protected def abort(id: String)(event: Event): Unit = {
 
     commands := Commands.Abort(id)
@@ -136,35 +169,6 @@ class WorkflowsView(allMetadata: Rx[List[Metadata]], baseHost: Rx[String], comma
       </tbody>
     </table>
 
-  def un(str: String): String = str.replace("\\\"","")
-  private def messageClass(r: Metadata, tp: String = "positive") = if(r.parentWorkflowId.isDefined) s"ui ${tp} tiny message" else s"ui ${tp} small message"
-
-  def rowInputs(r: Metadata): Elem =
-    <div class={messageClass(r, "info")}>
-      <div class="header">Inputs:</div>
-      <div class="ui list">
-        {
-
-            <pre class="item" style="max-height: 60vh; overflow-y:scroll;">
-              {
-              r.inputs.spaces4
-              }
-            </pre>
-        }
-      </div>
-    </div>
-
-
-  def rowOutputs(r: Metadata): Elem = if(r.outputs.isNull) <br/> else
-     <div class={messageClass(r)}>
-      <div class="header">Outputs:</div>
-      <code class="ui list">
-        {  r.outputs.spaces4 }
-      </code>
-    </div>
-
-
-
   def rowCallsTable(r: Metadata): Elem = if(r.calls.nonEmpty)
     <table class="ui small collapsing table">
       <thead>
@@ -183,25 +187,6 @@ class WorkflowsView(allMetadata: Rx[List[Metadata]], baseHost: Rx[String], comma
       </tbody>
     </table>
   else <br/>
-
-  def callRow(name: String, calls: List[LogCall], fileHost: Rx[String]): List[Elem] =
-      calls.map(c=>
-        <tr>
-          <td><a href={fileHost.map(h=> h + c.callRoot)} target="_blank">{name}</a></td>
-          <td class={statusClass(c.executionStatus)}>{c.executionStatus}</td>
-          <td><a href={fileHost.map(h=> h + c.stdout)}  target ="_blank">{c.stdout}</a></td>
-          <td><a href={fileHost.map(h=> h + c.stderr)} target ="_blank">{c.stderr}</a></td>
-          <td>{c.callCaching.fold("")(r=>r.result)}</td>
-          <td>{c.shardIndex}</td>
-        </tr>
-      )
-
-  def rowFailures(r: Metadata): List[Elem] = r.failures.map(f=>
-    <div class="ui negative message">
-      {f.message}
-      <p> {f.causedBy.mkString}</p>
-    </div>)
-
 
 }
 

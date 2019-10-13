@@ -1,13 +1,12 @@
 package group.research.aging.cromwell.client
 
-import fr.hmil.roshttp.HttpRequest
+import fr.hmil.roshttp.{AnyBody, BackendConfig, HttpRequest}
 import fr.hmil.roshttp.body.MultiPartBody
 import fr.hmil.roshttp.response.SimpleHttpResponse
 import fr.hmil.roshttp.body.Implicits._
 import fr.hmil.roshttp.body.JSONBody.JSONObject
 import fr.hmil.roshttp.body._
 import fr.hmil.roshttp.response.SimpleHttpResponse
-import fr.hmil.roshttp.{AnyBody, HttpRequest}
 import io.circe.{Decoder, Error}
 import io.circe.parser.parse
 
@@ -39,6 +38,8 @@ trait RosHttp {
 
   def postRequest(subpath: String)(multipart: MultiPartBody): Future[SimpleHttpResponse] = {
     val request = HttpRequest(base + subpath)
+      .withCrossDomainCookies(true)
+      .withBackendConfig(BackendConfig(maxChunkSize = 24576, internalBufferLength = 384))
     println(s"POST to ${request.longPath}, base is ${base} subpath is ${subpath}")
     request.post(multipart)
   }

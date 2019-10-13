@@ -40,7 +40,7 @@ Adding to dependencies
 add the following to you build.sbt
 ```scala
 resolvers += sbt.Resolver.bintrayRepo("comp-bio-aging", "main")
-libraryDependencies += "group.research.aging" %%% "cromwell-client" % "0.2.3"
+libraryDependencies += "group.research.aging" %%% "cromwell-client" % "0.2.6"
 ```
 Usage
 -----

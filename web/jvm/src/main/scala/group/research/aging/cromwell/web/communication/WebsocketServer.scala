@@ -56,7 +56,7 @@ class WebsocketServer(implicit http: HttpExt, materializer: ActorMaterializer ) 
     // Integration point between Akka Streams and above actor
     val source: Source[Message, NotUsed] =
       Source
-        .actorRef(bufferSize = 10240, overflowStrategy = OverflowStrategy.fail)
+        .actorRef(bufferSize = 20480, overflowStrategy = OverflowStrategy.fail)
         .map{ c: WebsocketMessages.WebsocketMessage =>
           import io.circe.syntax._
           val js = c.asJson
@@ -72,7 +72,7 @@ class WebsocketServer(implicit http: HttpExt, materializer: ActorMaterializer ) 
           // don't expose the wsHandle anymore
           NotUsed
         }
-        .keepAlive(maxIdle = 20.seconds, () => {
+        .keepAlive(maxIdle = 30.seconds, () => {
           import io.circe.syntax._
           val m: WebsocketMessages.WebsocketMessage = WebsocketMessages.WebsocketAction(KeepAlive.web)//
           val js = m.asJson
