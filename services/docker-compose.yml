@@ -15,7 +15,8 @@ services:
       - MYSQL_DATABASE=cromwell_db
     volumes:
       - ./mysql/init:/docker-entrypoint-initdb.d
-      - /data/databases/mysql:/var/lib/mysql
+      - ./mysql/my.cnf:/etc/mysql/my.cnf
+      - /data/databases/mysql:/var/lib/mysql-files
     ports:
       - "3307:3306"
   cromwell-client:
