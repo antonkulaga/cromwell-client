@@ -64,7 +64,7 @@ lazy val webcomponents = "1.0.1"
 
 lazy val jquery = "3.4.1"
 
-lazy val airframeLogVersion = "19.10.1"
+lazy val airframeLogVersion = "19.11.2"
 
 lazy val  cromwellClient = crossProject(JSPlatform, JVMPlatform)
   .crossType(CrossType.Full)
@@ -80,7 +80,7 @@ lazy val  cromwellClient = crossProject(JSPlatform, JVMPlatform)
 		libraryDependencies ++= Seq(
 			"fr.hmil" %%% "roshttp" % "2.2.4",
 			"com.beachape" %%% "enumeratum" % "1.5.13",
-			"com.lihaoyi" %%% "pprint" % "0.5.5",
+			"com.lihaoyi" %%% "pprint" % "0.5.6",
 			//"org.typelevel" %%% "cats-core"      % "1.3.1",
 			//"org.typelevel" %%% "cats-effect"     % "1.0.0",
 			"io.circe" %%% "circe-java8" % "0.12.0-M1",
@@ -100,7 +100,7 @@ lazy val  cromwellClient = crossProject(JSPlatform, JVMPlatform)
   .jsSettings(
 		jsEnv := new org.scalajs.jsenv.jsdomnodejs.JSDOMNodeJSEnv,
 		libraryDependencies ++= Seq(
-			"org.scala-js" %%% "scalajs-java-time" % "0.2.5",
+			"org.scala-js" %%% "scalajs-java-time" % "0.2.6",
 			"org.querki" %%% "jquery-facade" % "1.2"
 		)
 	)
@@ -109,7 +109,7 @@ lazy val cromwellClientJVM = cromwellClient.jvm
 
 lazy val cromwellClientJS = cromwellClient.js
 
-lazy val akka = "2.5.25"
+lazy val akka = "2.6.0"
 lazy val akkaHttp = "10.1.10"
 
 lazy val cromwellWeb = crossProject(JSPlatform, JVMPlatform)
@@ -131,7 +131,7 @@ lazy val cromwellWeb = crossProject(JSPlatform, JVMPlatform)
 		libraryDependencies ++= Seq(
 			"in.nvilla" %%% "monadic-html" % "0.4.0-RC1",
 			"org.akka-js" %%% "akkajsactorstream" % "1.2.5.23",
-			"com.thoughtworks.binding" %%% "dom" % "11.8.1" excludeAll ExclusionRule(organization = "org.scala-lang.modules")
+			"com.thoughtworks.binding" %%% "dom" % "11.9.0" excludeAll ExclusionRule(organization = "org.scala-lang.modules")
 		),
 		jsEnv := new org.scalajs.jsenv.jsdomnodejs.JSDOMNodeJSEnv,
 		scalaJSUseMainModuleInitializer := true
@@ -143,7 +143,7 @@ lazy val cromwellWeb = crossProject(JSPlatform, JVMPlatform)
 			"com.typesafe.akka" %% "akka-http" % akkaHttp,
 			"com.typesafe.akka" %% "akka-http-xml" % akkaHttp,
 			"javax.ws.rs" % "javax.ws.rs-api" % "2.1.1", //for extra annotations
-			"com.github.swagger-akka-http" %% "swagger-akka-http" % "2.0.3",
+			"com.github.swagger-akka-http" %% "swagger-akka-http" % "2.0.4",
 			"com.github.swagger-akka-http" %% "swagger-scala-module" % "2.0.5",
 			"com.vmunier" %% "scalajs-scripts" % "1.1.4",
       "de.heikoseeberger" %% "akka-http-circe" % "1.29.1",
@@ -152,17 +152,17 @@ lazy val cromwellWeb = crossProject(JSPlatform, JVMPlatform)
 			"org.webjars.bowergithub.fomantic" % "fomantic-ui" % "2.7.8",
 			"org.webjars" % "jquery" % jquery,
 			"org.webjars" % "webcomponentsjs" % webcomponents,
-			"org.webjars" % "swagger-ui" % "3.23.8" //Swagger UI
+			"org.webjars" % "swagger-ui" % "3.24.0" //Swagger UI
 		),
-		//(managedClasspath in Runtime) += (packageBin in Assets).value,
-		(fullClasspath in Runtime) += (packageBin in Assets).value,
+		(managedClasspath in Runtime) += (packageBin in Assets).value,
+		//(fullClasspath in Runtime) += (packageBin in Assets).value,
 		pipelineStages in Assets := Seq(scalaJSProd),
 		//pipelineStages in Assets := Seq(scalaJSDev), //to make compilation faster
 		//compile in Compile := ((compile in Compile) dependsOn scalaJSProd).value,
 		(emitSourceMaps in fullOptJS) := true,
 		fork in run := true,
 		maintainer in Docker := "Anton Kulaga <antonkulaga@gmail.com>",
-		dockerBaseImage := "oracle/graalvm-ce:19.2.0.1",
+		dockerBaseImage := "oracle/graalvm-ce:19.2.1",
 		daemonUserUid in Docker := None,
 		daemonUser in Docker := "root",
 		dockerExposedVolumes := Seq("/data"),
@@ -183,7 +183,7 @@ lazy val webJVM = cromwellWeb.jvm.settings(
 	scalaJSProjects := Seq(webJS),
 	libraryDependencies ++= Seq(
 		"com.lihaoyi" %% "requests" % "0.2.0" % Test,
-		"com.lihaoyi" %% "ammonite-ops" % "1.7.4" % Test
+		"com.lihaoyi" %% "ammonite-ops" % "1.8.1" % Test
 	)
 )
 

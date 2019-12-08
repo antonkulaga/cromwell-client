@@ -1,17 +1,14 @@
 package group.research.aging.cromwell.web.api.runners
 
-import akka.actor.{Actor, ActorRef, Props, _}
+import akka.actor.{ActorRef, Props}
 import akka.http.scaladsl.HttpExt
-import akka.stream.ActorMaterializer
+import akka.stream.Materializer
 import group.research.aging.cromwell.client.CromwellClientAkka
 import group.research.aging.cromwell.web.Commands
 import group.research.aging.cromwell.web.common.BasicActor
-import wvlet.log.LogSupport
-
-import scala.concurrent.duration._
 
 
-case class RunnerManager(implicit http: HttpExt, materializer: ActorMaterializer) extends BasicActor {
+case class RunnerManager(implicit http: HttpExt, materializer: Materializer) extends BasicActor {
 
   protected def operation(workers: Map[String, ActorRef]): Receive = {
     case mes @ MessagesAPI.ServerCommand(com, serverURL, callbackURLs, _, authOpt) =>

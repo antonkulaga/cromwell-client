@@ -19,6 +19,8 @@ import javax.ws.rs._
 
 @Path("/api")
 class RunService(val runner: ActorRef)(implicit val timeout: Timeout) extends CromwellClientService with PipelinesExtractor {
+
+
   
   @POST
   @Path("/run/{pipeline}")
@@ -73,6 +75,46 @@ class RunService(val runner: ActorRef)(implicit val timeout: Timeout) extends Cr
               debug(s"running pipeline failed with ${extraction}")
               failWith(extraction) // not executed.
             }
+          }
+        } ~ {
+          debug("POST REQUEST!")
+          debug("WDL FOUND!")
+          debug(s"WDL IS: ${p.main}")
+          if(p.dependencies.nonEmpty) debug(s"Found dependencies [${p.dependencies.map(_._1).mkString(", ")}]!")
+          complete(HttpResponse(StatusCodes.OK, Nil, p.main))
+        }
+    }
+  }
+
+
+  @GET
+  @Path("/run/batch/{pipeline}")
+  def batchRunAPI: Route = pathPrefix("run" / "batch" / Remaining) { pipeline =>
+    debug(s"BEFORE PARAMETER EXTRACTION FOR ${pipeline}")
+    extractPipeline(pipeline) match {
+      case None =>
+        error(s"CANNOT FIND ${pipeline}")
+        reject(PipelinesRejections.PipelineNotFound(pipeline))
+
+      case Some(p) =>
+        parameters("experiments".as[Int].*, "batch".as[Int].?,"server".?, "callback".?, "authorization".?) { (experiments, batchOpt, serverOpt, callBackOpt, authOpt) =>
+          val batch = batchOpt.getOrElse(4)
+          debug(s"FOUND PARAMETERS FOR RUNNING ${pipeline} with batch size ${batch}")
+          //val c = serverOpt.map(CromwellClient(_)).getOrElse(CromwellClient.default)
+          val serverURL = serverOpt.getOrElse(CromwellClient.defaultURL)
+          val json =
+            s"""{
+              quantification.experiments: ${experiments}
+              }"""
+            val toRun =  p.to_run(json)
+            val headers = authOpt.fold(Map.empty[String, String])(a=>Map("Authorization" -> a))
+            val cbs = callBackOpt.map(Set(_)).getOrElse(Set.empty[String])
+            val serverMessage: MessagesAPI.ServerCommand =
+              MessagesAPI.ServerCommand(toRun, serverURL, cbs, false, headers)
+            debug(s"sending a message ${serverMessage}")
+            completeOrRecoverWith((runner ? serverMessage).mapTo[StatusInfo]) { extraction =>
+              debug(s"running pipeline failed with ${extraction}")
+              failWith(extraction) // not executed.
           }
         } ~ {
           debug("POST REQUEST!")
