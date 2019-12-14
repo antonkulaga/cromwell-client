@@ -10,12 +10,14 @@ import wvlet.log.LogSupport
 trait PipelinesExtractor {
   self: LogSupport =>
 
+  /*
   def extractHost(hostFile: File = File("/etc/hosts")) = {
     val l = hostFile.lines.map{ case s =>
       val (h, v) = s.split("[ |\t]*")
 
     }
   }
+  */
 
   protected def fileOption(file: File, str: String): Option[File] = Option(file / str).filter(_.exists)
 

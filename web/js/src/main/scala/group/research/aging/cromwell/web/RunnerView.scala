@@ -74,6 +74,7 @@ class RunnerView(
     pipelines.impure.run{ ps=>
       currentPipeline :=  ps.pipelines.headOption.getOrElse(Pipeline.empty)
     }
+
     /*
     lastStatus.impure.run{ s=>   currentStatus := s}
     lastLimit.dropRepeats.impure.run(l=> limit:= l)

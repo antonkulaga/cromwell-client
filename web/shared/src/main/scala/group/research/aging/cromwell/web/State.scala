@@ -3,6 +3,7 @@ import java.time.{OffsetDateTime, ZoneOffset}
 
 import cats.kernel.Monoid
 import group.research.aging.cromwell.client.{CromwellClient, CromwellClientLike, Metadata, WorkflowStatus}
+import group.research.aging.cromwell.web.Commands.BatchRun
 import group.research.aging.cromwell.web.Results.QueryWorkflowResults
 import io.circe.{Json, ParsingFailure}
 import io.circe.generic.JsonCodec
@@ -118,5 +119,17 @@ object Pipeline {
       println("INPUT JSONG MERGING ERROR:")
       println(exception.toString)
       Commands.Run(main, input, options, dependencies)
+  }
+
+  def to_run_batch(inputs: Seq[String], options: String = ""): BatchRun ={
+      val ins: Seq[String] = inputs.map{ i=>concatJson(i).toTry match {
+        case Success(value) => value.spaces2
+        case Failure(exception) =>
+          println("INPUT JSONG MERGING ERROR:")
+          println(exception.toString)
+          i
+      }
+    }
+    BatchRun(main, ins, options)
   }
 }

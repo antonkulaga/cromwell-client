@@ -5,7 +5,7 @@ import akka.pattern._
 import akka.stream._
 import cats.effect.{ContextShift, IO}
 import group.research.aging.cromwell.client
-import group.research.aging.cromwell.client.{CallOutput, CromwellClientAkka, QueryResult, StatusAndOutputs, StatusInfo}
+import group.research.aging.cromwell.client.{CromwellClientAkka, QueryResult, QueryResults, StatusAndOutputs, StatusInfo, WorkflowStatus}
 import group.research.aging.cromwell.web.Commands.TestRun
 import group.research.aging.cromwell.web.WebServer.http
 import group.research.aging.cromwell.web.api.runners.MessagesAPI.CallBack
@@ -13,14 +13,12 @@ import group.research.aging.cromwell.web.common.BasicActor
 import group.research.aging.cromwell.web.{Commands, Results}
 import hammock.akka.AkkaInterpreter
 import hammock.circe.implicits._
-import hammock.{ContentType, Hammock, Method, _}
+import hammock.{Hammock, Method, _}
 import io.circe.Json
 import io.circe.syntax._
-import wvlet.log.LogSupport
 
 import scala.collection.immutable
 import scala.concurrent.{ExecutionContextExecutor, Future}
-import scala.concurrent.duration._
 import scala.util.Try
 
 
@@ -32,7 +30,6 @@ class RunnerWorker(client: CromwellClientAkka) extends BasicActor {
 
   debug(s"runner worker for ${client.base} cromwell server started!")
 
-  import scala.concurrent.duration._
   import scala.concurrent.duration._
 
   val decider: Supervision.Decider = {
@@ -63,15 +60,25 @@ class RunnerWorker(client: CromwellClientAkka) extends BasicActor {
   protected def operation(callbacks: Map[String, Set[MessagesAPI.CallBack]]): Receive = {
 
 
-    case MessagesAPI.Poll =>
+    case MessagesAPI.Poll => //checks running workflows and fires callbacks and batches
       //debug(s"polling the callbacks, currently ${callbacks.mkString(",")} are avaliable")
-      val queryResults: immutable.Seq[QueryResult] = client.getQuery(includeSubworkflows = true).unsafeRunSync().results
-      val toDelete: scala.Seq[(String, MessagesAPI.CallBack)] = runForDeletion(callbacks, queryResults)
+      val queryResults: QueryResults = client.getQuery().unsafeRunSync()
+      /*
+      val finished= queryResults.filter(s=>
+        s.status ==  WorkflowStatus.Succeded.entryName ||
+          s.status ==WorkflowStatus.WorkflowStatus.Failed.entryName).map(_.id)
+      */
+      context.parent ! MessagesAPI.ServerResults(client.base, queryResults)
+
+
+      val toDelete: scala.Seq[(String, MessagesAPI.CallBack)] = runForDeletion(callbacks, queryResults.results)
       val g: Map[String, Set[CallBack]] = toDelete.groupBy(_._1).mapValues(_.map(_._2).toSet)
       if(g.nonEmpty || callbacks.contains(TestRun.id)) {
         if(callbacks.contains(TestRun.id)) testResponse(callbacks)
         val updCallbacks = callbacks.filter(c => c._1 != TestRun.id)
-          .map{ case (i, cbs) => if(g.contains(i)) (i, cbs -- g(i)) else (i, cbs.filter(_!=CallBack.empty))}.filter(_._2.nonEmpty)
+          .map{ case (i, cbs) => if(g.contains(i)) (i, cbs -- g(i)) else (i, cbs.filter(_!=CallBack.empty))}
+          .filter(_._2.nonEmpty)
+
         //debug(s"deleting ${callbacks.size - updCallbacks.size} callbacks after execution!")
         context.become(operation(updCallbacks))
       }
@@ -86,6 +93,7 @@ class RunnerWorker(client: CromwellClientAkka) extends BasicActor {
           statusUpdate.map(s=>mes.promise(s)) pipeTo self
 
     case mes @ MessagesAPI.ServerCommand(Commands.TestRun(wdl, input, results, dependencies), serverURL, _, _, _) =>
+      //test server command
       val source: ActorRef = sender()
       val statusUpdate: Future[StatusInfo] = Future{
         StatusInfo("e442e52a-9de1-47f0-8b4f-e6e565008cf1-TEST", "Submitted")
@@ -125,10 +133,17 @@ class RunnerWorker(client: CromwellClientAkka) extends BasicActor {
         case Some(cbs) => context.become(operation(callbacks.updated(status.id, cbs ++ backs)))
         case None => context.become(operation(callbacks + (status.id -> backs)))
       }
+
   }
 
 
-  private def runForDeletion(callbacks: Map[String, Set[CallBack]], results: immutable.Seq[QueryResult]) = {
+  /**
+    * Chooses callbacks that should fire and be cleaned
+    * @param callbacks
+    * @param results
+    * @return
+    */
+  private def runForDeletion(callbacks: Map[String, Set[CallBack]], results: immutable.Seq[QueryResult]): Seq[(String, CallBack)] = {
     val toDelete: Seq[(String, CallBack)] = for {
       r <- results
       if callbacks.contains(r.id)
@@ -181,7 +196,8 @@ class RunnerWorker(client: CromwellClientAkka) extends BasicActor {
       if cb != CallBack.empty
     } {
       val headers = Map("Content-Type" -> "application/json") ++ cb.headers
-      import io.circe._, io.circe.parser._
+      import io.circe._
+      import io.circe.parser._
       val res: Option[Json] = parse(cb.updateOn.head).right.map(j => Some(j)).getOrElse(None)
       val u = Uri.unsafeParse(cb.backURL)
       debug(s"SENDING TEST RESULT TO ${u}:\n ${res}")

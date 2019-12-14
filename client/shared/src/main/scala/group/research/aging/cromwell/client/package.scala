@@ -4,13 +4,7 @@ import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
 import java.util.UUID
 
-import io.circe.{Encoder, Json}
-import java.time.OffsetDateTime
-import java.time.format.DateTimeFormatterBuilder
-
-import io.circe.{ Decoder, Encoder }
-
-import io.circe.java8.time._
+import io.circe.Encoder
 
 package object client {
 
@@ -30,16 +24,11 @@ package object client {
     override def apply(u: UUID): Json = u.toString.asJson
   }
 
-  import io.circe.generic.extras.Configuration
-  import io.circe.generic.extras._
-  import io.circe.syntax._
+  import io.circe.generic.extras.{Configuration, _}
 
   implicit val customConfig: Configuration = Configuration.default.withDefaults
 
   import io.circe._
-  import io.circe.generic.JsonCodec
-
-  import scala.concurrent.duration._
 
 
   trait CromwellResponse
@@ -98,7 +87,10 @@ package object client {
   }
 
   @ConfiguredJsonCodec case class QueryResult(id: String, status: String,
-                                              start: Option[OffsetDateTime] = None, end: Option[OffsetDateTime] = None, parentWorkflowId: Option[String] = None, rootWorkflowId: Option[String] = None) extends WorkflowResponse
+                                              start: Option[OffsetDateTime] = None,
+                                              end: Option[OffsetDateTime] = None,
+                                              parentWorkflowId: Option[String] = None,
+                                              rootWorkflowId: Option[String] = None) extends WorkflowResponse
 
 
   //implicit val config: Configuration = Configuration.default.withSnakeCaseKeys
@@ -181,7 +173,6 @@ package object client {
 
   import cats.Monoid
   import enumeratum._
-  import io.circe.generic.JsonCodec
 
   @ConfiguredJsonCodec sealed trait WorkflowStatus extends EnumEntry
 
@@ -200,19 +191,19 @@ package object client {
     */
     val values = findValues
 
-    case object Submitted extends WorkflowStatus
+      case object Submitted extends WorkflowStatus
 
-    case object Running extends WorkflowStatus
+      case object Running extends WorkflowStatus
 
-    case object Aborting extends WorkflowStatus
+      case object Aborting extends WorkflowStatus
 
-    case object Failed extends WorkflowStatus
+      case object Failed extends WorkflowStatus
 
-    case object Succeeded extends WorkflowStatus
+      case object Succeeded extends WorkflowStatus
 
-    case object Aborted extends WorkflowStatus
+      case object Aborted extends WorkflowStatus
 
-    case object AnyStatus extends WorkflowStatus
+      case object AnyStatus extends WorkflowStatus
+    }
   }
 
-}

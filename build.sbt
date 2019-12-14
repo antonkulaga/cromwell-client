@@ -13,7 +13,7 @@ lazy val commonSettings = Seq(
 
 	scalaVersion :=  "2.12.10",
 
-	version := "0.2.6",
+	version := "0.2.7",
 
 	unmanagedClasspath in Compile ++= (unmanagedResources in Compile).value,
 
@@ -64,7 +64,7 @@ lazy val webcomponents = "1.0.1"
 
 lazy val jquery = "3.4.1"
 
-lazy val airframeLogVersion = "19.11.2"
+lazy val airframeLogVersion = "19.12.0"
 
 lazy val  cromwellClient = crossProject(JSPlatform, JVMPlatform)
   .crossType(CrossType.Full)
@@ -129,7 +129,7 @@ lazy val cromwellWeb = crossProject(JSPlatform, JVMPlatform)
 	)
 	.jsSettings(
 		libraryDependencies ++= Seq(
-			"in.nvilla" %%% "monadic-html" % "0.4.0-RC1",
+			"in.nvilla" %%% "monadic-html" % "0.4.0",
 			"org.akka-js" %%% "akkajsactorstream" % "1.2.5.23",
 			"com.thoughtworks.binding" %%% "dom" % "11.9.0" excludeAll ExclusionRule(organization = "org.scala-lang.modules")
 		),

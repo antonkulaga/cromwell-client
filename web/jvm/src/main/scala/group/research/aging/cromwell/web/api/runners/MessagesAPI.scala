@@ -1,8 +1,9 @@
 package group.research.aging.cromwell.web.api.runners
 
 import akka.http.scaladsl.model.DateTime
-import group.research.aging.cromwell.client.{CallOutput, CallOutputs, StatusInfo, WorkflowStatus}
+import group.research.aging.cromwell.client.{CallOutput, CallOutputs, QueryResult, QueryResults, StatusInfo, WorkflowStatus}
 import group.research.aging.cromwell.web.Commands
+import group.research.aging.cromwell.web.Results.QueryWorkflowResults
 import io.circe._
 import io.circe.generic.JsonCodec
 
@@ -11,6 +12,7 @@ import io.circe.generic.extras.Configuration
 import io.circe.generic.extras._
 import io.circe.syntax._
 
+import scala.collection.parallel.immutable
 import scala.concurrent.duration._
 
 object MessagesAPI {
@@ -37,6 +39,10 @@ object MessagesAPI {
                       start: DateTime = DateTime.now, timeout: Duration = 48 hours, headers: Map[String, String] = Map.empty) extends MessageAPI
 
   case object Poll extends MessageAPI
+  //case class CompletedResults(ids: Seq[String], server: String) extends MessageAPI
+
+  case class ServerResults(server: String, queryResults: QueryResults) extends MessageAPI
+
 
   object ServerCommand {
     def emptyWith(serverURL: String, callbackURLs: Set[String] = Set.empty): ServerCommand = {
@@ -59,6 +65,7 @@ object MessagesAPI {
   {
     def callbacks(id: String): Set[CallBack] = callbackURLs.map(u=>
       CallBack(u, id, serverURL, CallBack.defaultUpdateOnStrings, withInputs, DateTime.now, defaultDuration, extraHeaders))
+
     def promise(status: StatusInfo, additionalParameters: Map[String, String] = Map.empty[String, String]): ServerPromise = ServerPromise(status, callbacks(status.id))
   }
 
