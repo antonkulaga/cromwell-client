@@ -14,7 +14,8 @@ import scala.concurrent.Future
 import scala.util.{Failure, Success, Try}
 import monix.execution.Scheduler.Implicits.global
 
-trait RosHttp {
+
+trait RosHttpBase extends {
 
   def api: String
   def base: String
@@ -55,60 +56,10 @@ trait RosHttp {
   {
     post[T](api + subpath)(multipart)(decoder)
   }
-
-
-  /*
-  def postIO[A: Codec[A]](subpath: String, headers: Map[String, String], value: A): IO[HttpResponse] =
-    Hammock.request[A](Method.POST, Uri.unsafeParse(base + subpath), headers, Some(value)).exec[IO]
-
-  def postAPI[A: Codec[A]](subpath: String, headers: Map[String, String], value: A): IO[HttpResponse] = postIO(api + subpath, headers, value)
-*/
-  /*
-def postWorkflow2(fileContent: String,
-                 workflowInputs: Option[String] = None,
-                 workflowOptions: Option[String] = None
-                ) = {
-  val params = ("workflowSource" -> fileContent) ::
-    workflowInputs.fold(List.empty[(String, String)])(part => List("workflowInputs" -> part)) ++
-      workflowOptions.fold(List.empty[(String, String)])(part => List("workflowOptions" -> part))
-
-  //postAPI(s"/workflows/${version}")(new MultiPartBody(parts))
-  postAPI(s"/workflows/${version}", Map.empty, params)
 }
-*/
 
+trait RosHttp extends RosHttpBase with PostAPI {
 
-  protected def prepareInputOptionsDependencies(
-                                 workflowInputs: String,
-                                 workflowOptions: String = "",
-                                 workflowDependencies: Option[java.nio.ByteBuffer] = None
-                               ): List[(String, BodyPart)] = {
-    val inputs: List[(String, BodyPart)] = if (workflowInputs == "") Nil else
-      List(("workflowInputs", AnyBody(workflowInputs)))
-    val options: List[(String, BodyPart)] = if (workflowOptions == "") Nil else
-      List(("workflowOptions", AnyBody(workflowOptions)))
-    val deps: List[(String, BodyPart)] =
-      workflowDependencies.fold(List.empty[(String, BodyPart)])(part  => List("workflowDependencies" -> ByteBufferBody(part)))
-    inputs ++ options ++ deps
-  }
-
-
-
-  /*
-  def postWorkflow(fileContent: String,
-                   workflowInputs: Option[JSONObject] = None,
-                   workflowOptions: Option[JSONObject] = None,
-                   workflowDependencies: Option[java.nio.ByteBuffer] = None
-                  ): Future[group.research.aging.cromwell.client.StatusInfo] = {
-    val params: List[(String, BodyPart)] =
-      ("workflowSource" -> PlainTextBody(fileContent)) ::
-        workflowInputs.fold(List.empty[(String, BodyPart)])(part  => List("workflowInputs" -> part)) ++
-          workflowOptions.fold(List.empty[(String, BodyPart)])(part  => List("workflowOptions" -> part)) ++
-          workflowDependencies.fold(List.empty[(String, BodyPart)])(part  => List("workflowDependencies" -> ByteBufferBody(part)))
-    val parts = Map[String, BodyPart](params:_*)
-    postAPI[group.research.aging.cromwell.client.StatusInfo](s"/workflows/${version}")(new MultiPartBody(parts))
-  }
-  */
   /**
     * 400
     * Malformed Input

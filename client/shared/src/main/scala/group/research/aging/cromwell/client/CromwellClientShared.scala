@@ -12,7 +12,7 @@ import io.circe.generic.auto._
 
 import scala.concurrent.Future
 
-trait CromwellClientShared extends RosHttp with CromwellClientLike {
+trait CromwellClientShared extends PostAPI with CromwellClientLike {
 
   def base: String
   def version: String

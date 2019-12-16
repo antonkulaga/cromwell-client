@@ -8,7 +8,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 /**
   * Created by antonkulaga on 2/18/17.
   */
-trait CromwellClientJSspecific
+trait CromwellClientJSspecific extends RosHttp
 {
   self: CromwellClientShared =>
 

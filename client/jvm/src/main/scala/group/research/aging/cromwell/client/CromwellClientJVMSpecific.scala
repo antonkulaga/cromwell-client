@@ -11,7 +11,7 @@ import scala.concurrent.Future
 /**
   * Created by antonkulaga on 2/18/17.
   */
-trait CromwellClientJVMSpecific {
+trait CromwellClientJVMSpecific extends RosHttp {
   self: CromwellClientShared =>
 
   import  implicits._

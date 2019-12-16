@@ -55,16 +55,19 @@ object MessagesAPI {
     * @param command
     * @param serverURL
     * @param callbackURLs
-    * @param withInputs
+    * @param callBackWithInputs
     * @param extraHeaders
     */
   case class ServerCommand(command: Commands.Command, serverURL: String,
                            callbackURLs: Set[String] = Set.empty,
-                           withInputs: Boolean = false,
-                           extraHeaders: Map[String, String] = Map.empty) extends MessageAPI
+                           callBackWithInputs: Boolean = false,
+                           extraHeaders: Map[String, String] = Map.empty, extraServers: List[String] = Nil) extends MessageAPI
   {
+
+    lazy val allServerURLs: List[String] = serverURL::extraServers
+
     def callbacks(id: String): Set[CallBack] = callbackURLs.map(u=>
-      CallBack(u, id, serverURL, CallBack.defaultUpdateOnStrings, withInputs, DateTime.now, defaultDuration, extraHeaders))
+      CallBack(u, id, serverURL, CallBack.defaultUpdateOnStrings, callBackWithInputs, DateTime.now, defaultDuration, extraHeaders))
 
     def promise(status: StatusInfo, additionalParameters: Map[String, String] = Map.empty[String, String]): ServerPromise = ServerPromise(status, callbacks(status.id))
   }

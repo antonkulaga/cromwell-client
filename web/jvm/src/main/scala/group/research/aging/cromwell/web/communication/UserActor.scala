@@ -10,7 +10,7 @@ import group.research.aging.cromwell.client.{CromwellClientAkka, WorkflowStatus}
 import group.research.aging.cromwell.web.Commands.{ChangeClient, StreamMetadata}
 import group.research.aging.cromwell.web.Results.QueryWorkflowResults
 import group.research.aging.cromwell.web.common.BasicActor
-import group.research.aging.cromwell.web.util.PipelinesExtractor
+import group.research.aging.cromwell.web.util.{HostExtractor, PipelinesExtractor}
 import group.research.aging.cromwell.web.{Commands, EmptyAction, Messages, Results}
 import wvlet.log.LogFormatter.SourceCodeLogFormatter
 import wvlet.log.{LogRotationHandler, Logger}
@@ -22,7 +22,11 @@ import scala.concurrent.{ExecutionContextExecutor, Future}
   * Actors that proccesses most of websocket messages from the users and back
   * @param username
   */
-case class UserActor(username: String, initialClient: CromwellClientAkka) extends BasicActor with PipelinesExtractor {
+case class UserActor(username: String, initialClient: CromwellClientAkka) extends BasicActor
+  with PipelinesExtractor
+  with HostExtractor
+{
+
 
   // Set the default log formatter
   Logger.setDefaultFormatter(SourceCodeLogFormatter)
@@ -131,8 +135,13 @@ case class UserActor(username: String, initialClient: CromwellClientAkka) extend
     case Results.WorkflowSent(status) =>
       context.system.scheduler.scheduleOnce(3 seconds, self, Commands.QueryWorkflows(WorkflowStatus.AnyStatus, true))
 
-    case ChangeClient(newURL) =>
-      debug(s"CHANGE CLIENT to ${newURL}!")
+    case ChangeClient(updatedURL) =>
+      val newURL = processHost(updatedURL)
+      if(newURL!=updatedURL)
+        debug(s"CHANGE CLIENT to ${updatedURL} which becomes ${newURL} after host substitution!")
+      else
+        debug(s"CHANGE CLIENT to ${updatedURL}!")
+
       val newClient = client.copy(base = newURL)(initialClient.http, initialClient.materializer)
       this.context.become(operation(output, newClient))
 

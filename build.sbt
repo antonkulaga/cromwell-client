@@ -78,6 +78,7 @@ lazy val  cromwellClient = crossProject(JSPlatform, JVMPlatform)
     name := "cromwell-client",
 
 		libraryDependencies ++= Seq(
+			"com.softwaremill.sttp.client" %%% "core" % "2.0.0-RC5",
 			"fr.hmil" %%% "roshttp" % "2.2.4",
 			"com.beachape" %%% "enumeratum" % "1.5.13",
 			"com.lihaoyi" %%% "pprint" % "0.5.6",

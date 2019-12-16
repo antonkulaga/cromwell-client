@@ -137,12 +137,12 @@ object Commands{
   case class ChangeClient(newURL: String) extends Command
   case class Run(wdl: String, input: String, options: String = "", dependencies: List[(String, String)] = Nil) extends Command
   object BatchRun {
-    lazy val empty = BatchRun("", Nil, "", Nil)
+    lazy val empty = BatchRun("", Nil, Nil, "", "", Nil)
   }
-  case class BatchRun(wdl: String, inputs: Seq[String], options: String = "", dependencies: List[(String, String)] = Nil) extends Command {
+  @JsonCodec case class BatchRun(wdl: String, inputs: Seq[String], servers: Seq[String], title: String, options: String = "", dependencies: List[(String, String)] = Nil) extends Command {
     lazy val runs: Seq[Run] = inputs.map(i => Run(wdl, i, options, dependencies))
     lazy val head: Run = runs.head
-    lazy val tail: BatchRun = if(isEmpty) this else BatchRun(wdl, inputs.tail, options, dependencies)
+    lazy val tail: BatchRun = if(isEmpty) this else BatchRun(wdl, inputs.tail, servers, title, options, dependencies)
     def isEmpty: Boolean = inputs.isEmpty
     def nonEmpty: Boolean = inputs.nonEmpty
   }

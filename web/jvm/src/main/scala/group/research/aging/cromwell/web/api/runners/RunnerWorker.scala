@@ -41,7 +41,7 @@ class RunnerWorker(client: CromwellClientAkka) extends BasicActor {
 
   context.system.scheduler.schedule(
     1 second,
-    2 seconds,
+    3 seconds,
     self,
     MessagesAPI.Poll)
 
@@ -84,7 +84,7 @@ class RunnerWorker(client: CromwellClientAkka) extends BasicActor {
       }
 
 
-    case mes @ MessagesAPI.ServerCommand(Commands.Run(wdl, input, options, dependencies), serverURL, _, _, _) =>
+    case mes @ MessagesAPI.ServerCommand(Commands.Run(wdl, input, options, dependencies), serverURL, _, _, _, _) =>
           val source: ActorRef = sender()
           val serv = if(serverURL.endsWith("/")) serverURL.dropRight(1) else serverURL
           val cl: CromwellClientAkka = if(client.base.contains(serv)) client else client.copy(base = serv)
@@ -92,7 +92,7 @@ class RunnerWorker(client: CromwellClientAkka) extends BasicActor {
           statusUpdate pipeTo source
           statusUpdate.map(s=>mes.promise(s)) pipeTo self
 
-    case mes @ MessagesAPI.ServerCommand(Commands.TestRun(wdl, input, results, dependencies), serverURL, _, _, _) =>
+    case mes @ MessagesAPI.ServerCommand(Commands.TestRun(wdl, input, results, dependencies), serverURL, _, _, _, _) =>
       //test server command
       val source: ActorRef = sender()
       val statusUpdate: Future[StatusInfo] = Future{

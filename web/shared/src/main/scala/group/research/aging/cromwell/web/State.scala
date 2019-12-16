@@ -121,7 +121,7 @@ object Pipeline {
       Commands.Run(main, input, options, dependencies)
   }
 
-  def to_run_batch(inputs: Seq[String], options: String = ""): BatchRun ={
+  def to_run_batch(inputs: Seq[String], servers:  scala.collection.Seq[String], title: String): BatchRun ={ //TODO: fix this ugly function
       val ins: Seq[String] = inputs.map{ i=>concatJson(i).toTry match {
         case Success(value) => value.spaces2
         case Failure(exception) =>
@@ -130,6 +130,6 @@ object Pipeline {
           i
       }
     }
-    BatchRun(main, ins, options)
+    BatchRun(main, ins,  servers = servers, title = title, dependencies = dependencies)
   }
 }

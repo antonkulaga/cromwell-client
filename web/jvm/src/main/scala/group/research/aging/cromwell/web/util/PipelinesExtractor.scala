@@ -1,23 +1,45 @@
 package group.research.aging.cromwell.web.util
 
+import java.net.URI
+
 import better.files.File
 import group.research.aging.cromwell.web.{Pipeline, Pipelines}
 import wvlet.log.LogSupport
 
+import scala.util.Try
+
+
+trait HostExtractor
+{
+  self: LogSupport =>
+
+  /**
+   * Extract host files
+   * @param hostFile
+   * @return
+   */
+  def extractHost(hostFile: File = File("/etc/hosts")): Map[String, String] = if(hostFile.exists && hostFile.nonEmpty) {
+    val h = hostFile.lines
+    h.collect{case s if !s.trim.startsWith("#") && !s.contains("ip6-") =>s.trim.split("\t| ")}.collect{case v if v.length ==2 => v.tail.head->v.head}.toMap
+  } else {
+    error(s"Host ${hostFile} does not exist or empty")
+    Map.empty
+  }
+
+  lazy val hosts: Map[String, String] = extractHost()
+
+  protected def processHost(url: String): String = if(!url.contains(":") || (!url.endsWith(":") && url.substring(url.indexOf(":")+1).forall(_.isDigit))) processHost("http://"+url) else {
+    val h = Try{Option(new URI(url).getHost).getOrElse(url)}.getOrElse(url) //TODO: fix this ugly peace
+    hosts.get(h).map(s=>url.replace(h, s)).getOrElse(url)
+  }
+
+
+}
 /**
   * Extract pipelines from the default folder
   */
-trait PipelinesExtractor {
+trait PipelinesExtractor  {
   self: LogSupport =>
-
-  /*
-  def extractHost(hostFile: File = File("/etc/hosts")) = {
-    val l = hostFile.lines.map{ case s =>
-      val (h, v) = s.split("[ |\t]*")
-
-    }
-  }
-  */
 
   protected def fileOption(file: File, str: String): Option[File] = Option(file / str).filter(_.exists)
 
