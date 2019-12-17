@@ -4,6 +4,7 @@ import java.io.{File => JFile}
 import java.nio.ByteBuffer
 
 import better.files._
+
 import cats.effect.IO
 
 import scala.concurrent.Future
@@ -11,7 +12,7 @@ import scala.concurrent.Future
 /**
   * Created by antonkulaga on 2/18/17.
   */
-trait CromwellClientJVMSpecific extends RosHttp {
+trait CromwellClientJVMSpecific  {
   self: CromwellClientShared =>
 
   import  implicits._

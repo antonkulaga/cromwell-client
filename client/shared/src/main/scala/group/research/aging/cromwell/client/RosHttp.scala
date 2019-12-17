@@ -81,6 +81,20 @@ trait RosHttp extends RosHttpBase with PostAPI {
     postAPI[group.research.aging.cromwell.client.StatusInfo](s"/workflows/${version}")(new MultiPartBody(parts))
   }
 
+  protected def prepareInputOptionsDependencies(
+                                                 workflowInputs: String,
+                                                 workflowOptions: String = "",
+                                                 workflowDependencies: Option[java.nio.ByteBuffer] = None
+                                               ): List[(String, BodyPart)] = {
+    val inputs: List[(String, BodyPart)] = if (workflowInputs == "") Nil else
+      List(("workflowInputs", AnyBody(workflowInputs)))
+    val options: List[(String, BodyPart)] = if (workflowOptions == "") Nil else
+      List(("workflowOptions", AnyBody(workflowOptions)))
+    val deps: List[(String, BodyPart)] =
+      workflowDependencies.fold(List.empty[(String, BodyPart)])(part  => List("workflowDependencies" -> ByteBufferBody(part)))
+    inputs ++ options ++ deps
+  }
+
   def postWorkflowURL(url: String,
                       workflowInputs: String,
                       workflowOptions: String = "",

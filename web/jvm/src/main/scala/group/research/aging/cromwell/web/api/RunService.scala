@@ -1,5 +1,5 @@
 package group.research.aging.cromwell.web.api
-
+import scala.concurrent.duration._
 import akka.actor.ActorRef
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Route
@@ -136,10 +136,10 @@ class RunService(val runner: ActorRef)(implicit val timeout: Timeout) extends Cr
             debug(s"EXPERIMENTS:\n ${experiments}")
             val inputs  = experiments.split(",")
 
-            val ins = inputs.sliding(batchSize).zipWithIndex.map{ case (ee, i)=>
+            val ins = inputs.sliding(batchSize, batchSize).zipWithIndex.map{ case (ee, i)=>
                 s"""{
                 "${pipeline}.${if(pipeline.contains("run")) "runs" else "experiments"}": [${ee.map(e=> "\"" + e + "\"").mkString(", ")}],
-                "${pipeline}.title": "${title}_${i}_to_${i+batchSize}"
+                "${pipeline}.title": "${title}_${i*batchSize}_to_${i+batchSize}"
                 }"""
             }.toList
 
@@ -148,7 +148,7 @@ class RunService(val runner: ActorRef)(implicit val timeout: Timeout) extends Cr
             debug(s"sending a batch ${title}")
 
 
-            completeOrRecoverWith((runner ? b).mapTo[BatchRun]) { extraction =>
+            completeOrRecoverWith((runner.?(b)(12000 millis)).mapTo[BatchRun]) { extraction =>
               debug(s"running pipeline failed with ${extraction}")
 
               failWith(extraction) // not executed.

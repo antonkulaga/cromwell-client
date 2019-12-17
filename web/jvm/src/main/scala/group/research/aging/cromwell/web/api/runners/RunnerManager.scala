@@ -36,22 +36,22 @@ case class RunnerManager(implicit http: HttpExt, materializer: ActorMaterializer
       }
 
     case b: Commands.BatchRun =>
+      val from = sender()
       pprint.pprintln(s"batch task, avaliable servers are: ${workers.keys.mkString(", ")}")
       val newServers: Set[String] = b.servers.map(processHost).toSet -- workers.keySet
-      if(newServers.isEmpty){
-        context.become(operation(workers, b))
-      } else {
-        debug("sending batch tasks to new servers: " + newServers.mkString(", "))
-        val zp = newServers.zip(b.runs)
-        context.become(operation(workers, b.copy(inputs = b.inputs.drop(zp.size))))
-        println(s"changing batch size from ${b.inputs.size} to ${b.inputs.drop(zp.size).size}")
-        for{
-          (s, r) <- zp
-        } self ! MessagesAPI.ServerCommand(r, s)
-
-      }
-      println("returning batch to server")
-      sender() ! b //TODO: for debugging
+        debug("initiating servers for batch tasks: " + newServers.mkString(", "))
+        val newWorkers = for{
+          (serverURL, j) <- newServers.zipWithIndex
+        } yield {
+          val newURL = processHost(serverURL)
+          if (newURL != serverURL) debug(s"adding client for ${serverURL} which becomes ${newURL} after host substitution!")
+          else debug(s"adding client for ${serverURL}")
+          val client = CromwellClientAkka(newURL, "v1")
+          newURL -> context.actorOf(Props(new RunnerWorker(client)), name = "runner_" + workers.size + j + 1)
+        }
+        println("returning batch to server")
+        from ! b //TODO: for debugging
+        context.become(operation(workers ++ newWorkers, b))
 
 
     case mes @ MessagesAPI.ServerCommand(com, serverURL, callbackURLs, _, _, _) =>
@@ -80,7 +80,6 @@ case class RunnerManager(implicit http: HttpExt, materializer: ActorMaterializer
           val a: ActorRef = context.actorOf(Props(new RunnerWorker(client)), name = "runner_" + workers.size + 1)
           //val info = WorkerInformation(serverURL, a)
           context.become(operation(workers.updated(newURL, a), batch))
-          println("forwarding servermessage to self")
           self forward mes
       }
 

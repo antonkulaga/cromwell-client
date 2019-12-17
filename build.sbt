@@ -66,6 +66,8 @@ lazy val jquery = "3.4.1"
 
 lazy val airframeLogVersion = "19.12.0"
 
+lazy val sttpVersion = "2.0.0-RC5"
+
 lazy val  cromwellClient = crossProject(JSPlatform, JVMPlatform)
   .crossType(CrossType.Full)
   .in(file("client"))
@@ -78,7 +80,11 @@ lazy val  cromwellClient = crossProject(JSPlatform, JVMPlatform)
     name := "cromwell-client",
 
 		libraryDependencies ++= Seq(
-			"com.softwaremill.sttp.client" %%% "core" % "2.0.0-RC5",
+			"com.softwaremill.sttp.client" %%% "core" % sttpVersion,
+			"com.softwaremill.sttp.client" %% "circe" % sttpVersion,
+			//"com.softwaremill.sttp.client" %% "async-http-client-backend-future" % sttpVersion,
+			"com.softwaremill.sttp.client" %% "akka-http-backend" % sttpVersion,
+			"com.typesafe.akka" %% "akka-stream" % akka,
 			"fr.hmil" %%% "roshttp" % "2.2.4",
 			"com.beachape" %%% "enumeratum" % "1.5.13",
 			"com.lihaoyi" %%% "pprint" % "0.5.6",
@@ -110,19 +116,16 @@ lazy val cromwellClientJVM = cromwellClient.jvm
 
 lazy val cromwellClientJS = cromwellClient.js
 
-lazy val akka = "2.6.0"
-lazy val akkaHttp = "10.1.10"
+lazy val akka = "2.5.27" //a bit old but want to sync with sttp backend
+lazy val akkaHttp = "10.1.11"
 
 lazy val cromwellWeb = crossProject(JSPlatform, JVMPlatform)
 	.crossType(CrossType.Full)
 	.in(file("web"))
 	.settings(commonSettings: _*)
 	.settings(
-
 		parallelExecution in Test := false,
-
 		name := "cromwell-web",
-
 		libraryDependencies  ++= Seq(
 			"com.github.japgolly.scalacss" % "core_2.12" % "0.5.6",
 			"org.wvlet.airframe" %%% "airframe-log" % airframeLogVersion

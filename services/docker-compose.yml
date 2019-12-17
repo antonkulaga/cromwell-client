@@ -20,20 +20,20 @@ services:
       - /data/databases/mysql:/var/lib/mysql-files
     ports:
       - "3307:3306"
-#  cromwell-client:
-#    image: quay.io/comp-bio-aging/cromwell-web:0.2.6
-#    environment:
-#      - CROMWELL=http://cromwell:8000
-#      - CROMWELL_LOGS=/data/sources/cromwell-client/logs
-#    ports:
-#      - 8001:8001
-#    volumes:
-#         - /data:/data
-#    deploy:
-#      placement:
-#        constraints:
-#          - node.role == manager
-#      replicas: 1
-#      mode: replicated
-#      restart_policy:
-#        condition: on-failure
+  cromwell-client:
+    image: quay.io/comp-bio-aging/cromwell-web:0.2.6
+    environment:
+      - CROMWELL=http://cromwell:8000
+      - CROMWELL_LOGS=/data/sources/cromwell-client/logs
+    ports:
+      - 8001:8001
+    volumes:
+      - /data:/data
+    deploy:
+      placement:
+        constraints:
+          - node.role == manager
+      replicas: 1
+      mode: replicated
+      restart_policy:
+        condition: on-failure
