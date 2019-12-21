@@ -111,25 +111,17 @@ object Pipeline {
 
   def to_run(input: String, options: String = ""): Commands.Run = concatJson(input).map{
     js => Commands.Run(main, js.spaces2, options, dependencies)
-  }.toTry match {
-    case Success(value) =>
+  } match {
+    case Right(value) =>
       //println(s"""MERGED JSON = \n ${value}""")
       value
-    case Failure(exception) =>
-      println("INPUT JSONG MERGING ERROR:")
-      println(exception.toString)
+    case Left(exception) =>
+      println("INPUT JSON MERGING ERROR:")
+      println(exception.message)
+      if(exception.message!=exception.underlying.getMessage)
+        println("with exception: "+exception.underlying.getMessage)
+      println("-----")
+      println(s"FULL JSON WAS: ${input}")
       Commands.Run(main, input, options, dependencies)
-  }
-
-  def to_run_batch(inputs: Seq[String], servers:  scala.collection.Seq[String], title: String): BatchRun ={ //TODO: fix this ugly function
-      val ins: Seq[String] = inputs.map{ i=>concatJson(i).toTry match {
-        case Success(value) => value.spaces2
-        case Failure(exception) =>
-          println("INPUT JSONG MERGING ERROR:")
-          println(exception.toString)
-          i
-      }
-    }
-    BatchRun(main, ins,  servers = servers, title = title, dependencies = dependencies)
   }
 }

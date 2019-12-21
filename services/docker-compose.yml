@@ -21,7 +21,7 @@ services:
     ports:
       - "3307:3306"
   cromwell-client:
-    image: quay.io/comp-bio-aging/cromwell-web:0.2.6
+    image: quay.io/comp-bio-aging/cromwell-web:0.2.8
     environment:
       - CROMWELL=http://cromwell:8000
       - CROMWELL_LOGS=/data/sources/cromwell-client/logs

@@ -137,15 +137,54 @@ object Commands{
   case class ChangeClient(newURL: String) extends Command
   case class Run(wdl: String, input: String, options: String = "", dependencies: List[(String, String)] = Nil) extends Command
   object BatchRun {
-    lazy val empty = BatchRun("", Nil, Nil, "", "", Nil)
+    lazy val empty: BatchRun = BatchRun(Pipeline.empty, Nil, Nil, "", "", 0, 0)
   }
-  @JsonCodec case class BatchRun(wdl: String, inputs: Seq[String], servers: Seq[String], title: String, options: String = "", dependencies: List[(String, String)] = Nil) extends Command {
+  @JsonCodec case class BatchRun(pipeline: Pipeline,
+                                 experiments: Seq[String],
+                                 servers: Seq[String],
+                                 title: String = "",
+                                 options: String = "",
+                                 current: Int = 0,
+                                 maxBatchSize: Int = 5
+                               //  minimalBatch: Int = 2 //JUST TO AVOID STARTING BY 1 each time
+                                ) extends Command {
+    /*
     lazy val runs: Seq[Run] = inputs.map(i => Run(wdl, i, options, dependencies))
     lazy val head: Run = runs.head
     lazy val tail: BatchRun = if(isEmpty) this else BatchRun(wdl, inputs.tail, servers, title, options, dependencies)
-    def isEmpty: Boolean = inputs.isEmpty
-    def nonEmpty: Boolean = inputs.nonEmpty
+
+    */
+    def isEmpty: Boolean = experiments.isEmpty
+    def nonEmpty: Boolean = experiments.nonEmpty
+    lazy val experimentsLeft: Int = experiments.size - current
+    lazy val status = s"${current} of ${experiments.length}"
+
+    def slice(from: Int, until: Int): Run = {
+      val ee = experiments.slice(from, until)
+      val exp = ee.map(e=> "\"" + e + "\"").mkString(", ")
+      val status = "[" + title + "_" + (from+1) +"-" + until + "|" + experiments.length + "]"
+      val p_name = pipeline.name.replace(".wdl", "")
+      val experimentsName = pipeline.name match {
+        case "quant_by_runs" => "runs"
+        case "quantification" => "experiments"
+        case "quant_sample" => "experiment"
+        case _ =>
+          "experiments"
+      }
+      val input = s"""{
+                "${p_name}.${experimentsName}": [${exp}],
+                "${p_name}.title": "${status}"
+                }"""
+      pipeline.to_run(input, options)
+    }
+    def hasNext: Boolean = current + 1 <= experiments.length
+    def next(num: Int): (Run, BatchRun) = {
+      val b = Math.min(Math.min(num, maxBatchSize), experiments.length - current)
+      val end: Int = Math.min(current + b, experiments.length)
+      (slice(current, end), this.copy(current = current + b))
+    }
   }
+
   object TestRun
   {
     val id = "e442e52a-9de1-47f0-8b4f-e6e565008cf1-TEST"

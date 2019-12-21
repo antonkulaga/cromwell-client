@@ -22,12 +22,22 @@ case class RunnerManager(implicit http: HttpExt, materializer: ActorMaterializer
          // val updatedInfo = workers.updated(server, inf.copy(queryResults = inf.queryResults))
           val runSubmit = queryResults.results.filter(v=>v.status == WorkflowStatus.Running.entryName || v.status == WorkflowStatus.Submitted.entryName)
           val topRunSubmit = runSubmit.filter(v=>v.parentWorkflowId.isEmpty )
-          debug(s"top status: ${topRunSubmit.toString()} \n batch size = ${batch.inputs.size}")
-          if(batch.nonEmpty && topRunSubmit.isEmpty) {
-            debug(s"SENDING BATCH RUN ${batch.title} (${batch.inputs.length - 1} remains ) WITH ${batch.head}")
+          val num = (batch.maxBatchSize - topRunSubmit.length * batch.maxBatchSize)
+          val goNext = num > 0  //temporal going further
+          //if(batch.nonEmpty)  debug(s"top status: ${topRunSubmit.toString()} \n  current = ${batch.current}, batches_to_run = ${num}, experiments left = ${batch.experimentsLeft} goNext = ${goNext}")
+          if(batch.nonEmpty && batch.hasNext && goNext) {
+            //debug(s"SENDING BATCH RUN ${batch.title} (${batch.inputs.length - 1} remains ) WITH ${batch.head}")
             //inf.worker ! batch.head
-            self ! MessagesAPI.ServerCommand(batch.head, server)
-            context.become(operation(workers, batch.tail))
+            val (diff, newBatch) = batch.next(num)
+            if(newBatch.hasNext) {
+              println(s"going to new batch with ${newBatch.status}")
+              context.become(operation(workers, newBatch))
+            } else {
+              debug(s"FINISHED submitting of the series ${batch.title} of length ${batch.experiments.length}")
+              context.become(operation(workers, BatchRun.empty))
+            }
+            //debug(s"sending message to ${server} with inputs: ${diff.input}")
+            self ! MessagesAPI.ServerCommand(diff, server)
           }
 
         case None=>
@@ -37,7 +47,7 @@ case class RunnerManager(implicit http: HttpExt, materializer: ActorMaterializer
 
     case b: Commands.BatchRun =>
       val from = sender()
-      pprint.pprintln(s"batch task, avaliable servers are: ${workers.keys.mkString(", ")}")
+      debug(s"batch task, target servers are ${b.servers.mkString(",")}, active servers are [${workers.keys.mkString(", ")}]")
       val newServers: Set[String] = b.servers.map(processHost).toSet -- workers.keySet
         debug("initiating servers for batch tasks: " + newServers.mkString(", "))
         val newWorkers = for{

@@ -94,10 +94,10 @@ class RunService(val runner: ActorRef)(implicit val timeout: Timeout) extends Cr
         description = "batch title"),
       new Parameter(name = "pipeline", in = ParameterIn.PATH, required = true,
         example = "quantification", style = ParameterStyle.DEFAULT, allowReserved = true,
-        description = "path to the workflow inside pipelines folder (defined by PIPELINES enviroment variable, /data/pipelines by default)"),
+        description = "path to the workflow inside pipelines folder (defined by PIPELINES environment variable, /data/pipelines by default)"),
 
       new Parameter(name = "experiments", in = ParameterIn.QUERY, required = true, style = ParameterStyle.SIMPLE, allowReserved = true,
-        description = "List of come-separated experiments to run"),
+        description = "List of coma-separated experiments to run"),
       new Parameter(name = "batch_size", in = ParameterIn.QUERY, required = false, style = ParameterStyle.SIMPLE, allowReserved = true,
         description = "batch size, 4 by default"),
 
@@ -114,39 +114,24 @@ class RunService(val runner: ActorRef)(implicit val timeout: Timeout) extends Cr
       new ApiResponse(responseCode = "500", description = "Internal server error")
     )
   )
-  def batchRunAPI: Route = pathPrefix("run" / "batch" / Remaining) { pipeline =>
-    debug(s"BEFORE PARAMETER EXTRACTION FOR ${pipeline}")
-    extractPipeline(pipeline) match {
+  def batchRunAPI: Route = pathPrefix("run" / "batch" / Remaining) { pipelineName =>
+    debug(s"BEFORE PARAMETER EXTRACTION FOR ${pipelineName}")
+    extractPipeline(pipelineName) match {
       case None =>
-        error(s"CANNOT FIND ${pipeline}")
-        reject(PipelinesRejections.PipelineNotFound(pipeline))
+        error(s"CANNOT FIND ${pipelineName}")
+        reject(PipelinesRejections.PipelineNotFound(pipelineName))
 
-      case Some(p) =>
+      case Some(pipeline) =>
         parameters("title".?(""),"experiments", "servers", "batch_size".?(4))
         //  parameters("server".?, "callback".?, "authorization".?) { (serverOpt, callBackOpt, authOpt) =>
         {
-          (title, experiments, servers, batchSize) =>
-          //val batchSize = 4
-          //val experiments = List.empty[String]
-          //val servers = List.empty[String]
-          //(experiments, batchSize, servers) => //, callBackOpt, authOpt) =>
-            debug(s"FOUND PARAMETERS FOR RUNNING ${pipeline} with batch size ${batchSize}")
+          (title, experimentString, servers, batchSize) =>
+          val experiments = experimentString.split(",").toSeq
+          debug(s"FOUND PARAMETERS FOR RUNNING ${pipeline} with batch size ${batchSize}")
             //val c = serverOpt.map(CromwellClient(_)).getOrElse(CromwellClient.default)
             val serverURLs: Seq[String] = servers.split(",")// serverOpt.getOrElse(CromwellClient.defaultURL)
-            debug(s"EXPERIMENTS:\n ${experiments}")
-            val inputs  = experiments.split(",")
-
-            val ins = inputs.sliding(batchSize, batchSize).zipWithIndex.map{ case (ee, i)=>
-                s"""{
-                "${pipeline}.${if(pipeline.contains("run")) "runs" else "experiments"}": [${ee.map(e=> "\"" + e + "\"").mkString(", ")}],
-                "${pipeline}.title": "${title}_${i*batchSize}_to_${i+batchSize}"
-                }"""
-            }.toList
-
-            debug("INPUTS ARE: \n"+ ins.mkString("\n"))
-            val b = p.to_run_batch(ins, serverURLs, title)
-            debug(s"sending a batch ${title}")
-
+            debug(s"EXPERIMENTS:\n [${experiments.mkString(",")}]")
+           val b = BatchRun(pipeline,experiments, serverURLs, title, maxBatchSize = batchSize)
 
             completeOrRecoverWith((runner.?(b)(12000 millis)).mapTo[BatchRun]) { extraction =>
               debug(s"running pipeline failed with ${extraction}")
@@ -157,8 +142,8 @@ class RunService(val runner: ActorRef)(implicit val timeout: Timeout) extends Cr
           debug("BATCH GET REQUEST!")
           debug("WDL FOUND!")
           //debug(s"WDL IS: ${p.main}")
-          if(p.dependencies.nonEmpty) debug(s"Found dependencies [${p.dependencies.map(_._1).mkString(", ")}]!")
-          complete(HttpResponse(StatusCodes.OK, Nil, p.main))
+          if(pipeline.dependencies.nonEmpty) debug(s"Found dependencies [${pipeline.dependencies.map(_._1).mkString(", ")}]!")
+          complete(HttpResponse(StatusCodes.OK, Nil, pipeline.main))
         }
     }
   }

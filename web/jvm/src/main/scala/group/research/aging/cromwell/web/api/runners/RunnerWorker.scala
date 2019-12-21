@@ -40,8 +40,8 @@ class RunnerWorker(client: CromwellClientAkka) extends BasicActor {
   implicit def dispatcher: ExecutionContextExecutor = context.dispatcher
 
   context.system.scheduler.schedule(
-    1 second,
-    3 seconds,
+    2 second,
+    8 seconds,
     self,
     MessagesAPI.Poll)
 
