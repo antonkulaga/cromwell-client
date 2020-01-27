@@ -1,11 +1,8 @@
 package group.research.aging.cromwell.client
 
-import java.io.{File => JFile}
 import java.nio.ByteBuffer
 
 import better.files._
-
-import cats.effect.IO
 
 import scala.concurrent.Future
 
@@ -15,7 +12,7 @@ import scala.concurrent.Future
 trait CromwellClientJVMSpecific  {
   self: CromwellClientShared =>
 
-  import  implicits._
+  import implicits._
 
   def zipDependencies(files: Seq[(String, String)]): Option[File] = if(files.nonEmpty) {
     val dir = File.newTemporaryDirectory()

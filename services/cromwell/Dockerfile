@@ -1,5 +1,7 @@
 FROM broadinstitute/cromwell:dev
 
+ENV NB_USER=cromwell
+
 RUN apt update &&  apt -y upgrade
 RUN apt -y install apt-transport-https ca-certificates curl software-properties-common gnupg2 git
 RUN curl -fsSL https://download.docker.com/linux/debian/gpg | apt-key add -
@@ -12,8 +14,10 @@ WORKDIR data
 
 COPY ./app-config /app-config
 
-RUN useradd -r -u 1002 cromwell
-RUN usermod -aG docker cromwell
+#22-29
+
+RUN useradd -r -u 1002 $NB_USER
+RUN usermod -aG docker $NB_USER
 ENV EUID=1002
 
 ENTRYPOINT ["/bin/sh", "-c"]

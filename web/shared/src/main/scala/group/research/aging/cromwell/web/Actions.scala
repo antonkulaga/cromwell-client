@@ -164,8 +164,9 @@ object Commands{
       val exp = ee.map(e=> "\"" + e + "\"").mkString(", ")
       val status = "[" + title + "_" + (from+1) +"-" + until + "|" + experiments.length + "]"
       val p_name = pipeline.name.replace(".wdl", "")
-      val experimentsName = pipeline.name match {
+      val experimentsName = p_name match {
         case "quant_by_runs" => "runs"
+        case "quant_run" => "runs"
         case "quantification" => "experiments"
         case "quant_sample" => "experiment"
         case _ =>

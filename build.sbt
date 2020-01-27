@@ -64,7 +64,7 @@ lazy val webcomponents = "1.0.1"
 
 lazy val jquery = "3.4.1"
 
-lazy val airframeLogVersion = "19.12.0"
+lazy val airframeLogVersion = "20.1.3"
 
 lazy val sttpVersion = "2.0.0-RC5"
 
@@ -127,7 +127,7 @@ lazy val cromwellWeb = crossProject(JSPlatform, JVMPlatform)
 		parallelExecution in Test := false,
 		name := "cromwell-web",
 		libraryDependencies  ++= Seq(
-			"com.github.japgolly.scalacss" % "core_2.12" % "0.5.6",
+			"com.github.japgolly.scalacss" % "core_2.12" % "0.6.0",
 			"org.wvlet.airframe" %%% "airframe-log" % airframeLogVersion
 		)
 	)
@@ -150,13 +150,13 @@ lazy val cromwellWeb = crossProject(JSPlatform, JVMPlatform)
 			"com.github.swagger-akka-http" %% "swagger-akka-http" % "2.0.4",
 			"com.github.swagger-akka-http" %% "swagger-scala-module" % "2.0.5",
 			"com.vmunier" %% "scalajs-scripts" % "1.1.4",
-      "de.heikoseeberger" %% "akka-http-circe" % "1.29.1",
-			"ch.megard" %% "akka-http-cors" % "0.4.1",
+      "de.heikoseeberger" %% "akka-http-circe" % "1.30.0",
+			"ch.megard" %% "akka-http-cors" % "0.4.2",
 			"org.webjars" % "Semantic-UI" %  semanticUI,
 			"org.webjars.bowergithub.fomantic" % "fomantic-ui" % "2.7.8",
 			"org.webjars" % "jquery" % jquery,
 			"org.webjars" % "webcomponentsjs" % webcomponents,
-			"org.webjars" % "swagger-ui" % "3.24.0" //Swagger UI
+			"org.webjars" % "swagger-ui" % "3.24.3" //Swagger UI
 		),
 		(managedClasspath in Runtime) += (packageBin in Assets).value,
 		//(fullClasspath in Runtime) += (packageBin in Assets).value,
@@ -166,7 +166,7 @@ lazy val cromwellWeb = crossProject(JSPlatform, JVMPlatform)
 		(emitSourceMaps in fullOptJS) := true,
 		fork in run := true,
 		maintainer in Docker := "Anton Kulaga <antonkulaga@gmail.com>",
-		dockerBaseImage := "oracle/graalvm-ce:19.2.1",
+		dockerBaseImage := "oracle/graalvm-ce:19.3.1",
 		daemonUserUid in Docker := None,
 		daemonUser in Docker := "root",
 		dockerExposedVolumes := Seq("/data"),
@@ -186,8 +186,8 @@ lazy val webJS = cromwellWeb.js
 lazy val webJVM = cromwellWeb.jvm.settings(
 	scalaJSProjects := Seq(webJS),
 	libraryDependencies ++= Seq(
-		"com.lihaoyi" %% "requests" % "0.2.0" % Test,
-		"com.lihaoyi" %% "ammonite-ops" % "1.8.1" % Test
+		"com.lihaoyi" %% "requests" % "0.5.0" % Test,
+		"com.lihaoyi" %% "ammonite-ops" % "2.0.4" % Test
 	)
 )
 

@@ -29,6 +29,7 @@ services:
       - 8001:8001
     volumes:
       - /data:/data
+      - /etc/hosts:/etc/hosts
     deploy:
       placement:
         constraints:
