@@ -38,7 +38,7 @@ class RunnerView(
 
   var interval: js.UndefOr[js.timers.SetIntervalHandle] = js.undefined
 
-  val counter = Var(0)
+  val counter: Var[Int] = Var(0)
 
   //lazy val defURL = "http://agingkills.westeurope.cloudapp.azure.com" //"http://localhost:8000"
 
@@ -52,7 +52,7 @@ class RunnerView(
 
   val options: Var[Option[String]] = Var(None)
 
-  val url = Var("") //Var("http://agingkills.westeurope.cloudapp.azure.com") //"http://localhost:8000"
+  val url: Var[String] = Var("") //Var("http://agingkills.westeurope.cloudapp.azure.com") //"http://localhost:8000"
 
 
   val lastLimit: Rx[Int] = lastQuery.map(_.limit)
@@ -74,13 +74,6 @@ class RunnerView(
     pipelines.impure.run{ ps=>
       currentPipeline :=  ps.pipelines.headOption.getOrElse(Pipeline.empty)
     }
-
-    /*
-    lastStatus.impure.run{ s=>   currentStatus := s}
-    lastLimit.dropRepeats.impure.run(l=> limit:= l)
-    lastOffset.dropRepeats.impure.run(o=> offset := o)
-    lastExpandSubworkflows.impure.run(s=> expandSubworkflows := s)
-    */
 
   }
 
@@ -189,7 +182,9 @@ class RunnerView(
 
   protected def uploadFilesHandler(v: Var[List[(String, String)]])(event: Event): Unit = {
     uploadMultipleHandler(event){
-      case Success(seq) => v := seq.map{ case (f, c) => f.name -> c}.toList
+      case Success(seq) =>
+        println("uploaded files: " + v.now.map(_._1))
+        v := seq.map{ case (f, c) => f.name -> c}.toList
       case Failure(th)=>
         dom.console.error(th.getMessage)
         messages := Messages.ExplainedError("failed uploading files", th.getMessage)

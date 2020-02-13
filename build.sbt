@@ -13,7 +13,7 @@ lazy val commonSettings = Seq(
 
 	scalaVersion :=  "2.12.10",
 
-	version := "0.2.8",
+	version := "0.2.9",
 
 	unmanagedClasspath in Compile ++= (unmanagedResources in Compile).value,
 
@@ -64,9 +64,9 @@ lazy val webcomponents = "1.0.1"
 
 lazy val jquery = "3.4.1"
 
-lazy val airframeLogVersion = "20.1.3"
+lazy val airframeLogVersion = "20.2.0"
 
-lazy val sttpVersion = "2.0.0-RC5"
+lazy val sttpVersion = "2.0.0-RC9"
 
 lazy val  cromwellClient = crossProject(JSPlatform, JVMPlatform)
   .crossType(CrossType.Full)
@@ -86,12 +86,11 @@ lazy val  cromwellClient = crossProject(JSPlatform, JVMPlatform)
 			"com.softwaremill.sttp.client" %% "akka-http-backend" % sttpVersion,
 			"com.typesafe.akka" %% "akka-stream" % akka,
 			"fr.hmil" %%% "roshttp" % "2.2.4",
-			"com.beachape" %%% "enumeratum" % "1.5.13",
-			"com.lihaoyi" %%% "pprint" % "0.5.6",
+			"com.beachape" %%% "enumeratum" % "1.5.15",
+			"com.lihaoyi" %%% "pprint" % "0.5.9",
 			//"org.typelevel" %%% "cats-core"      % "1.3.1",
 			//"org.typelevel" %%% "cats-effect"     % "1.0.0",
-			"io.circe" %%% "circe-java8" % "0.12.0-M1",
-			"io.circe" %%% "circe-generic-extras" % "0.12.2",
+			"io.circe" %%% "circe-generic-extras" % "0.13.0",
 			"com.pepegar" %%% "hammock-circe" % hammockVersion,
 			"org.wvlet.airframe" %%% "airframe-log" % airframeLogVersion
     )
@@ -116,7 +115,7 @@ lazy val cromwellClientJVM = cromwellClient.jvm
 
 lazy val cromwellClientJS = cromwellClient.js
 
-lazy val akka = "2.5.27" //a bit old but want to sync with sttp backend
+lazy val akka = "2.5.29" //a bit old but want to sync with sttp backend
 lazy val akkaHttp = "10.1.11"
 
 lazy val cromwellWeb = crossProject(JSPlatform, JVMPlatform)
@@ -150,7 +149,7 @@ lazy val cromwellWeb = crossProject(JSPlatform, JVMPlatform)
 			"com.github.swagger-akka-http" %% "swagger-akka-http" % "2.0.4",
 			"com.github.swagger-akka-http" %% "swagger-scala-module" % "2.0.5",
 			"com.vmunier" %% "scalajs-scripts" % "1.1.4",
-      "de.heikoseeberger" %% "akka-http-circe" % "1.30.0",
+      "de.heikoseeberger" %% "akka-http-circe" % "1.31.0",
 			"ch.megard" %% "akka-http-cors" % "0.4.2",
 			"org.webjars" % "Semantic-UI" %  semanticUI,
 			"org.webjars.bowergithub.fomantic" % "fomantic-ui" % "2.7.8",

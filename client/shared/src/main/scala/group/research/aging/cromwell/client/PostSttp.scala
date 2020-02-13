@@ -26,7 +26,7 @@ trait PostSttp extends PostAPI {
   protected def parseUri(str: String): Uri =     Uri.parse(str).toOption match {
       case Some(value) => value
       case None =>
-        println(s"FAILED TO PARSE ${str} fallinb back to just http://cromwell:8000")
+        println(s"FAILED TO PARSE ${str} falling back to just http://cromwell:8000")
         uri"http://cromwell:8000"
   }
 
@@ -75,6 +75,7 @@ trait PostSttp extends PostAPI {
   }
 
   override def postWorkflow(fileContent: String, workflowInputs: String, workflowOptions: String, workflowDependencies: Option[ByteBuffer]): Future[StatusInfo] = {
+    println("***********POSTING WORKFLOW*************************")
     val parts = multipart("workflowSource", fileContent) :: prepareInputOptionsDependencies(workflowInputs, workflowOptions, workflowDependencies)
     postAPI[group.research.aging.cromwell.client.StatusInfo](s"/workflows/${version}")(parts)
   }

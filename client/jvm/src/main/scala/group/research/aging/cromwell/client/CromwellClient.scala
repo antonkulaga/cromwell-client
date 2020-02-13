@@ -15,11 +15,14 @@ import io.circe.generic.JsonCodec
 import sttp.client.SttpBackend
 import sttp.client.akkahttp.AkkaHttpBackend
 import akka.stream.scaladsl.{FileIO, Flow, Sink, Source, StreamConverters}
+
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutor, Future}
 import sttp.client._
 import sttp.client.circe._
 import sttp.client.akkahttp._
 import akka.http.scaladsl.model.ws.{Message, WebSocketRequest}
+import akka.http.scaladsl.settings.{ConnectionPoolSettings, PoolImplementation}
+
 import scala.concurrent.{ExecutionContext, Future}
 
 object CromwellClient {
@@ -41,7 +44,9 @@ object CromwellClient {
 
 }
 
-@JsonCodec case class CromwellClient(base: String, version: String = "v1") extends CromwellClientShared with CromwellClientJVMSpecific with RosHttp {
+
+@JsonCodec case class CromwellClient(base: String, version: String = "v1") extends CromwellClientShared with RosHttp
+{
   implicit override protected def getInterpreter: InterpTrans[IO] = ApacheInterpreter.instance
 }
 
@@ -52,5 +57,8 @@ case class CromwellClientAkka(base: String, version: String = "v1")(implicit val
 
   implicit override protected def getInterpreter: InterpTrans[IO] = AkkaInterpreter.instance[IO]//(http)
 
-  override implicit def sttpBackend: SttpBackend[Future, Source[ByteString, Any], Flow[Message, Message, *]] = AkkaHttpBackend.usingActorSystem(http.system)
+  override implicit def sttpBackend: SttpBackend[Future, Source[ByteString, Any], Flow[Message, Message, *]] =
+    AkkaHttpBackend.usingActorSystem(http.system,
+      options = SttpBackendOptions.Default
+    )
 }
