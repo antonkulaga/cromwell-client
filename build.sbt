@@ -64,7 +64,7 @@ lazy val webcomponents = "1.0.1"
 
 lazy val jquery = "3.4.1"
 
-lazy val airframeLogVersion = "20.2.0"
+lazy val airframeLogVersion = "20.3.0"
 
 lazy val sttpVersion = "2.0.0-RC9"
 
@@ -152,10 +152,10 @@ lazy val cromwellWeb = crossProject(JSPlatform, JVMPlatform)
       "de.heikoseeberger" %% "akka-http-circe" % "1.31.0",
 			"ch.megard" %% "akka-http-cors" % "0.4.2",
 			"org.webjars" % "Semantic-UI" %  semanticUI,
-			"org.webjars.bowergithub.fomantic" % "fomantic-ui" % "2.7.8",
+			"org.webjars.bowergithub.fomantic" % "fomantic-ui" % "2.8.3",
 			"org.webjars" % "jquery" % jquery,
 			"org.webjars" % "webcomponentsjs" % webcomponents,
-			"org.webjars" % "swagger-ui" % "3.24.3" //Swagger UI
+			"org.webjars" % "swagger-ui" % "3.25.0" //Swagger UI
 		),
 		(managedClasspath in Runtime) += (packageBin in Assets).value,
 		//(fullClasspath in Runtime) += (packageBin in Assets).value,
