@@ -11,9 +11,9 @@ lazy val commonSettings = Seq(
 
 	organization := "group.research.aging",
 
-	scalaVersion :=  "2.12.10",
+	scalaVersion :=  "2.12.12",
 
-	version := "0.2.9",
+	version := "0.3.0",
 
 	unmanagedClasspath in Compile ++= (unmanagedResources in Compile).value,
 
@@ -56,7 +56,7 @@ lazy val commonSettings = Seq(
 
 commonSettings
 
-lazy val hammockVersion = "0.10.0"
+lazy val hammockVersion = "0.11.0"
 
 lazy val semanticUI = "2.4.1"
 
@@ -64,9 +64,9 @@ lazy val webcomponents = "1.0.1"
 
 lazy val jquery = "3.4.1"
 
-lazy val airframeLogVersion = "20.3.0"
+lazy val airframeLogVersion = "20.4.1"
 
-lazy val sttpVersion = "2.0.0-RC9"
+lazy val sttpVersion = "2.0.9"
 
 lazy val  cromwellClient = crossProject(JSPlatform, JVMPlatform)
   .crossType(CrossType.Full)
@@ -86,7 +86,7 @@ lazy val  cromwellClient = crossProject(JSPlatform, JVMPlatform)
 			"com.softwaremill.sttp.client" %% "akka-http-backend" % sttpVersion,
 			"com.typesafe.akka" %% "akka-stream" % akka,
 			"fr.hmil" %%% "roshttp" % "2.2.4",
-			"com.beachape" %%% "enumeratum" % "1.5.15",
+			"com.beachape" %%% "enumeratum" % "1.6.0",
 			"com.lihaoyi" %%% "pprint" % "0.5.9",
 			//"org.typelevel" %%% "cats-core"      % "1.3.1",
 			//"org.typelevel" %%% "cats-effect"     % "1.0.0",
@@ -98,7 +98,7 @@ lazy val  cromwellClient = crossProject(JSPlatform, JVMPlatform)
 	.disablePlugins(RevolverPlugin)
   .jvmSettings(
     libraryDependencies ++= Seq(
-			"com.github.pathikrit" %% "better-files" % "3.8.0",
+			"com.github.pathikrit" %% "better-files" % "3.9.1",
 			"com.pepegar" %% "hammock-apache-http" % hammockVersion,
 			"com.pepegar" %% "hammock-akka-http" % hammockVersion
     )
@@ -106,7 +106,8 @@ lazy val  cromwellClient = crossProject(JSPlatform, JVMPlatform)
   .jsSettings(
 		jsEnv := new org.scalajs.jsenv.jsdomnodejs.JSDOMNodeJSEnv,
 		libraryDependencies ++= Seq(
-			"org.scala-js" %%% "scalajs-java-time" % "0.2.6",
+			//"org.scala-js" %%% "scalajs-java-time" % "1.0.0",
+			"io.github.cquiroz" %%% "scala-java-time" % "2.0.0",
 			"org.querki" %%% "jquery-facade" % "1.2"
 		)
 	)
@@ -115,8 +116,8 @@ lazy val cromwellClientJVM = cromwellClient.jvm
 
 lazy val cromwellClientJS = cromwellClient.js
 
-lazy val akka = "2.5.29" //a bit old but want to sync with sttp backend
-lazy val akkaHttp = "10.1.11"
+lazy val akka = "2.5.31" //a bit old but want to sync with sttp backend
+lazy val akkaHttp = "10.1.12"
 
 lazy val cromwellWeb = crossProject(JSPlatform, JVMPlatform)
 	.crossType(CrossType.Full)
@@ -126,7 +127,7 @@ lazy val cromwellWeb = crossProject(JSPlatform, JVMPlatform)
 		parallelExecution in Test := false,
 		name := "cromwell-web",
 		libraryDependencies  ++= Seq(
-			"com.github.japgolly.scalacss" % "core_2.12" % "0.6.0",
+			"com.github.japgolly.scalacss" % "core_2.12" % "0.6.1",
 			"org.wvlet.airframe" %%% "airframe-log" % airframeLogVersion
 		)
 	)
@@ -146,13 +147,13 @@ lazy val cromwellWeb = crossProject(JSPlatform, JVMPlatform)
 			"com.typesafe.akka" %% "akka-http" % akkaHttp,
 			"com.typesafe.akka" %% "akka-http-xml" % akkaHttp,
 			"javax.ws.rs" % "javax.ws.rs-api" % "2.1.1", //for extra annotations
-			"com.github.swagger-akka-http" %% "swagger-akka-http" % "2.0.4",
-			"com.github.swagger-akka-http" %% "swagger-scala-module" % "2.0.5",
+			"com.github.swagger-akka-http" %% "swagger-akka-http" % "2.1.1",
+			"com.github.swagger-akka-http" %% "swagger-scala-module" % "2.1.1",
 			"com.vmunier" %% "scalajs-scripts" % "1.1.4",
       "de.heikoseeberger" %% "akka-http-circe" % "1.31.0",
-			"ch.megard" %% "akka-http-cors" % "0.4.2",
+			"ch.megard" %% "akka-http-cors" % "0.4.3",
 			"org.webjars" % "Semantic-UI" %  semanticUI,
-			"org.webjars.bowergithub.fomantic" % "fomantic-ui" % "2.8.3",
+			"org.webjars.bowergithub.fomantic" % "fomantic-ui" % "2.8.4",
 			"org.webjars" % "jquery" % jquery,
 			"org.webjars" % "webcomponentsjs" % webcomponents,
 			"org.webjars" % "swagger-ui" % "3.25.0" //Swagger UI
@@ -185,7 +186,7 @@ lazy val webJS = cromwellWeb.js
 lazy val webJVM = cromwellWeb.jvm.settings(
 	scalaJSProjects := Seq(webJS),
 	libraryDependencies ++= Seq(
-		"com.lihaoyi" %% "requests" % "0.5.0" % Test,
+		"com.lihaoyi" %% "requests" % "0.5.2" % Test,
 		"com.lihaoyi" %% "ammonite-ops" % "2.0.4" % Test
 	)
 )

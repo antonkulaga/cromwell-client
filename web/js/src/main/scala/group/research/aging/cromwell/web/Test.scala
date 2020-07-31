@@ -1,5 +1,5 @@
 package group.research.aging.cromwell.web
-
+/*
 import com.thoughtworks.binding
 import com.thoughtworks.binding.{Binding, dom}
 import com.thoughtworks.binding.Binding._
@@ -84,3 +84,4 @@ object Test {
     dom.render(node, table)
   }
 }
+*/
