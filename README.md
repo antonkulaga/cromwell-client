@@ -13,7 +13,7 @@ reStart
 ```
 It is also published as a Docker container. You can run it as:
 ```bash
-docker run -p 8001:8001 quay.io/comp-bio-aging/cromwell-web:0.3.0
+docker run -p 8001:8001 quay.io/comp-bio-aging/cromwell-web:0.3.1
 ```
 
 ![Screenshot](/screenshot.png?raw=true "CromwellWeb screenshot")
@@ -69,8 +69,8 @@ import scala.concurrent.Future
 
 val client = CromwellClient.localhost
 
-val workflow = File("/home/antonkulaga/denigma/rna-seq/RNA_Seq.wdl")
-val inputs = File("/home/antonkulaga/denigma/rna-seq/inputs/worms.json")
+val workflow = File("/data/sources/rna-seq/pipelines/quantification/quantification.wdl")
+val inputs = File("/data/sources/rna-seq/pipelines/quantification/inputs/worms.json")
 val result = client.postWorkflowFiles(workflow, inputs)
 ```
 

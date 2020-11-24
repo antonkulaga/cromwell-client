@@ -264,7 +264,6 @@ class RunnerView(
   } yield (u && i.isDefined) && (m && w.isDefined || p)
 
 
-
   val topMenu: Elem = <div class="ui top big fixed menu">
       <section class="item">
         <div class={enabledIf("ui big primary button", validUrl)} onclick={ updateClick _}>Update workflows</div>
@@ -324,8 +323,8 @@ class RunnerView(
         </section>
         <div class="ui stackable menu" id ="input_menu">
           <section class="item tab segment active">
-            <div class="ui label">inputs json</div>
-            <input id ="inputs" onchange = { uploadFileHandler(inputs) _ } accept=".json" name="inputs" type="file" >
+            <div class="ui label">inputs json/yaml</div>
+            <input id ="inputs" onchange = { uploadFileHandler(inputs) _ } accept=".json,.yaml,.yml" name="inputs" type="file" >
             </input>
             <i class="remove icon" style={visibleIfDefined(inputs)} onclick={cleaner("inputs", ()=>inputs := None) _}></i>
           </section>
@@ -336,8 +335,8 @@ class RunnerView(
         </div>
       <div class="ui stackable blue menu" id ="manual_menu" style={visibleIf(inManualTab)}>
         <section class="item tab segment active"  data-tab="manual">
-          <div class="ui label">workflow WDL</div>
-          <input id ="wdl" onchange = { uploadFileHandler(wdlFile) _ } accept=".wdl"  name="wdl" type="file" >
+          <div class="ui label">workflow WDL or CWL</div>
+          <input id ="wdl" onchange = { uploadFileHandler(wdlFile) _ } accept=".wdl,.cwl"  name="wdl" type="file" >
           </input>
           <i class="remove icon" style={visibleIfDefined(wdlFile)} onclick={cleaner("wdl", ()=>wdlFile := None) _}></i>
         </section>
@@ -345,13 +344,13 @@ class RunnerView(
           <div class="ui label">dependencies</div>
           <input id ="dependencies"
                  onchange = { uploadFilesHandler(dependencies) _ }
-                 accept=".wdl"  name="dependencies" type="file" multiple="multiple" >
+                 accept=".wdl,.cwl"  name="dependencies" type="file" multiple="multiple" >
             </input>
           <i class="remove icon" style={visibleIfHasElements(dependencies)} onclick={cleaner("dependencies", ()=> dependencies := List.empty) _}></i>
         </section>
         <section class="item tab segment active" data-tab="manual">
           <div class="ui label">options</div>
-          <input id ="options" onchange = { uploadFileHandler(options) _ } accept=".json" name="options" type="file" >
+          <input id ="options" onchange = { uploadFileHandler(options) _ } accept=".json,.yaml,.yml" name="options" type="file" >
           </input>
           <i class="remove icon"  style={visibleIfDefined(options)} onclick={cleaner("options", ()=>options := None) _}></i>
         </section>

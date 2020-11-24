@@ -61,13 +61,13 @@ trait PipelinesExtractor  {
   lazy val pipelinesRoot: Option[File] = scala.util.Properties.envOrNone("PIPELINES").flatMap(s=>fileOption(s)).orElse(pipelinesRootDefaults).filter(_.isDirectory)
 
   def getPipelineFile(pipeline: String): Option[File]= pipelinesRoot.flatMap{
-      root => fileOption(root, pipeline + ".wdl").orElse(fileOption(root, pipeline))
+      root => fileOption(root, pipeline + ".wdl").orElse(fileOption(root, pipeline + ".cwl")).orElse(fileOption(root, pipeline))
     }
 
 
   protected def getDefaults(dir: File, containsName: String = "default"): String = {
     dir.children
-      .filter(f=>f.isRegularFile && f.name.contains(containsName) && f.extension.contains(".json"))
+      .filter(f=>f.isRegularFile && f.name.contains(containsName) && (f.extension.contains(".json") || f.extension.contains(".yml") || f.extension.contains(".yaml")))
       .foldLeft(""){
         (acc, el) => acc + el.lines.mkString("\n")
       }.trim
@@ -75,7 +75,7 @@ trait PipelinesExtractor  {
 
   lazy val allPipelines: Pipelines = {
     val p = pipelinesRoot.map{ root => root.children
-      .filter(f=> f.extension.contains("wdl") || f.isDirectory)
+      .filter(f=> f.extension.contains("wdl") || f.extension.contains("cwl") || f.isDirectory)
       .toList.map(n=>extractPipeline(n.name))
       .collect{ case Some(v) => v}}
       .getOrElse(Nil)
@@ -97,9 +97,10 @@ trait PipelinesExtractor  {
     * @return
     */
   def extractPipeline(pipeline: String): Option[Pipeline] = getPipelineFile(pipeline).flatMap{ v => v match {
-      case dir if dir.isDirectory && dir.nonEmpty && dir.children.exists(_.extension.contains(".wdl")) =>
-        val workflows: Seq[File] = dir.children.filter(f=>f.isRegularFile && f.extension.contains(".wdl")).toList
-        val main: File = workflows.collectFirst{ case ch if ch.name == pipeline + ".wdl" | ch.name == "main.wdl" || ch.name == "index.wdl" => ch}.getOrElse {
+      case dir if dir.isDirectory && dir.nonEmpty && (dir.children.exists(_.extension.contains(".wdl")) || dir.children.exists(_.extension.contains(".cwl"))) =>
+        val workflows: Seq[File] = dir.children.filter(f=>f.isRegularFile && (f.extension.contains(".wdl") || f.extension.contains(".cwl"))).toList
+        val main: File = workflows.collectFirst{
+          case ch if ch.name == pipeline + ".wdl" | ch.name == "main.wdl" || ch.name == "index.wdl" | ch.name == pipeline + ".cwl" | ch.name == "main.cwl" || ch.name == "index.cwl" => ch}.getOrElse {
           error("could not find good candidate for the main workflows, choosing the random wdl file")
           workflows.head
         }

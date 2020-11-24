@@ -2,15 +2,12 @@ package group.research.aging.cromwell.web
 import java.time.{OffsetDateTime, ZoneOffset}
 
 import cats.kernel.Monoid
-import group.research.aging.cromwell.client.{CromwellClient, CromwellClientLike, Metadata, WorkflowStatus}
-import group.research.aging.cromwell.web.Commands.BatchRun
+import group.research.aging.cromwell.client.{CromwellClient, Metadata, WorkflowStatus}
 import group.research.aging.cromwell.web.Results.QueryWorkflowResults
-import io.circe.{Json, ParsingFailure}
 import io.circe.generic.JsonCodec
-import io.circe.parser.parse
+import io.circe.{Json, ParsingFailure}
 
 import scala.collection.immutable._
-import scala.util.{Failure, Success}
 
 object WorkflowNode {
 
@@ -105,7 +102,6 @@ object Pipeline {
 
   def concatJson(js: String): Either[ParsingFailure, Json] = {
     import io.circe.parser._
-    import io.circe.syntax._
     parse(defaults).flatMap(d=>parse(js).map(j=>d.deepMerge(j)))
   }
 

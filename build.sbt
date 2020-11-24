@@ -6,6 +6,8 @@ import sbtcrossproject.CrossPlugin.autoImport.crossProject
 
 name := "cromwell-client-parent"
 
+scalaJSStage in Global := FullOptStage
+
 //settings for all the projects
 lazy val commonSettings = Seq(
 
@@ -13,7 +15,7 @@ lazy val commonSettings = Seq(
 
 	scalaVersion :=  "2.12.12",
 
-	version := "0.3.0",
+	version := "0.3.1",
 
 	unmanagedClasspath in Compile ++= (unmanagedResources in Compile).value,
 
@@ -62,7 +64,7 @@ lazy val semanticUI = "2.4.1"
 
 lazy val webcomponents = "1.0.1"
 
-lazy val jquery = "3.4.1"
+lazy val jquery = "3.5.1"
 
 lazy val airframeLogVersion = "20.4.1"
 
@@ -87,7 +89,7 @@ lazy val  cromwellClient = crossProject(JSPlatform, JVMPlatform)
 			"com.typesafe.akka" %% "akka-stream" % akka,
 			"fr.hmil" %%% "roshttp" % "2.2.4",
 			"com.beachape" %%% "enumeratum" % "1.6.0",
-			"com.lihaoyi" %%% "pprint" % "0.5.9",
+			"com.lihaoyi" %%% "pprint" % "0.6.0",
 			//"org.typelevel" %%% "cats-core"      % "1.3.1",
 			//"org.typelevel" %%% "cats-effect"     % "1.0.0",
 			"io.circe" %%% "circe-generic-extras" % "0.13.0",
@@ -116,8 +118,8 @@ lazy val cromwellClientJVM = cromwellClient.jvm
 
 lazy val cromwellClientJS = cromwellClient.js
 
-lazy val akka = "2.5.31" //a bit old but want to sync with sttp backend
-lazy val akkaHttp = "10.1.12"
+lazy val akka = "2.6.10"//"2.5.32" //a bit old but want to sync with sttp backend
+lazy val akkaHttp = "10.2.1"
 
 lazy val cromwellWeb = crossProject(JSPlatform, JVMPlatform)
 	.crossType(CrossType.Full)
@@ -134,7 +136,7 @@ lazy val cromwellWeb = crossProject(JSPlatform, JVMPlatform)
 	.jsSettings(
 		libraryDependencies ++= Seq(
 			"in.nvilla" %%% "monadic-html" % "0.4.0",
-			"org.akka-js" %%% "akkajsactorstream" % "1.2.5.23",
+			"org.akka-js" %%% "akkajsactorstream" % "2.2.6.3",
 			"com.thoughtworks.binding" %%% "dom" % "11.9.0" excludeAll ExclusionRule(organization = "org.scala-lang.modules")
 		),
 		jsEnv := new org.scalajs.jsenv.jsdomnodejs.JSDOMNodeJSEnv,
@@ -147,26 +149,26 @@ lazy val cromwellWeb = crossProject(JSPlatform, JVMPlatform)
 			"com.typesafe.akka" %% "akka-http" % akkaHttp,
 			"com.typesafe.akka" %% "akka-http-xml" % akkaHttp,
 			"javax.ws.rs" % "javax.ws.rs-api" % "2.1.1", //for extra annotations
-			"com.github.swagger-akka-http" %% "swagger-akka-http" % "2.1.1",
-			"com.github.swagger-akka-http" %% "swagger-scala-module" % "2.1.1",
+			"com.github.swagger-akka-http" %% "swagger-akka-http" % "2.2.0",
+			"com.github.swagger-akka-http" %% "swagger-scala-module" % "2.1.3",
 			"com.vmunier" %% "scalajs-scripts" % "1.1.4",
-      "de.heikoseeberger" %% "akka-http-circe" % "1.31.0",
-			"ch.megard" %% "akka-http-cors" % "0.4.3",
+      "de.heikoseeberger" %% "akka-http-circe" % "1.35.2", //"1.31.0",
+			"ch.megard" %% "akka-http-cors" % "1.1.0",
 			"org.webjars" % "Semantic-UI" %  semanticUI,
-			"org.webjars.bowergithub.fomantic" % "fomantic-ui" % "2.8.4",
+			"org.webjars.bowergithub.fomantic" % "fomantic-ui" % "2.8.7",
 			"org.webjars" % "jquery" % jquery,
 			"org.webjars" % "webcomponentsjs" % webcomponents,
-			"org.webjars" % "swagger-ui" % "3.25.0" //Swagger UI
+			"org.webjars" % "swagger-ui" % "3.37.0" //Swagger UI
 		),
 		(managedClasspath in Runtime) += (packageBin in Assets).value,
 		//(fullClasspath in Runtime) += (packageBin in Assets).value,
-		pipelineStages in Assets := Seq(scalaJSProd),
+		compile in Compile := ((compile in Compile) dependsOn scalaJSPipeline).value,
+		pipelineStages in Assets := Seq(scalaJSPipeline),
 		//pipelineStages in Assets := Seq(scalaJSDev), //to make compilation faster
 		//compile in Compile := ((compile in Compile) dependsOn scalaJSProd).value,
-		(emitSourceMaps in fullOptJS) := true,
 		fork in run := true,
 		maintainer in Docker := "Anton Kulaga <antonkulaga@gmail.com>",
-		dockerBaseImage := "oracle/graalvm-ce:19.3.1",
+		dockerBaseImage := "oracle/graalvm-ce:20.3.0-java11",
 		daemonUserUid in Docker := None,
 		daemonUser in Docker := "root",
 		dockerExposedVolumes := Seq("/data"),
@@ -186,8 +188,8 @@ lazy val webJS = cromwellWeb.js
 lazy val webJVM = cromwellWeb.jvm.settings(
 	scalaJSProjects := Seq(webJS),
 	libraryDependencies ++= Seq(
-		"com.lihaoyi" %% "requests" % "0.5.2" % Test,
-		"com.lihaoyi" %% "ammonite-ops" % "2.0.4" % Test
+		"com.lihaoyi" %% "requests" % "0.6.5" % Test,
+		"com.lihaoyi" %% "ammonite-ops" % "2.2.0" % Test
 	)
 )
 
