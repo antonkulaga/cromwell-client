@@ -119,7 +119,7 @@ lazy val cromwellClientJVM = cromwellClient.jvm
 lazy val cromwellClientJS = cromwellClient.js
 
 lazy val akka = "2.6.10"//"2.5.32" //a bit old but want to sync with sttp backend
-lazy val akkaHttp = "10.2.1"
+lazy val akkaHttp = "10.2.2"
 
 lazy val cromwellWeb = crossProject(JSPlatform, JVMPlatform)
 	.crossType(CrossType.Full)
@@ -153,12 +153,12 @@ lazy val cromwellWeb = crossProject(JSPlatform, JVMPlatform)
 			"com.github.swagger-akka-http" %% "swagger-scala-module" % "2.1.3",
 			"com.vmunier" %% "scalajs-scripts" % "1.1.4",
       "de.heikoseeberger" %% "akka-http-circe" % "1.35.2", //"1.31.0",
-			"ch.megard" %% "akka-http-cors" % "1.1.0",
+			"ch.megard" %% "akka-http-cors" % "1.1.1",
 			"org.webjars" % "Semantic-UI" %  semanticUI,
 			"org.webjars.bowergithub.fomantic" % "fomantic-ui" % "2.8.7",
 			"org.webjars" % "jquery" % jquery,
 			"org.webjars" % "webcomponentsjs" % webcomponents,
-			"org.webjars" % "swagger-ui" % "3.37.0" //Swagger UI
+			"org.webjars" % "swagger-ui" % "3.38.0" //Swagger UI
 		),
 		(managedClasspath in Runtime) += (packageBin in Assets).value,
 		//(fullClasspath in Runtime) += (packageBin in Assets).value,
