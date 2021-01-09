@@ -13,10 +13,7 @@ object Tester {
     {"id":"9e0a1de3-9a0f-4ef3-8b96-f15a1a54a1a5","status":"Submitted"}
     */
 
-    // Using the Apache HTTP commons interpreter
-    implicit val interpreter = ApacheInterpreter[IO]
-
-  def run(pipeline: String, content: String, server: String = "http://pic:8000", callback: String = "http://localhost:8001/api/trace"): HttpResponse = {
+  def run(pipeline: String, content: String, server: String = "http://agingkills.eu:8000", callback: String = "http://localhost:8001/api/trace"): HttpResponse = {
     val json: Json = parse(content).right.get
     //val cont = Json.fromString("""{"myWorkflow.name": "World"}""")
     Hammock.request(Method.POST,

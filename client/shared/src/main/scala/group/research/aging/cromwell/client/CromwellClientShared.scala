@@ -44,6 +44,7 @@ trait CromwellClientShared extends PostAPI with CromwellClientLike {
   //implicit val interpTrans = Interpreter[IO]
 
   def get(subpath: String, headers: Map[String, String]): Free[HttpF, HttpResponse] =
+
     Hammock.request(Method.GET, Uri.unsafeParse(base + subpath), headers)
 
   def post(subpath: String, headers: Map[String, String]): Free[HttpF, HttpResponse] =

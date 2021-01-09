@@ -58,7 +58,7 @@ lazy val commonSettings = Seq(
 
 commonSettings
 
-lazy val hammockVersion = "0.11.0"
+lazy val hammockVersion = "0.11.3"
 
 lazy val semanticUI = "2.4.1"
 
@@ -93,7 +93,7 @@ lazy val  cromwellClient = crossProject(JSPlatform, JVMPlatform)
 			//"org.typelevel" %%% "cats-core"      % "1.3.1",
 			//"org.typelevel" %%% "cats-effect"     % "1.0.0",
 			"io.circe" %%% "circe-generic-extras" % "0.13.0",
-			"com.pepegar" %%% "hammock-circe" % hammockVersion,
+			"com.pepegar" %%% "hammock-circe" % "0.11.0",//hammockVersion,
 			"org.wvlet.airframe" %%% "airframe-log" % airframeLogVersion
     )
 	)
