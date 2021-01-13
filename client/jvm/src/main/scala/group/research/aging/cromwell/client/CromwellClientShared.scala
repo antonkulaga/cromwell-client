@@ -17,13 +17,26 @@ trait CromwellClientShared extends PostAPI with CromwellClientLike {
   def base: String
   def version: String
 
-  def baseHost: String = new URI(base).getHost
+  override def baseHost: String = new URI(base).getHost
 
   lazy val baseNoPort: String = {
     val first = base.indexOf(":/")
     val last = base.lastIndexOf(":")
     if(first!=last) base.substring(0, last) else base
   }
+
+
+  //def get(subpath: String, headers: Map[String, String]): Free[HttpF, HttpResponse]
+
+  //def getIO[T](subpath: String, headers: Map[String, String])(implicit D: Decoder[T], M: MarshallC[HammockF]): IO[T]
+
+  //def getAPI[T](subpath: String, headers: Map[String, String] = Map.empty)(implicit D: Decoder[T], M: MarshallC[HammockF]): IO[T]
+
+  //def getStats: IO[Stats]
+
+  //def getVersion: IO[Version]
+
+  //def getEngineStatus: IO[Entity]
 
   lazy val api = "/api"
 
@@ -39,13 +52,69 @@ trait CromwellClientShared extends PostAPI with CromwellClientLike {
     """.stripMargin
 
 
+  ///FROM SHARED
+
+  /**
+    * 400
+    * Malformed Workflow ID
+    * 403
+    * Workflow in terminal status
+    * 404
+    * Workflow ID Not Found
+    * 500
+    * Internal Error
+    */
+  //def abort(id: String): IO[group.research.aging.cromwell.client.StatusInfo]
+
+
+  /*
+
+  def makeWorkflowOptions(output: String, log: String="", call_log: String = ""): String
+
+
+
+  def getOutput(id: String): IO[CallOutputs]
+
+  def getLabels(id: String): IO[WorkflowLabels]
+
+  def getQuery(status: WorkflowStatus = WorkflowStatus.AnyStatus, includeSubworkflows: Boolean = false): IO[QueryResults]
+
+  def getAllOutputs(status: WorkflowStatus = WorkflowStatus.AnyStatus, includeSubworkflows: Boolean = false): IO[List[CallOutputs]]
+
+  def getLogs(id: String): IO[Logs]
+
+  def getAllLogs(status: WorkflowStatus = WorkflowStatus.AnyStatus): IO[List[Logs]]
+
+  def getBackends: IO[Backends]
+
+  def getMetadata(id: String, v: String = "v2", expandSubWorkflows: Boolean = true): IO[Metadata]
+
+  def getAllMetadata(status: WorkflowStatus = WorkflowStatus.AnyStatus, includeSubworkflows: Boolean = true): IO[List[Metadata]]
+
+
+  def postWorkflow(fileContent: String,
+                   workflowInputs: String,
+                   workflowOptions: String,
+                   workflowDependencies: Option[java.nio.ByteBuffer] = None
+                  ): Future[group.research.aging.cromwell.client.StatusInfo]
+
+  def postWorkflowURL(url: String,  workflowInputs: String,
+                      workflowOptions: String = "",
+                      workflowDependencies: Option[java.nio.ByteBuffer] = None): Future[StatusInfo]
+
+  def describeWorkflow(fileContent: String,
+                       workflowInputs: String,
+                       workflowOptions: String = "",
+                       workflowDependencies: Option[java.nio.ByteBuffer] = None): Future[ValidationResult]
+  */
+
+  ///FROM SHARED
+
 
   implicit protected def getInterpreter: InterpTrans[IO]
   //implicit val interpTrans = Interpreter[IO]
 
-  def get(subpath: String, headers: Map[String, String]): Free[HttpF, HttpResponse] =
-
-    Hammock.request(Method.GET, Uri.unsafeParse(base + subpath), headers)
+  def get(subpath: String, headers: Map[String, String]): Free[HttpF, HttpResponse] = Hammock.request(Method.GET, Uri.unsafeParse(base + subpath), headers)
 
   def post(subpath: String, headers: Map[String, String]): Free[HttpF, HttpResponse] =
     Hammock.request(Method.POST, Uri.unsafeParse(base + subpath), headers)

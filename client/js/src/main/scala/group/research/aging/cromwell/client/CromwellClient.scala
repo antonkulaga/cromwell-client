@@ -18,9 +18,12 @@ object CromwellClient {
   }
 }
 
-@JsonCodec case class CromwellClient(base: String, version: String)
-  extends CromwellClientShared with CromwellClientJSspecific
-
+@JsonCodec case class CromwellClient(base: String, version: String) extends CromwellClientLike
+//CromwellClientShared
+with CromwellClientJSspecific
+{
+  lazy val api = "/api"
+}
 /*
   def postWorkflowStrings(fileContent: String,
                           workflowInputs: String,
