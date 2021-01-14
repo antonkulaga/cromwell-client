@@ -8,7 +8,7 @@ import scalajs.js
 import scala.xml.Elem
 
 import java.time.format.DateTimeFormatter
-import com.thoughtworks.binding.Binding.BindingInstances.monadSyntax._
+//import com.thoughtworks.binding.Binding.BindingInstances.monadSyntax._
 
 @js.native
 @js.annotation.JSGlobalScope

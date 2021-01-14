@@ -12,7 +12,6 @@ import io.circe.generic.extras.Configuration
 import io.circe.generic.extras._
 import io.circe.syntax._
 
-import scala.collection.parallel.immutable
 import scala.concurrent.duration._
 
 object MessagesAPI {

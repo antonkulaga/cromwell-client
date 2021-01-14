@@ -2,7 +2,7 @@ package group.research.aging.cromwell.client
 
 import java.net.URI
 
-import cats.effect.IO
+//import cats.effect.IO
 //import hammock.{Decoder, _}
 //import hammock.marshalling._
 

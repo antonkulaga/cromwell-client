@@ -11,7 +11,7 @@ import group.research.aging.cromwell.web.api.runners.MessagesAPI.ServerCommand
 import group.research.aging.cromwell.web.common.BasicActor
 import group.research.aging.cromwell.web.util.HostExtractor
 
-case class RunnerManager(implicit http: HttpExt, materializer: ActorMaterializer) extends BasicActor with HostExtractor {
+class RunnerManager(implicit http: HttpExt, materializer: ActorMaterializer) extends BasicActor with HostExtractor {
 
   protected def operation(workers: Map[String, ActorRef], batch: BatchRun): Receive = {
 

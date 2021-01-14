@@ -101,7 +101,8 @@ trait RosHttp extends RosHttpBase with PostAPI {
                       workflowDependencies: Option[java.nio.ByteBuffer] = None): Future[StatusInfo] = {
     val params = ("workflowUrl", PlainTextBody(url)) :: prepareInputOptionsDependencies(workflowInputs, workflowOptions, workflowDependencies)
     val parts = Map[String, BodyPart](params: _*)
-    postAPI[group.research.aging.cromwell.client.StatusInfo](s"/workflows/${version}")(new MultiPartBody(parts))
+    ???
+    //postAPI[group.research.aging.cromwell.client.StatusInfo](s"/workflows/${version}")(new MultiPartBody(parts))
   }
 
   def describeWorkflow(fileContent: String,
@@ -111,7 +112,9 @@ trait RosHttp extends RosHttpBase with PostAPI {
     //val inputs: List[(String, BodyPart)] = if (workflowInputs == "") Nil else List(("workflowInputs", AnyBody(workflowInputs)))
     val params = ("workflowSource", PlainTextBody(fileContent)) :: prepareInputOptionsDependencies(workflowInputs, workflowOptions, workflowDependencies)
     val parts = Map[String, BodyPart](params: _*)
-    postAPI[group.research.aging.cromwell.client.ValidationResult](s"/womtool/${version}/describe")(new MultiPartBody(parts))
+
+    //postAPI[group.research.aging.cromwell.client.ValidationResult](s"/womtool/${version}/describe")(new MultiPartBody(parts))
+    ???
   }
 
 }

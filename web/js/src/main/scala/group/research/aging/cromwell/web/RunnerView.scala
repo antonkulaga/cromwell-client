@@ -12,11 +12,11 @@ import org.scalajs.dom.Event
 import dom.ext._
 import org.scalajs.dom.html.Input
 import org.scalajs.dom.raw.HTMLInputElement
-import com.thoughtworks.binding.Binding.BindingInstances.monadSyntax._
+//import com.thoughtworks.binding.Binding.BindingInstances.monadSyntax._
 import scala.scalajs.js
 import scala.util.{Failure, Success, Try}
 import scala.xml.Elem
-import org.querki.jquery.$
+//import org.querki.jquery.$
 /**
   * View for loading workflows and running workflows
   * @param commands Var to run commands

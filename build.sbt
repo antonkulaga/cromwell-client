@@ -13,7 +13,7 @@ lazy val commonSettings = Seq(
 
 	organization := "group.research.aging",
 
-	scalaVersion :=  "2.12.12",
+	scalaVersion :=  "2.13.4",
 
 	version := "0.3.1",
 
@@ -37,9 +37,11 @@ lazy val commonSettings = Seq(
     }.taskValue,
     */
 
-	addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.1" cross CrossVersion.full),
+	//addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.1" cross CrossVersion.full),
 
-	addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.10"),
+	addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.11.1" cross CrossVersion.full),
+
+		//addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.10"),
 
 	bintrayRepository := "main",
 
@@ -51,9 +53,11 @@ lazy val commonSettings = Seq(
 
 	exportJars := true,
 
-	scalacOptions ++= Seq("-target:jvm-1.8", "-feature", "-language:_"),
+	scalacOptions ++= Seq("-feature", "-language:_"),
 
-	javacOptions ++= Seq("-source", "1.8", "-target", "1.8", "-Xlint", "-J-Xss256M", "-encoding", "UTF-8", "-XDignore.symbol.file")
+	scalacOptions += "-Ymacro-annotations",
+
+	javacOptions ++= Seq("-Xlint", "-J-Xss256M", "-encoding", "UTF-8", "-XDignore.symbol.file")
 )
 
 commonSettings
@@ -82,35 +86,39 @@ lazy val  cromwellClient = crossProject(JSPlatform, JVMPlatform)
     name := "cromwell-client",
 
 		libraryDependencies ++= Seq(
-			"com.softwaremill.sttp.client" %%% "core" % sttpVersion,
-			"com.softwaremill.sttp.client" %% "circe" % sttpVersion,
-			//"com.softwaremill.sttp.client" %% "async-http-client-backend-future" % sttpVersion,
-			"com.softwaremill.sttp.client" %% "akka-http-backend" % sttpVersion,
-			"com.typesafe.akka" %% "akka-stream" % akka,
-			"fr.hmil" %%% "roshttp" % "2.2.4",
 			"com.beachape" %%% "enumeratum" % "1.6.0",
 			"com.lihaoyi" %%% "pprint" % "0.6.0",
 			//"org.typelevel" %%% "cats-core"      % "1.3.1",
 			//"org.typelevel" %%% "cats-effect"     % "1.0.0",
 			"io.circe" %%% "circe-generic-extras" % "0.13.0",
-			"com.pepegar" %%% "hammock-circe" % "0.11.0",//hammockVersion,
+			"io.circe" %%% "circe-parser" % "0.13.0",
+			"io.circe" %%% "circe-generic" % "0.13.0",
 			"org.wvlet.airframe" %%% "airframe-log" % airframeLogVersion
     )
 	)
 	.disablePlugins(RevolverPlugin)
   .jvmSettings(
     libraryDependencies ++= Seq(
+			"fr.hmil" %% "roshttp" % "3.0.0",//"2.2.4",
 			"com.github.pathikrit" %% "better-files" % "3.9.1",
 			"com.pepegar" %% "hammock-apache-http" % hammockVersion,
-			"com.pepegar" %% "hammock-akka-http" % hammockVersion
-    )
+			"com.pepegar" %% "hammock-akka-http" % hammockVersion,
+			"com.softwaremill.sttp.client" %% "core" % sttpVersion,
+			"com.softwaremill.sttp.client" %% "circe" % sttpVersion,
+			"com.pepegar" %% "hammock-circe" % hammockVersion,
+			//"com.softwaremill.sttp.client" %% "async-http-client-backend-future" % sttpVersion,
+			"com.softwaremill.sttp.client" %% "akka-http-backend" % sttpVersion,
+			"com.typesafe.akka" %% "akka-stream" % akka,
+
+		)
   )
   .jsSettings(
 		jsEnv := new org.scalajs.jsenv.jsdomnodejs.JSDOMNodeJSEnv,
 		libraryDependencies ++= Seq(
 			//"org.scala-js" %%% "scalajs-java-time" % "1.0.0",
 			"io.github.cquiroz" %%% "scala-java-time" % "2.0.0",
-			"org.querki" %%% "jquery-facade" % "1.2"
+			"be.doeraene" %%% "scalajs-jquery" % "1.0.0"
+			//"org.querki" %%% "jquery-facade" % "1.2"
 		)
 	)
 
@@ -129,15 +137,16 @@ lazy val cromwellWeb = crossProject(JSPlatform, JVMPlatform)
 		parallelExecution in Test := false,
 		name := "cromwell-web",
 		libraryDependencies  ++= Seq(
-			"com.github.japgolly.scalacss" % "core_2.12" % "0.6.1",
+			"com.github.japgolly.scalacss" %%% "core" % "0.6.1",
 			"org.wvlet.airframe" %%% "airframe-log" % airframeLogVersion
+			//"org.scala-lang.modules" %% "scala-collection-compat" % "2.3.2"
 		)
 	)
 	.jsSettings(
 		libraryDependencies ++= Seq(
 			"in.nvilla" %%% "monadic-html" % "0.4.0",
-			"org.akka-js" %%% "akkajsactorstream" % "2.2.6.3",
-			"com.thoughtworks.binding" %%% "dom" % "11.9.0" excludeAll ExclusionRule(organization = "org.scala-lang.modules")
+			"org.akka-js" %%% "akkajsactorstream" % "2.2.6.3"
+			//"com.thoughtworks.binding" %%% "dom" % "11.9.0" excludeAll ExclusionRule(organization = "org.scala-lang.modules")
 		),
 		jsEnv := new org.scalajs.jsenv.jsdomnodejs.JSDOMNodeJSEnv,
 		scalaJSUseMainModuleInitializer := true

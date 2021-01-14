@@ -1,10 +1,10 @@
 package group.research.aging.cromwell.client
 
-import cats.effect.IO
+//import cats.effect.IO
 //import hammock.InterpTrans
 //import hammock.js.Interpreter
 
-import scala.concurrent.ExecutionContext.Implicits.global
+//import scala.concurrent.ExecutionContext.Implicits.global
 /**
   * Created by antonkulaga on 2/18/17.
   */

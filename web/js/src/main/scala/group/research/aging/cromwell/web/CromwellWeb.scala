@@ -3,8 +3,16 @@ package group.research.aging.cromwell.web
 import group.research.aging.cromwell.client.CromwellClient
 import group.research.aging.cromwell.web.Messages.ExplainedError
 import group.research.aging.cromwell.web.communication.{WebsocketClient, WebsocketMessages}
-import org.querki.jquery._
+//import org.querki.jquery._
 import wvlet.log.LogLevel
+
+import org.scalajs.jquery.JQueryStatic
+import scala.scalajs.js
+import scala.scalajs.js.annotation.JSImport
+
+@js.native
+@JSImport("jquery", JSImport.Namespace)
+object jquery extends JQueryStatic
 
 import scala.util.Random
 
@@ -20,7 +28,7 @@ object CromwellWeb extends scala.App with Base {
   import mhtml._
   import org.scalajs.dom
 
-  lazy val table: JQuery = $("workflows")
+  //lazy val table: JQuery = $("workflows")
 
   /**
     * commands, messages and results are main types of actions, they are put inside Var-s for DataBinding purposes

@@ -4,6 +4,8 @@ import scalacss.DevDefaults._  // Always use dev settings
 object MyStyles extends StyleSheet.Standalone {
   import dsl._
 
+  /*
+  2.13 issues
   media.maxWidth(1024 px) - {
     &("html") - {
       fontSize(8 pt)
@@ -15,10 +17,11 @@ object MyStyles extends StyleSheet.Standalone {
     }
   }
 
+
   "body" - (
 //    backgroundColor(skyblue)
     )
-
+  */
   "#main" - (
     overflowX.scroll,
   )

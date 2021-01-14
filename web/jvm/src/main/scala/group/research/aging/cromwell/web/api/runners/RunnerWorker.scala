@@ -72,7 +72,7 @@ class RunnerWorker(client: CromwellClientAkka) extends BasicActor {
 
 
       val toDelete: scala.Seq[(String, MessagesAPI.CallBack)] = runForDeletion(callbacks, queryResults.results)
-      val g: Map[String, Set[CallBack]] = toDelete.groupBy(_._1).mapValues(_.map(_._2).toSet)
+      val g: Map[String, Set[CallBack]] = toDelete.groupBy(_._1).map{ case (g, v) => g-> v.map(_._2).toSet}
       if(g.nonEmpty || callbacks.contains(TestRun.id)) {
         if(callbacks.contains(TestRun.id)) testResponse(callbacks)
         val updCallbacks = callbacks.filter(c => c._1 != TestRun.id)
