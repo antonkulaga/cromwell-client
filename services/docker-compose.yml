@@ -22,6 +22,8 @@ services:
       - /data/databases/mysql:/var/lib/mysql-files
     ports:
       - "3307:3306"
+    cap_add:
+      - SYS_NICE  # CAP_SYS_NICE
   cromwell-client:
     image: quay.io/comp-bio-aging/cromwell-web:latest
     environment:
