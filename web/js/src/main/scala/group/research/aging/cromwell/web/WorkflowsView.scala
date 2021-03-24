@@ -24,7 +24,7 @@ class WorkflowsView(allMetadata: Rx[List[Metadata]], baseHost: Rx[String], comma
       {if(r.parentWorkflowId.isDefined) <td style="border: 0px !important;">
       <i class={if(r.rootWorkflowId.isDefined && r.rootWorkflowId.contains(r.parentWorkflowId.get)) "angle right icon" else "small angle double right icon"}></i>
     </td> else <!--no cell-->}
-      <td colspan={if(r.parentWorkflowId.isDefined) "1" else "2"} style={if(r.parentWorkflowId.isDefined) "border: 0px !important;" else ""}>{generalInfo(r)}{rowInputs(r)}{rowOutputs(r)}</td>
+      <td class="workflow_cell" colspan={if(r.parentWorkflowId.isDefined) "1" else "2"} style={if(r.parentWorkflowId.isDefined) "border: 0px !important;" else ""}>{generalInfo(r)}{rowInputs(r)}{rowOutputs(r)}</td>
       <td style={if(r.parentWorkflowId.isDefined) "border: 0px !important;" else ""}>
         {rowFailures(r)}{rowCallsTable(r)}
       </td>
@@ -100,7 +100,7 @@ class WorkflowsView(allMetadata: Rx[List[Metadata]], baseHost: Rx[String], comma
     <table id="workflows" class="ui small blue striped celled table">
     <thead>
       <tr>
-        <th  colspan="2">workflow</th>
+        <th class="workflow_cell" colspan="2">workflow</th>
         <th>calls and failures</th>
       </tr>
     </thead>

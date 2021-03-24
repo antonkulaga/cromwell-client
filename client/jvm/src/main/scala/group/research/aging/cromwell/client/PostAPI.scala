@@ -1,9 +1,5 @@
 package group.research.aging.cromwell.client
 
-
-import fr.hmil.roshttp.AnyBody
-import fr.hmil.roshttp.body._
-
 import scala.concurrent.Future
 
 trait PostAPI {

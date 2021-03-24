@@ -3,7 +3,7 @@ package group.research.aging.cromwell.web.api.runners
 import akka.actor.{ActorRef, Props}
 import akka.http.scaladsl.HttpExt
 import akka.stream.{ActorMaterializer, Materializer}
-import group.research.aging.cromwell.client.{CromwellClientAkka, QueryResults, WorkflowStatus}
+import group.research.aging.cromwell.client.{CromwellClient, QueryResults, WorkflowStatus}
 import group.research.aging.cromwell.web.Commands
 import group.research.aging.cromwell.web.Commands.BatchRun
 import group.research.aging.cromwell.web.Results.QueryWorkflowResults
@@ -56,7 +56,7 @@ class RunnerManager(implicit http: HttpExt, materializer: ActorMaterializer) ext
           val newURL = processHost(serverURL)
           if (newURL != serverURL) debug(s"adding client for ${serverURL} which becomes ${newURL} after host substitution!")
           else debug(s"adding client for ${serverURL}")
-          val client = CromwellClientAkka(newURL, "v1")
+          val client = CromwellClient(newURL, "v1")
           newURL -> context.actorOf(Props(new RunnerWorker(client)), name = "runner_" + workers.size + j + 1)
         }
         println("returning batch to server")
@@ -86,7 +86,7 @@ class RunnerManager(implicit http: HttpExt, materializer: ActorMaterializer) ext
           val newURL = processHost(serverURL)
           if(newURL!=serverURL) debug(s"adding client for ${serverURL} which becomes ${newURL} after host substitution!")
           else debug(s"adding client for ${serverURL}")
-          val client  = CromwellClientAkka(newURL, "v1")
+          val client  = CromwellClient(newURL, "v1")
           val a: ActorRef = context.actorOf(Props(new RunnerWorker(client)), name = "runner_" + workers.size + 1)
           //val info = WorkerInformation(serverURL, a)
           context.become(operation(workers.updated(newURL, a), batch))

@@ -9,18 +9,20 @@ import io.circe
 import io.circe.Decoder
 import sttp.client._
 import sttp.model.{Part, Uri}
-
 import akka.stream.scaladsl.{FileIO, Flow, Sink, Source, StreamConverters}
+
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutor, Future}
 import sttp.client._
 import sttp.client.circe._
 import sttp.client.akkahttp._
 import akka.http.scaladsl.model.ws.{Message, WebSocketRequest}
+import sttp.client.asynchttpclient.future.AsyncHttpClientFutureBackend
+
 import scala.collection.immutable.Seq
 
 trait PostSttp extends PostAPI {
 
-  implicit def sttpBackend: SttpBackend[Future, Source[ByteString, Any], Flow[Message, Message, *]]
+  implicit def sttpBackend = AsyncHttpClientFutureBackend()
   implicit def executionContext: ExecutionContext
 
   protected def parseUri(str: String): Uri =     Uri.parse(str).toOption match {

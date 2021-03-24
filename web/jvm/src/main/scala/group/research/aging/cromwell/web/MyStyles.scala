@@ -33,4 +33,7 @@ object MyStyles extends StyleSheet.Standalone {
   "#url" - (
     minWidth(280 px)
   )
+  ".workflow_cell"- (
+    maxWidth(800 px)
+  )
 }

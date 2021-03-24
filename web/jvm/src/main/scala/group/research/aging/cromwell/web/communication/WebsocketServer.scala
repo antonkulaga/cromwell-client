@@ -9,7 +9,7 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.stream.{ActorMaterializer, OverflowStrategy}
 import akka.stream.scaladsl._
-import group.research.aging.cromwell.client.{CromwellClient, CromwellClientAkka}
+import group.research.aging.cromwell.client.{CromwellClient}
 import group.research.aging.cromwell.web.KeepAlive
 import io.circe.parser.decode
 import wvlet.log.LogFormatter.SourceCodeLogFormatter
@@ -38,7 +38,7 @@ class WebsocketServer(implicit http: HttpExt, materializer: ActorMaterializer ) 
 
     info(s"adding user ${username}")
     val serverURL = CromwellClient.defaultURL
-    val client  = CromwellClientAkka(serverURL, "v1")
+    val client  = CromwellClient(serverURL, "v1")
     val wsUser: ActorRef = http.system.actorOf(Props(UserActor(username, client)), name = username)
 
 

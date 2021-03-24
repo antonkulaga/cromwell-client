@@ -6,7 +6,7 @@ import akka.actor.ActorRef
 import akka.pattern.pipe
 import better.files.File
 import cats.implicits._
-import group.research.aging.cromwell.client.{CromwellClientAkka, WorkflowStatus}
+import group.research.aging.cromwell.client.{CromwellClient, WorkflowStatus}
 import group.research.aging.cromwell.web.Commands.{ChangeClient, StreamMetadata}
 import group.research.aging.cromwell.web.Results.QueryWorkflowResults
 import group.research.aging.cromwell.web.common.BasicActor
@@ -22,7 +22,7 @@ import scala.concurrent.{ExecutionContextExecutor, Future}
   * Actors that proccesses most of websocket messages from the users and back
   * @param username
   */
-case class UserActor(username: String, initialClient: CromwellClientAkka) extends BasicActor
+case class UserActor(username: String, initialClient: CromwellClient) extends BasicActor
   with PipelinesExtractor
   with HostExtractor
 {
@@ -58,7 +58,7 @@ case class UserActor(username: String, initialClient: CromwellClientAkka) extend
     * @param client
     * @return
     */
-  protected def operation(output: List[ActorRef], client: CromwellClientAkka): Receive = {
+  protected def operation(output: List[ActorRef], client: CromwellClient): Receive = {
 
     case WebsocketMessages.ConnectWsHandle(ref) =>
       this.context.become(operation(output :+ ref, client))
@@ -142,7 +142,7 @@ case class UserActor(username: String, initialClient: CromwellClientAkka) extend
       else
         debug(s"CHANGE CLIENT to ${updatedURL}!")
 
-      val newClient = client.copy(base = newURL)(initialClient.http, initialClient.materializer)
+      val newClient = client.copy(base = newURL)
       this.context.become(operation(output, newClient))
 
     case Commands.Abort(id) =>

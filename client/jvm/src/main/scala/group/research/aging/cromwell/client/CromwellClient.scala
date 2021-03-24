@@ -3,29 +3,24 @@ package group.research.aging.cromwell.client
 import java.net.URI
 
 import _root_.akka.http.scaladsl.HttpExt
-import akka.actor.ActorSystem
+import akka.http.scaladsl.model.ws.Message
 import akka.stream.ActorMaterializer
-import akka.stream.scaladsl.Source
+import akka.stream.scaladsl.{Flow, Source}
 import akka.util.ByteString
 import cats.effect.{ContextShift, IO}
 import hammock.InterpTrans
 import hammock.akka.AkkaInterpreter
 import hammock.apache.ApacheInterpreter
 import io.circe.generic.JsonCodec
-import sttp.client.SttpBackend
+import sttp.client.{SttpBackend, _}
 import sttp.client.akkahttp.AkkaHttpBackend
-import akka.stream.scaladsl.{FileIO, Flow, Sink, Source, StreamConverters}
-
-import scala.concurrent.{ExecutionContext, ExecutionContextExecutor, Future}
-import sttp.client._
-import sttp.client.circe._
-import sttp.client.akkahttp._
-import akka.http.scaladsl.model.ws.{Message, WebSocketRequest}
-import akka.http.scaladsl.settings.{ConnectionPoolSettings, PoolImplementation}
+import sttp.client.asynchttpclient.future.AsyncHttpClientFutureBackend
 
 import scala.concurrent.{ExecutionContext, Future}
 
 object CromwellClient {
+
+  import scala.concurrent.ExecutionContext.Implicits.global
 
 
   lazy val defaultServerPort = "8000"
@@ -45,11 +40,16 @@ object CromwellClient {
 }
 
 
-@JsonCodec case class CromwellClient(base: String, version: String = "v1") extends CromwellClientShared with RosHttp
+@JsonCodec case class CromwellClient(base: String, version: String = "v1") extends CromwellClientShared with PostSttp with CromwellClientJVMSpecific
 {
   implicit override protected def getInterpreter: InterpTrans[IO] = ApacheInterpreter.instance
+
+  override implicit def executionContext: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
+
+  override implicit def sttpBackend= AsyncHttpClientFutureBackend()
 }
 
+/*
 case class CromwellClientAkka(base: String, version: String = "v1")(implicit val http: HttpExt, val materializer: ActorMaterializer)
                              extends CromwellClientShared with CromwellClientJVMSpecific with PostSttp {
   implicit val executionContext: ExecutionContext = http.system.dispatcher
@@ -57,8 +57,11 @@ case class CromwellClientAkka(base: String, version: String = "v1")(implicit val
 
   implicit override protected def getInterpreter: InterpTrans[IO] = AkkaInterpreter.instance[IO]//(http)
 
+  /*
   override implicit def sttpBackend: SttpBackend[Future, Source[ByteString, Any], Flow[Message, Message, *]] =
     AkkaHttpBackend.usingActorSystem(http.system,
       options = SttpBackendOptions.Default
     )
+   */
 }
+*/

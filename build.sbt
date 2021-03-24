@@ -72,7 +72,7 @@ lazy val jquery = "3.5.1"
 
 lazy val airframeLogVersion = "20.4.1"
 
-lazy val sttpVersion = "2.0.9"
+lazy val sttpVersion = "2.2.9"
 
 lazy val  cromwellClient = crossProject(JSPlatform, JVMPlatform)
   .crossType(CrossType.Full)
@@ -99,7 +99,6 @@ lazy val  cromwellClient = crossProject(JSPlatform, JVMPlatform)
 	.disablePlugins(RevolverPlugin)
   .jvmSettings(
     libraryDependencies ++= Seq(
-			"fr.hmil" %% "roshttp" % "3.0.0",//"2.2.4",
 			"com.github.pathikrit" %% "better-files" % "3.9.1",
 			"com.pepegar" %% "hammock-apache-http" % hammockVersion,
 			"com.pepegar" %% "hammock-akka-http" % hammockVersion,
@@ -108,7 +107,9 @@ lazy val  cromwellClient = crossProject(JSPlatform, JVMPlatform)
 			"com.pepegar" %% "hammock-circe" % hammockVersion,
 			//"com.softwaremill.sttp.client" %% "async-http-client-backend-future" % sttpVersion,
 			"com.softwaremill.sttp.client" %% "akka-http-backend" % sttpVersion,
-			"com.typesafe.akka" %% "akka-stream" % akka,
+			//"com.softwaremill.sttp.client" %% "async-http-client-backend-future" % sttpVersion,
+			"com.softwaremill.sttp.client" %% "async-http-client-backend-future" %  sttpVersion,
+      "com.typesafe.akka" %% "akka-stream" % akka
 
 		)
   )
@@ -177,7 +178,7 @@ lazy val cromwellWeb = crossProject(JSPlatform, JVMPlatform)
 		//compile in Compile := ((compile in Compile) dependsOn scalaJSProd).value,
 		fork in run := true,
 		maintainer in Docker := "Anton Kulaga <antonkulaga@gmail.com>",
-		dockerBaseImage := "oracle/graalvm-ce:20.3.0-java11",
+		dockerBaseImage := "ghcr.io/graalvm/graalvm-ce:latest",
 		daemonUserUid in Docker := None,
 		daemonUser in Docker := "root",
 		dockerExposedVolumes := Seq("/data"),

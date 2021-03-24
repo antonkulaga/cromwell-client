@@ -4,8 +4,7 @@ import akka.actor._
 import akka.pattern._
 import akka.stream._
 import cats.effect.{ContextShift, IO}
-import group.research.aging.cromwell.client
-import group.research.aging.cromwell.client.{CromwellClientAkka, QueryResult, QueryResults, StatusAndOutputs, StatusInfo, WorkflowStatus}
+import group.research.aging.cromwell.client.{CromwellClient, QueryResult, QueryResults, StatusAndOutputs, StatusInfo}
 import group.research.aging.cromwell.web.Commands.TestRun
 import group.research.aging.cromwell.web.WebServer.http
 import group.research.aging.cromwell.web.api.runners.MessagesAPI.CallBack
@@ -26,7 +25,7 @@ import scala.util.Try
   * Actors that interacts with cromwell server, receives messages from API and returns stuff back
   * @param client
   */
-class RunnerWorker(client: CromwellClientAkka) extends BasicActor {
+class RunnerWorker(client: CromwellClient) extends BasicActor {
 
   debug(s"runner worker for ${client.base} cromwell server started!")
 
@@ -87,7 +86,7 @@ class RunnerWorker(client: CromwellClientAkka) extends BasicActor {
     case mes @ MessagesAPI.ServerCommand(Commands.Run(wdl, input, options, dependencies), serverURL, _, _, _, _) =>
           val source: ActorRef = sender()
           val serv = if(serverURL.endsWith("/")) serverURL.dropRight(1) else serverURL
-          val cl: CromwellClientAkka = if(client.base.contains(serv)) client else client.copy(base = serv)
+          val cl: CromwellClient = if(client.base.contains(serv)) client else client.copy(base = serv)
           val statusUpdate = cl.postWorkflowStrings(wdl, input.replace("\t", "  "), options, dependencies)
           statusUpdate pipeTo source
           statusUpdate.map(s=>mes.promise(s)) pipeTo self
