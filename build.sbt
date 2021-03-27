@@ -39,7 +39,7 @@ lazy val commonSettings = Seq(
 
 	//addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.1" cross CrossVersion.full),
 
-	addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.11.1" cross CrossVersion.full),
+	addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.11.3" cross CrossVersion.full),
 
 		//addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.10"),
 
@@ -72,7 +72,7 @@ lazy val jquery = "3.5.1"
 
 lazy val airframeLogVersion = "20.4.1"
 
-lazy val sttpVersion = "2.2.9"
+lazy val sttpVersion = "3.1.1" //"2.2.9"
 
 lazy val  cromwellClient = crossProject(JSPlatform, JVMPlatform)
   .crossType(CrossType.Full)
@@ -87,7 +87,7 @@ lazy val  cromwellClient = crossProject(JSPlatform, JVMPlatform)
 
 		libraryDependencies ++= Seq(
 			"com.beachape" %%% "enumeratum" % "1.6.0",
-			"com.lihaoyi" %%% "pprint" % "0.6.0",
+			"com.lihaoyi" %%% "pprint" % "0.6.3",
 			//"org.typelevel" %%% "cats-core"      % "1.3.1",
 			//"org.typelevel" %%% "cats-effect"     % "1.0.0",
 			"io.circe" %%% "circe-generic-extras" % "0.13.0",
@@ -102,13 +102,11 @@ lazy val  cromwellClient = crossProject(JSPlatform, JVMPlatform)
 			"com.github.pathikrit" %% "better-files" % "3.9.1",
 			"com.pepegar" %% "hammock-apache-http" % hammockVersion,
 			"com.pepegar" %% "hammock-akka-http" % hammockVersion,
-			"com.softwaremill.sttp.client" %% "core" % sttpVersion,
-			"com.softwaremill.sttp.client" %% "circe" % sttpVersion,
+			"com.softwaremill.sttp.client3" %% "core" % sttpVersion,
+			"com.softwaremill.sttp.client3" %% "circe" % sttpVersion,
 			"com.pepegar" %% "hammock-circe" % hammockVersion,
-			//"com.softwaremill.sttp.client" %% "async-http-client-backend-future" % sttpVersion,
-			"com.softwaremill.sttp.client" %% "akka-http-backend" % sttpVersion,
-			//"com.softwaremill.sttp.client" %% "async-http-client-backend-future" % sttpVersion,
-			"com.softwaremill.sttp.client" %% "async-http-client-backend-future" %  sttpVersion,
+			//"com.softwaremill.sttp.client3" %% "akka-http-backend" % sttpVersion,
+			"com.softwaremill.sttp.client3" %% "async-http-client-backend-future" %  sttpVersion,
       "com.typesafe.akka" %% "akka-stream" % akka
 
 		)

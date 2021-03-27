@@ -12,9 +12,9 @@ import hammock.InterpTrans
 import hammock.akka.AkkaInterpreter
 import hammock.apache.ApacheInterpreter
 import io.circe.generic.JsonCodec
-import sttp.client.{SttpBackend, _}
-import sttp.client.akkahttp.AkkaHttpBackend
-import sttp.client.asynchttpclient.future.AsyncHttpClientFutureBackend
+import sttp.client3.{SttpBackend, _}
+//import sttp.client3.akkahttp.AkkaHttpBackend
+import sttp.client3.asynchttpclient.future.AsyncHttpClientFutureBackend
 
 import scala.concurrent.{ExecutionContext, Future}
 

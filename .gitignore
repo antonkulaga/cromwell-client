@@ -2,6 +2,8 @@
 *.class
 *.log
 logs/
+.bsp
+.bsp/*
 
 # sbt specific
 .cache/

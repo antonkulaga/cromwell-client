@@ -7,16 +7,16 @@ import akka.stream.scaladsl.Source
 import akka.util.ByteString
 import io.circe
 import io.circe.Decoder
-import sttp.client._
+import sttp.client3._
 import sttp.model.{Part, Uri}
 import akka.stream.scaladsl.{FileIO, Flow, Sink, Source, StreamConverters}
 
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutor, Future}
-import sttp.client._
-import sttp.client.circe._
-import sttp.client.akkahttp._
+import sttp.client3._
+import sttp.client3.circe._
+//import sttp.client3.akkahttp._
 import akka.http.scaladsl.model.ws.{Message, WebSocketRequest}
-import sttp.client.asynchttpclient.future.AsyncHttpClientFutureBackend
+import sttp.client3.asynchttpclient.future.AsyncHttpClientFutureBackend
 
 import scala.collection.immutable.Seq
 
@@ -32,7 +32,7 @@ trait PostSttp extends PostAPI {
         uri"http://cromwell:8000"
   }
 
-  def postRequest[T](subpath: String)(multipart: Seq[Part[BasicRequestBody]])(implicit decoder: Decoder[T]): Future[Response[Either[ResponseError[circe.Error], T]]] = {
+  def postRequest[T](subpath: String)(multipart: Seq[Part[BasicRequestBody]])(implicit decoder: Decoder[T]) = {
     basicRequest
       .post(parseUri(base + subpath))
       .multipartBody(multipart)
@@ -41,7 +41,7 @@ trait PostSttp extends PostAPI {
   }
 
   def post[T](subpath: String)(parts: Seq[Part[BasicRequestBody]])(implicit decoder: Decoder[T]): Future[T] = {
-    val resp: Future[Response[Either[ResponseError[circe.Error], T]]] = basicRequest
+    val resp = basicRequest
       .post(parseUri(base + subpath))
       .multipartBody(parts)
       .response(asJson[T])

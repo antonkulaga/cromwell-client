@@ -1,1 +1,1 @@
-{"name":"sbt","version":"1.4.5","bspVersion":"2.0.0-M5","languages":["scala"],"argv":["/usr/lib/jvm/graalvm-ce-java11-20.1.0/bin/java","-Xms100m","-Xmx100m","-classpath","/home/antonkulaga/.local/share/JetBrains/IdeaIC2020.2/Scala/launcher/sbt-launch.jar","xsbt.boot.Boot","-bsp"]}
+{"name":"sbt","version":"1.4.5","bspVersion":"2.0.0-M5","languages":["scala"],"argv":["/usr/lib/jvm/graalvm-ce-java11-20.1.0/bin/java","-Xms100m","-Xmx100m","-classpath","/usr/share/sbt/bin/sbt-launch.jar","xsbt.boot.Boot","-bsp"]}
