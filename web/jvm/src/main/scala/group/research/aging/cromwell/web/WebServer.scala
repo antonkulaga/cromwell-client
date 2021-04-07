@@ -105,7 +105,7 @@ object WebServer extends HttpApp with FailFastCirceSupport with LogSupport {
       headers = Nil,
       entity = request.entity,
       method = request.method)
-    http.singleRequest(proxyRequest).map{ p=>
+      http.singleRequest(proxyRequest).map{ p=>
       val r  = p.addHeader(headers.`Access-Control-Allow-Origin`.*)
       RouteResult.Complete(r)
     }

@@ -1,21 +1,38 @@
 package group.research.aging.cromwell.client
 
+import fansi.Back
+import io.circe
+import org.apache.http.client.HttpResponseException
+import sttp.capabilities
+import sttp.capabilities.zio.ZioStreams
+import sttp.client3.circe.asJson
+import sttp.client3.httpclient.zio.HttpClientZioBackend
+import wvlet.log.LogSupport
+import zio.{Task, ZIO}
+
 import java.net.URI
 
-import cats.effect.IO
-import cats.free.Free
-import cats.implicits._
-import hammock._
-import hammock.circe.implicits._
-import hammock.marshalling._
-import io.circe.generic.auto._
 
-import scala.concurrent.Future
-
-trait CromwellClientShared extends PostAPI with CromwellClientLike {
+trait CromwellClientShared extends CromwellClientLike with CromwellClientSharedZIO with LogSupport {
 
   def base: String
   def version: String
+
+  import sttp.client3._
+  import sttp.model.Uri
+
+  protected def parseUri(str: String): Uri =     Uri.parse(str).toOption match { //TODO: ugly fix
+    case Some(value) => value
+    case None =>
+      error(s"FAILED TO PARSE ${str} falling back to just http://cromwell:8000")
+      uri"http://cromwell:8000"
+  }
+
+
+  import java.util
+  import java.util.stream.Collectors
+
+  implicit val zioBackend: Task[SttpBackend[Task, ZioStreams with capabilities.WebSockets]] =  HttpClientZioBackend()
 
   override def baseHost: String = new URI(base).getHost
 
@@ -24,6 +41,12 @@ trait CromwellClientShared extends PostAPI with CromwellClientLike {
     val last = base.lastIndexOf(":")
     if(first!=last) base.substring(0, last) else base
   }
+
+  import sttp.client3._
+  import zio._
+
+
+
 
 
   //def get(subpath: String, headers: Map[String, String]): Free[HttpF, HttpResponse]
@@ -38,7 +61,6 @@ trait CromwellClientShared extends PostAPI with CromwellClientLike {
 
   //def getEngineStatus: IO[Entity]
 
-  lazy val api = "/api"
 
   def makeWorkflowOptions(output: String, log: String="", call_log: String = ""): String =
     s"""
@@ -52,150 +74,37 @@ trait CromwellClientShared extends PostAPI with CromwellClientLike {
     """.stripMargin
 
 
-  ///FROM SHARED
-
   /**
-    * 400
-    * Malformed Workflow ID
-    * 403
-    * Workflow in terminal status
-    * 404
-    * Workflow ID Not Found
-    * 500
-    * Internal Error
+    * Send requests that assumes String answer, i.e. simple get or post without body
+    * @param request
+    * @return
     */
-  //def abort(id: String): IO[group.research.aging.cromwell.client.StatusInfo]
+  def text_request_zio(request: Request[Either[String, String], Any] ): ZIO[Any, Throwable, Response[Right[HttpError[String], String]]] = this.zioBackend.flatMap{
+    backend =>
+      request.send(backend).map{
+        case Response(Left(error), code, statusText, _ ,_, _) => Left(HttpError((error, statusText), code))
+        case Response( Right(result), code, statusText, headers, history, request) => Right(Response(Right.apply[HttpError[String], String](result), code, statusText, headers, history, request))
+      }.absolve
+  }
 
-
-  /*
-
-  def makeWorkflowOptions(output: String, log: String="", call_log: String = ""): String
-
-
-
-  def getOutput(id: String): IO[CallOutputs]
-
-  def getLabels(id: String): IO[WorkflowLabels]
-
-  def getQuery(status: WorkflowStatus = WorkflowStatus.AnyStatus, includeSubworkflows: Boolean = false): IO[QueryResults]
-
-  def getAllOutputs(status: WorkflowStatus = WorkflowStatus.AnyStatus, includeSubworkflows: Boolean = false): IO[List[CallOutputs]]
-
-  def getLogs(id: String): IO[Logs]
-
-  def getAllLogs(status: WorkflowStatus = WorkflowStatus.AnyStatus): IO[List[Logs]]
-
-  def getBackends: IO[Backends]
-
-  def getMetadata(id: String, v: String = "v2", expandSubWorkflows: Boolean = true): IO[Metadata]
-
-  def getAllMetadata(status: WorkflowStatus = WorkflowStatus.AnyStatus, includeSubworkflows: Boolean = true): IO[List[Metadata]]
-
-
-  def postWorkflow(fileContent: String,
-                   workflowInputs: String,
-                   workflowOptions: String,
-                   workflowDependencies: Option[java.nio.ByteBuffer] = None
-                  ): Future[group.research.aging.cromwell.client.StatusInfo]
-
-  def postWorkflowURL(url: String,  workflowInputs: String,
-                      workflowOptions: String = "",
-                      workflowDependencies: Option[java.nio.ByteBuffer] = None): Future[StatusInfo]
-
-  def describeWorkflow(fileContent: String,
-                       workflowInputs: String,
-                       workflowOptions: String = "",
-                       workflowDependencies: Option[java.nio.ByteBuffer] = None): Future[ValidationResult]
-  */
-
-  ///FROM SHARED
-
-
-  implicit protected def getInterpreter: InterpTrans[IO]
-  //implicit val interpTrans = Interpreter[IO]
-
-  def get(subpath: String, headers: Map[String, String]): Free[HttpF, HttpResponse] = Hammock.request(Method.GET, Uri.unsafeParse(base + subpath), headers)
-
-  def post(subpath: String, headers: Map[String, String]): Free[HttpF, HttpResponse] =
-    Hammock.request(Method.POST, Uri.unsafeParse(base + subpath), headers)
-
-  def patch(subpath: String, headers: Map[String, String]): Free[HttpF, HttpResponse] =
-    Hammock.request(Method.PATCH, Uri.unsafeParse(base + subpath), headers)
-
-  //def post[T](subpath: String, headers: Map[String, String], body: T): Free[HttpF, HttpResponse] = Hammock.request(Method.POST, Uri.unsafeParse(base + subpath), headers,
-  //  Some(Entity.ByteArrayEntity)
-
-
-  def getIO[T](subpath: String, headers: Map[String, String])(implicit D: Decoder[T], M: MarshallC[HammockF]): IO[T] =
-    get(subpath, headers).as[T](D, M).exec[IO]
-
-  def getAPI[T](subpath: String, headers: Map[String, String] = Map.empty)(implicit D: Decoder[T], M: MarshallC[HammockF]): IO[T] =
-    getIO[T](api + subpath, headers)(D, M)
-
-  def postIO[T](subpath: String, headers: Map[String, String])(implicit D: Decoder[T], M: MarshallC[HammockF]): IO[T] =
-    post(subpath, headers).as[T](D, M).exec[IO]
-
-  def postAPIsimple[T](subpath: String, headers: Map[String, String] = Map.empty)(implicit D: Decoder[T], M: MarshallC[HammockF]): IO[T] =
-    postIO[T](api + subpath, headers)(D, M)
-
-  def getStats: IO[Stats] = getIO[Stats](s"/engine/${version}/stats", Map.empty)
-
-  def getVersion: IO[Version] = getIO[Version](s"/engine/${version}/version", Map.empty)
-
-  def getEngineStatus: IO[Entity] = get(s"/engine/${version}/status", Map.empty).map(_.entity).exec[IO]
-
-  /**
-    * 400
-    * Malformed Workflow ID
-    * 403
-    * Workflow in terminal status
-    * 404
-    * Workflow ID Not Found
-    * 500
-    * Internal Error
-    */
-  def abort(id: String): IO[group.research.aging.cromwell.client.StatusInfo] =
-    {
-      println(s"abborting ${id}")
-      postAPIsimple[group.research.aging.cromwell.client.StatusInfo](s"/workflows/${version}/${id}/abort")
+  def json_request_zio[T](request: JsonRequest[T])(implicit decoder: io.circe.Decoder[T]): ZIO[Any, Throwable, T] = {
+    this.zioBackend.flatMap { case backend =>
+      val response: Task[Response[Either[ResponseExceptionJson, T]]] = request.send(backend)
+      response.map {
+        case  Response(Left(error), code, status, header, history, request) =>
+          logger.error(s"request with ${request.uri.toString} failed with ${code} CODE and ${error} ERROR and ${status} STATUS")
+          Left(error)
+        case Response(Right(result), _, _, _, _, _) =>
+          Right(result)
+      }.absolve
     }
-
-  def getOutput(id: String): IO[CallOutputs] = getAPI[CallOutputs](s"/workflows/${version}/${id}/outputs")
-
-  def getLabels(id: String): IO[WorkflowLabels] = getAPI[WorkflowLabels](s"/workflows/${version}/{id}/labels")
-
-  protected def queryString(status: WorkflowStatus = WorkflowStatus.AnyStatus, includeSubworkflows: Boolean = false): String = status match {
-    case WorkflowStatus.AnyStatus => s"/workflows/${version}/query?includeSubworkflows=${includeSubworkflows}"
-    case status: WorkflowStatus =>   s"/workflows/${version}/query?status=${status.entryName}&includeSubworkflows=${includeSubworkflows}"
   }
 
-  def getQuery(status: WorkflowStatus = WorkflowStatus.AnyStatus, includeSubworkflows: Boolean = false): IO[QueryResults] = {
-    val url = queryString(status, includeSubworkflows)
-    getAPI[QueryResults](url)
-  }
 
-  def getAllOutputs(status: WorkflowStatus = WorkflowStatus.AnyStatus, includeSubworkflows: Boolean = false): IO[List[CallOutputs]] =
-    getQuery(status, includeSubworkflows).flatMap(q=>
-      q.results.map(r=>this.getOutput(r.id)).sequence
-    )
+  def runtime = Runtime.default
 
-
-  def getLogs(id: String): IO[Logs] = getAPI[Logs](s"/workflows/${version}/${id}/logs")
-  def getStatus(id: String): IO[StatusInfo] = getAPI[StatusInfo](s"/workflows/${version}/${id}/status")
-
-
-  def getAllLogs(status: WorkflowStatus = WorkflowStatus.AnyStatus): IO[List[Logs]] = getQuery(status).flatMap(q=>
-    q.results.map(r=>this.getLogs(r.id)).sequence
-  )
-
-  def getBackends: IO[Backends] = getAPI[Backends](s"/workflows/${version}/backends")
-
-  def getMetadata(id: String, v: String = "v2", expandSubWorkflows: Boolean = true): IO[Metadata] =
-    getAPI[Metadata](s"/workflows/${v}/${id}/metadata?expandSubWorkflows=${expandSubWorkflows}")
-
-  def getAllMetadata(status: WorkflowStatus = WorkflowStatus.AnyStatus, includeSubworkflows: Boolean = true): IO[List[Metadata]] =
-    getQuery(status, includeSubworkflows).flatMap(q=>
-    q.results.map(r=>this.getMetadata(r.id)).sequence
-  )
+  import cats.effect.IO
+  import cats.free.Free
+  import cats.implicits._
 
 }

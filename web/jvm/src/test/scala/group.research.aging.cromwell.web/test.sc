@@ -24,6 +24,6 @@ object Tester {
 }
 
 println("????")
-val res = Tester.hello("http://localhost:8000")
+val res = MockPostRequests.hello("http://localhost:8000")
 println(res)
 println("!!!!")

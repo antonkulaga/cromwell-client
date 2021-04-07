@@ -1,7 +1,6 @@
 package group.research.aging.cromwell.web.communication
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
-
 import akka.actor.ActorRef
 import akka.pattern.pipe
 import better.files.File
@@ -14,6 +13,7 @@ import group.research.aging.cromwell.web.util.{HostExtractor, PipelinesExtractor
 import group.research.aging.cromwell.web.{Commands, EmptyAction, Messages, Results}
 import wvlet.log.LogFormatter.SourceCodeLogFormatter
 import wvlet.log.{LogRotationHandler, Logger}
+import zio.ZIO
 
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContextExecutor, Future}
@@ -78,14 +78,21 @@ case class UserActor(username: String, initialClient: CromwellClient) extends Ba
       debug("=====Commands.QueryWorkflows=======")
       debug(q)
       //val metaFut: Future[Results.UpdatedMetadata] = client.getAllMetadata(status, subworkflows).map(m=> Results.UpdatedMetadata(m)).unsafeToFuture()
-      val queryResults = client.getQuery(status, expandSubworkflows)
-        .map(r=>QueryWorkflowResults(r, Map.empty, status, expandSubworkflows, limit, offset).paginate(limit, offset)).unsafeToFuture()
-      pipe(queryResults)(context.dispatcher) to self
+      //val queryResults = client.getQuery(status, expandSubworkflows)
+      //  .map(r=>QueryWorkflowResults(r, Map.empty, status, expandSubworkflows, limit, offset).paginate(limit, offset)).unsafeToFuture()
+      val queryResults: ZIO[Any, Throwable, QueryWorkflowResults] = client.getQueryZIO(status, expandSubworkflows)
+        .map(r=>QueryWorkflowResults(r, Map.empty, status, expandSubworkflows, limit, offset)
+          .paginate(limit, offset))
+      val queryResultsFut = client.runtime.unsafeRunToFuture(queryResults).future
+
+      pipe(queryResultsFut)(context.dispatcher) to self
 
     case r: Results.QueryWorkflowResults =>
       output.foreach(o=>o ! WebsocketMessages.WebsocketAction(r))
       for(id <- r.missing) {
-        val metaFut = client.getMetadata(id).map(r=>Results.UpdatedMetadata(Map(r.id-> r))).unsafeToFuture()
+        val meta = client.getMetadataZIO(id).map(r=>Results.UpdatedMetadata(Map(r.id-> r)))
+        val metaFut = client.runtime.unsafeRunToFuture(meta).future
+        //val metaFut = client.getMetadata(id).map(r=>Results.UpdatedMetadata(Map(r.id-> r))).unsafeToFuture()
         pipe(metaFut)(context.dispatcher) to self
       }
 
@@ -147,10 +154,11 @@ case class UserActor(username: String, initialClient: CromwellClient) extends Ba
 
     case Commands.Abort(id) =>
       debug(s"aborting ${id}")
-      val abortion =  client.abort(id)
-        .map(s=>Messages.Infos(List(Messages.Info("abortion", s"aborting ${s.id}, current status: ${s.status}")))).unsafeToFuture()
+      val abortion =  client.abortZIO(id)
+        .map(s=>Messages.Infos(List(Messages.Info("abortion", s"aborting ${s.id}, current status: ${s.status}"))))
+      val abortionFut = client.runtime.unsafeRunToFuture(abortion).future
         //.map(_=>Commands.QueryWorkflows(WorkflowStatus.AnyStatus))
-      pipe(abortion)(context.system.dispatcher).pipeTo(self)
+      pipe(abortionFut)(context.system.dispatcher).pipeTo(self)
       //val update = akka.pattern.after(3 seconds, context.system.scheduler)(abortion.map(_ => Commands.QueryWorkflows(WorkflowStatus.AnyStatus, true)))(context.system.dispatcher)
       //pipe(update)(context.system.dispatcher).pipeTo(self)
 

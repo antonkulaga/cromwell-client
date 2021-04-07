@@ -40,13 +40,11 @@ object CromwellClient {
 }
 
 
-@JsonCodec case class CromwellClient(base: String, version: String = "v1") extends CromwellClientShared with PostSttp with CromwellClientJVMSpecific
+@JsonCodec case class CromwellClient(base: String, version: String = "v1") extends CromwellClientShared with CromwellClientJVMSpecific
 {
-  implicit override protected def getInterpreter: InterpTrans[IO] = ApacheInterpreter.instance
+  implicit protected def getInterpreter: InterpTrans[IO] = ApacheInterpreter.instance
 
-  override implicit def executionContext: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
-
-  override implicit def sttpBackend= AsyncHttpClientFutureBackend()
+  //override implicit def asyncHttpBackend= AsyncHttpClientFutureBackend()
 }
 
 /*

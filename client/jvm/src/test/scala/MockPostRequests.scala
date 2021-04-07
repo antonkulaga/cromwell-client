@@ -3,7 +3,7 @@ import group.research.aging.cromwell.client.{CromwellClient, StatusInfo}
 import scala.concurrent.duration.DurationInt
 import scala.concurrent.{Await, Future}
 
-object Tester {
+object MockPostRequests {
   /*
     curl -d "{"hello.name": "World"}" -H "Accept: application/json"  -X POST http://localhost:8001/api/run/hello-world.wdl?host=http://pic:8000
     {"id":"9e0a1de3-9a0f-4ef3-8b96-f15a1a54a1a5","status":"Submitted"}
@@ -88,8 +88,9 @@ object Tester {
           |  "greeting.name": "World"
           |}
           |""".stripMargin
-      val status: Future[StatusInfo] = client.postWorkflow(greeting, input, "", None)
-      Await.result(status, 5 seconds)
+      val status = client.postWorkflow(greeting, input, "", None)
+      val statusFut = client.runtime.unsafeRunToFuture(status).future
+      Await.result(statusFut, 5 seconds)
     }
 
   def hello(server: String = "http://agingkills.eu:8000", callback: String = "http://localhost:8001/api/trace"): StatusInfo = {
@@ -101,8 +102,39 @@ object Tester {
         |  "hello.name": "World"
         |}
         |""".stripMargin
-    val status: Future[StatusInfo] = client.postWorkflowStrings(hello, input, "", List("greeting.wdl"->greeting))
-    Await.result(status, 5 seconds)
+    val status = client.postWorkflowStrings(hello, input, "", List("greeting.wdl"->greeting))
+    //val statusFut = client.runtime.unsafeRunToFuture(status).future
+    //Await.result(statusFut, 5 seconds)
+    client.runtime.unsafeRun(status)
+  }
+
+  def bad_input(server: String = "http://agingkills.eu:8000", callback: String = "http://localhost:8001/api/trace"): StatusInfo = {
+    val client = CromwellClient(server, "v1")
+
+    val input =
+      """
+        |{
+        |  "buy.name": "World"
+        |}
+        |""".stripMargin
+    val status = client.postWorkflowStrings(hello, input, "", List("greeting.wdl"->greeting))
+    //val statusFut = client.runtime.unsafeRunToFuture(status).future
+    //Await.result(statusFut, 5 seconds)
+    client.runtime.unsafeRun(status)
+  }
+
+  def bad_wdl(server: String = "http://agingkills.eu:8000", callback: String = "http://localhost:8001/api/trace"): StatusInfo = {
+    val client = CromwellClient(server, "v1")
+
+    val input =
+      """
+        |{
+        |  "buy.name": "World"
+        |}
+        |""".stripMargin
+    val status = client.postWorkflowStrings("it is totally broken!", input, "", List("greeting.wdl"->greeting))
+    //val statusFut = client.runtime.unsafeRunToFuture(status).future
+    client.runtime.unsafeRun(status)
   }
 
   /*

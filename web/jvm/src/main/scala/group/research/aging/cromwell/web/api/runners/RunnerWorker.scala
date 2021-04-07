@@ -61,7 +61,8 @@ class RunnerWorker(client: CromwellClient) extends BasicActor {
 
     case MessagesAPI.Poll => //checks running workflows and fires callbacks and batches
       //debug(s"polling the callbacks, currently ${callbacks.mkString(",")} are avaliable")
-      val queryResults: QueryResults = client.getQuery().unsafeRunSync()
+      //val queryResults: QueryResults = client.getQuery().unsafeRunSync()
+      val queryResults = client.runtime.unsafeRunTask(client.getQueryZIO())
       /*
       val finished= queryResults.filter(s=>
         s.status ==  WorkflowStatus.Succeded.entryName ||
@@ -107,25 +108,33 @@ class RunnerWorker(client: CromwellClient) extends BasicActor {
 
     case Commands.QueryWorkflows(status, subworkflows, _, _) => //here we do not have pagination at the moment
       val s = sender
-      client.getAllMetadata(status, subworkflows).map(m=> Results.UpdatedMetadata(m.map(r=>r.id->r).toMap)).unsafeToFuture().pipeTo(s)
+      val allmeta = client.getAllMetadataZIO(status, subworkflows).map(m=> Results.UpdatedMetadata(m.map(r=>r.id->r).toMap))
+      val allmetaFut = client.runtime.unsafeRunToFuture(allmeta).future
+      allmetaFut.pipeTo(s)
 
     case Commands.GetQuery(status, subs) =>
       val s = sender
-      client.getQuery(status, subs).unsafeToFuture().pipeTo(s)
+      val query = client.getQueryZIO(status, subs)
+      val queryFut = client.runtime.unsafeRunToFuture(query).future
+      queryFut.pipeTo(s)
 
     case Commands.SingleWorkflow.GetOutput(id) =>
       val s = sender()
-      val st = client.getStatus(id).unsafeToFuture()
-      val o = client.getOutput(id).unsafeToFuture()
+      val st = client.getStatusZIO(id)
+      val stFut = client.runtime.unsafeRunToFuture(st).future
+      val o = client.getOutputZIO(id)
+      val oFut = client.runtime.unsafeRunToFuture(o).future
       val r: Future[StatusAndOutputs] = for{
-        stat <-st
-        out <- o
+        stat <-stFut
+        out <- oFut
       } yield StatusAndOutputs(stat, out)
       r.pipeTo(s)
 
     case Commands.SingleWorkflow.GetStatus(id) =>
       val s = sender()
-      client.getStatus(id).unsafeToFuture().pipeTo(s)
+      val st = client.getStatusZIO(id)
+      val stFut = client.runtime.unsafeRunToFuture(st).future
+      stFut.pipeTo(s)
 
     case promise @ MessagesAPI.ServerPromise(status, backs) =>
       callbacks.get(status.id) match {
@@ -148,7 +157,7 @@ class RunnerWorker(client: CromwellClient) extends BasicActor {
       if callbacks.contains(r.id)
       cb: CallBack <- callbacks(r.id)
       if cb.updateOn.contains(r.status)
-      outputs = client.getOutput(r.id).unsafeRunSync()
+      outputs = client.runtime.unsafeRunTask(client.getOutputZIO(r.id))
       json: Json = MessagesAPI.PipelineResult(r.id, r.status, outputs.outputs).asJson
       //debug(s"sending reesults back to ${cb.backURL}")
       headers = Map("Content-Type" -> "application/json") ++ cb.headers

@@ -88,8 +88,6 @@ lazy val  cromwellClient = crossProject(JSPlatform, JVMPlatform)
 		libraryDependencies ++= Seq(
 			"com.beachape" %%% "enumeratum" % "1.6.0",
 			"com.lihaoyi" %%% "pprint" % "0.6.3",
-			//"org.typelevel" %%% "cats-core"      % "1.3.1",
-			//"org.typelevel" %%% "cats-effect"     % "1.0.0",
 			"io.circe" %%% "circe-generic-extras" % "0.13.0",
 			"io.circe" %%% "circe-parser" % "0.13.0",
 			"io.circe" %%% "circe-generic" % "0.13.0",
@@ -105,6 +103,7 @@ lazy val  cromwellClient = crossProject(JSPlatform, JVMPlatform)
 			"com.softwaremill.sttp.client3" %% "core" % sttpVersion,
 			"com.softwaremill.sttp.client3" %% "circe" % sttpVersion,
 			"com.pepegar" %% "hammock-circe" % hammockVersion,
+			"com.softwaremill.sttp.client3" %% "httpclient-backend-zio" % sttpVersion,
 			//"com.softwaremill.sttp.client3" %% "akka-http-backend" % sttpVersion,
 			"com.softwaremill.sttp.client3" %% "async-http-client-backend-future" %  sttpVersion,
       "com.typesafe.akka" %% "akka-stream" % akka
@@ -169,7 +168,7 @@ lazy val cromwellWeb = crossProject(JSPlatform, JVMPlatform)
 			"org.webjars" % "swagger-ui" % "3.38.0" //Swagger UI
 		),
 		(managedClasspath in Runtime) += (packageBin in Assets).value,
-		//(fullClasspath in Runtime) += (packageBin in Assets).value,
+		(fullClasspath in Runtime) += (packageBin in Assets).value,
 		compile in Compile := ((compile in Compile) dependsOn scalaJSPipeline).value,
 		pipelineStages in Assets := Seq(scalaJSPipeline),
 		//pipelineStages in Assets := Seq(scalaJSDev), //to make compilation faster

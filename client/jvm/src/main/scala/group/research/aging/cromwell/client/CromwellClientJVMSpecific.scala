@@ -28,7 +28,7 @@ trait CromwellClientJVMSpecific  {
   def postWorkflowStrings(workflow: String,
                         workflowInputs: String,
                         workflowOptions: String = "",
-                        wdlDependencies: Seq[(String, String)] = Seq.empty): Future[StatusInfo] ={
+                        wdlDependencies: Seq[(String, String)] = Seq.empty) ={
     self.postWorkflow(
       workflow,
       workflowInputs,
@@ -40,7 +40,7 @@ trait CromwellClientJVMSpecific  {
   def validateWorkflow(workflow: String,
                           workflowInputs: String,
                           workflowOptions: String = "",
-                          wdlDependencies: Seq[(String, String)] = Seq.empty): Future[ValidationResult] ={
+                          wdlDependencies: Seq[(String, String)] = Seq.empty) ={
     self.describeWorkflow(
       workflow,
       workflowInputs,
@@ -65,7 +65,7 @@ trait CromwellClientJVMSpecific  {
                          workflowInputs: File,
                          workflowOptions: String = "",
                          wdlDependencies: Option[File] = None,
-                        ): Future[StatusInfo] ={
+                        ) ={
     self.postWorkflow(
       workflow.lines.mkString("\n"),
       workflowInputs,
