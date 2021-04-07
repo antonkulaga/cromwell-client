@@ -1,15 +1,13 @@
 package group.research.aging.cromwell.client
 
-import fansi.Back
-import io.circe
-import org.apache.http.client.HttpResponseException
 import sttp.capabilities
 import sttp.capabilities.zio.ZioStreams
-import sttp.client3.circe.asJson
 import sttp.client3.httpclient.zio.HttpClientZioBackend
+import sttp.model.Header
 import wvlet.log.LogSupport
-import zio.{Task, ZIO}
-
+import zio.Task
+import sttp.client3._
+import sttp.model.Uri
 import java.net.URI
 
 
@@ -18,8 +16,6 @@ trait CromwellClientShared extends CromwellClientLike with CromwellClientSharedZ
   def base: String
   def version: String
 
-  import sttp.client3._
-  import sttp.model.Uri
 
   protected def parseUri(str: String): Uri =     Uri.parse(str).toOption match { //TODO: ugly fix
     case Some(value) => value
@@ -27,10 +23,6 @@ trait CromwellClientShared extends CromwellClientLike with CromwellClientSharedZ
       error(s"FAILED TO PARSE ${str} falling back to just http://cromwell:8000")
       uri"http://cromwell:8000"
   }
-
-
-  import java.util
-  import java.util.stream.Collectors
 
   implicit val zioBackend: Task[SttpBackend[Task, ZioStreams with capabilities.WebSockets]] =  HttpClientZioBackend()
 
@@ -87,6 +79,15 @@ trait CromwellClientShared extends CromwellClientLike with CromwellClientSharedZ
       }.absolve
   }
 
+  def just_post_zio[TBody](fullpath: String, body: TBody, headers: Seq[Header] = Seq.empty)(implicit serializer: BodySerializer[TBody]): ZIO[Any, Throwable, Response[Right[HttpError[String], String]]] = {
+    val request = basicRequest
+      .post(parseUri(base + fullpath))
+      .body[TBody](body)(serializer)
+      .headers(headers:_*)
+    text_request_zio(request)
+  }
+
+
   def json_request_zio[T](request: JsonRequest[T])(implicit decoder: io.circe.Decoder[T]): ZIO[Any, Throwable, T] = {
     this.zioBackend.flatMap { case backend =>
       val response: Task[Response[Either[ResponseExceptionJson, T]]] = request.send(backend)
@@ -102,9 +103,5 @@ trait CromwellClientShared extends CromwellClientLike with CromwellClientSharedZ
 
 
   def runtime = Runtime.default
-
-  import cats.effect.IO
-  import cats.free.Free
-  import cats.implicits._
 
 }

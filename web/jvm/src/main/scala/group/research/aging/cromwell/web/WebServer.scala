@@ -1,18 +1,14 @@
 package group.research.aging.cromwell.web
 
-import akka.actor.{ActorSystem, OneForOneStrategy, SupervisorStrategy}
 import akka.http.scaladsl.marshallers.xml.ScalaXmlSupport._
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.server._
 import akka.http.scaladsl.{Http, HttpExt, model}
 import akka.stream.{ActorMaterializer, ActorMaterializerSettings, Supervision}
-import cats.effect.{ContextShift, IO}
 import ch.megard.akka.http.cors.scaladsl.CorsDirectives._
 import de.heikoseeberger.akkahttpcirce._
 import group.research.aging.cromwell.web.api.RestAPI
 import group.research.aging.cromwell.web.communication.WebsocketServer
-import hammock.InterpTrans
-import hammock.akka.AkkaInterpreter
 import io.circe.generic.auto._
 import scalacss.DevDefaults._
 import wvlet.log.LogFormatter.SourceCodeLogFormatter
@@ -20,7 +16,6 @@ import wvlet.log.{LogLevel, LogSupport, Logger}
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.xml.Unparsed
-import scala.concurrent.duration._
 
 /**
   * Cromwell UI webserver
@@ -95,9 +90,6 @@ object WebServer extends HttpApp with FailFastCirceSupport with LogSupport {
   implicit def actorSystem = http.system
   implicit lazy val materializer: ActorMaterializer = ActorMaterializer(ActorMaterializerSettings(http.system).withSupervisionStrategy(decider))
   implicit lazy val executionContext: ExecutionContext = http.system.dispatcher
-  implicit lazy val cs: ContextShift[IO] = IO.contextShift(executionContext)
-
-  implicit protected def getInterpreter: InterpTrans[IO] = AkkaInterpreter.instance[IO]
 
   def proxy(request: HttpRequest, url: model.Uri): Future[RouteResult] = {
     println("url to send is: " + url.toString())

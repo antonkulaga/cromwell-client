@@ -15,7 +15,7 @@ lazy val commonSettings = Seq(
 
 	scalaVersion :=  "2.13.4",
 
-	version := "0.3.1",
+	version := "0.4.0",
 
 	unmanagedClasspath in Compile ++= (unmanagedResources in Compile).value,
 
@@ -98,16 +98,14 @@ lazy val  cromwellClient = crossProject(JSPlatform, JVMPlatform)
   .jvmSettings(
     libraryDependencies ++= Seq(
 			"com.github.pathikrit" %% "better-files" % "3.9.1",
-			"com.pepegar" %% "hammock-apache-http" % hammockVersion,
-			"com.pepegar" %% "hammock-akka-http" % hammockVersion,
+			//"com.pepegar" %% "hammock-apache-http" % hammockVersion,
+			//"com.pepegar" %% "hammock-akka-http" % hammockVersion,
 			"com.softwaremill.sttp.client3" %% "core" % sttpVersion,
 			"com.softwaremill.sttp.client3" %% "circe" % sttpVersion,
-			"com.pepegar" %% "hammock-circe" % hammockVersion,
+			//"com.pepegar" %% "hammock-circe" % hammockVersion,
 			"com.softwaremill.sttp.client3" %% "httpclient-backend-zio" % sttpVersion,
 			//"com.softwaremill.sttp.client3" %% "akka-http-backend" % sttpVersion,
-			"com.softwaremill.sttp.client3" %% "async-http-client-backend-future" %  sttpVersion,
-      "com.typesafe.akka" %% "akka-stream" % akka
-
+			"com.typesafe.akka" %% "akka-stream" % akka
 		)
   )
   .jsSettings(

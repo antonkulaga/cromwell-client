@@ -3,18 +3,17 @@ package group.research.aging.cromwell.web.api.runners
 import akka.actor._
 import akka.pattern._
 import akka.stream._
-import cats.effect.{ContextShift, IO}
 import group.research.aging.cromwell.client.{CromwellClient, QueryResult, QueryResults, StatusAndOutputs, StatusInfo}
 import group.research.aging.cromwell.web.Commands.TestRun
-import group.research.aging.cromwell.web.WebServer.http
 import group.research.aging.cromwell.web.api.runners.MessagesAPI.CallBack
 import group.research.aging.cromwell.web.common.BasicActor
 import group.research.aging.cromwell.web.{Commands, Results}
-import hammock.akka.AkkaInterpreter
-import hammock.circe.implicits._
-import hammock.{Hammock, Method, _}
 import io.circe.Json
 import io.circe.syntax._
+import sttp.client3._
+import sttp.model.{Header, Uri}
+import sttp.client3.circe._
+import io.circe.generic.auto._
 
 import scala.collection.immutable
 import scala.concurrent.{ExecutionContextExecutor, Future}
@@ -45,11 +44,6 @@ class RunnerWorker(client: CromwellClient) extends BasicActor {
     MessagesAPI.Poll)
 
   implicit val materializer: ActorMaterializer = ActorMaterializer( ActorMaterializerSettings(context.system).withSupervisionStrategy(decider))
-
-  //implicit  protected def getInterpreter: Interpreter[IO] = Interpreter[IO]
-  implicit val cs: ContextShift[IO] = IO.contextShift(http.system.dispatcher)
-
-  implicit protected def getInterpreter: InterpTrans[IO] = AkkaInterpreter.instance[IO]
 
   /**
     * Recieve generating functions
@@ -89,8 +83,9 @@ class RunnerWorker(client: CromwellClient) extends BasicActor {
           val serv = if(serverURL.endsWith("/")) serverURL.dropRight(1) else serverURL
           val cl: CromwellClient = if(client.base.contains(serv)) client else client.copy(base = serv)
           val statusUpdate = cl.postWorkflowStrings(wdl, input.replace("\t", "  "), options, dependencies)
-          statusUpdate pipeTo source
-          statusUpdate.map(s=>mes.promise(s)) pipeTo self
+          val statusUpdateFut = cl.runtime.unsafeRunToFuture(statusUpdate)
+          statusUpdateFut pipeTo source
+          statusUpdateFut.map(s=>mes.promise(s)) pipeTo self
 
     case mes @ MessagesAPI.ServerCommand(Commands.TestRun(wdl, input, results, dependencies), serverURL, _, _, _, _) =>
       //test server command
@@ -158,9 +153,10 @@ class RunnerWorker(client: CromwellClient) extends BasicActor {
       cb: CallBack <- callbacks(r.id)
       if cb.updateOn.contains(r.status)
       outputs = client.runtime.unsafeRunTask(client.getOutputZIO(r.id))
-      json: Json = MessagesAPI.PipelineResult(r.id, r.status, outputs.outputs).asJson
+      result = MessagesAPI.PipelineResult(r.id, r.status, outputs.outputs)
+      json: Json = result.asJson
       //debug(s"sending reesults back to ${cb.backURL}")
-      headers = Map("Content-Type" -> "application/json") ++ cb.headers
+      headers = (Map("Content-Type" -> "application/json") ++ cb.headers).map(kv=> Header(kv._1, kv._2)).toList
     }
       yield {
         debug(s"sending reesults back to ${cb.backURL}")
@@ -170,10 +166,11 @@ class RunnerWorker(client: CromwellClient) extends BasicActor {
         debug(s"calling back ${cb.backURL} with request:")
         debug(json)
         debug("and result")
+
         //WARNING EFFECT!!!
         val resultTry = Try {
-          val req = Hammock.request[Json](Method.POST, Uri.unsafeParse(s"${cb.backURL}"), headers, Some(json))
-          req.exec[IO].unsafeRunSync()
+          val req = client.just_post_zio(s"${cb.backURL}", json, headers)
+          client.runtime.unsafeRunTask(req)
         }
         debug(resultTry)
         debug("with headers = " + headers.mkString(";"))
@@ -203,16 +200,14 @@ class RunnerWorker(client: CromwellClient) extends BasicActor {
       cb <- cbs
       if cb != CallBack.empty
     } {
-      val headers = Map("Content-Type" -> "application/json") ++ cb.headers
+      val headers = (Map("Content-Type" -> "application/json") ++ cb.headers).map(kv=>Header(kv._1, kv._2)).toList
       import io.circe._
       import io.circe.parser._
       val res: Option[Json] = parse(cb.updateOn.head).right.map(j => Some(j)).getOrElse(None)
-      val u = Uri.unsafeParse(cb.backURL)
-      debug(s"SENDING TEST RESULT TO ${u}:\n ${res}")
+      debug(s"SENDING TEST RESULT TO ${cb.backURL}:\n ${res}")
       Try{
-        val req = Hammock.request[Json](Method.POST, u, Map("Content-Type" -> "application/json"), res)
-        req.exec[IO].unsafeRunSync()
-
+        val post = client.just_post_zio(cb.backURL, res.get, headers)
+        client.runtime.unsafeRunTask(post)
       } match {
         case  scala.util.Failure(e) => error(s"failed to callback to ${cb.backURL} with the following error ${e}")
         case scala.util.Success(result) =>debug(s"calling back ${cb.backURL} with request:")

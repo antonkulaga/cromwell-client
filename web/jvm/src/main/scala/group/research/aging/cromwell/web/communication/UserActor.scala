@@ -110,7 +110,9 @@ case class UserActor(username: String, initialClient: CromwellClient) extends Ba
       debug("INPUT: ")
       debug(input)
       debug("=================================")
-      val postFut = client.validateWorkflow(wdl, input, options, dependencies).map(v => Results.WorkflowValidated(v)).recover{
+      val validate = client.validateWorkflow(wdl, input, options, dependencies).map(v => Results.WorkflowValidated(v))
+
+      val postFut = client.runtime.unsafeRunToFuture(validate).recover{
         case th =>
           error(s"WORKFLOW could not be executed because of: \n ${th}")
           val m = Option(th.getMessage).combine(Option(th.getCause).map(_.getMessage)).getOrElse(th.toString)
@@ -130,8 +132,10 @@ case class UserActor(username: String, initialClient: CromwellClient) extends Ba
       debug("INPUT: ")
       debug(input)
       debug("=================================")
-      val postFut = client.postWorkflowStrings(wdl, input.replace("\t", "  "), options, dependencies)
-        .map[Results.ActionResult](s=>Results.WorkflowSent(s))(context.dispatcher).recover{
+      val sentWorkflow = client.postWorkflowStrings(wdl, input.replace("\t", "  "), options, dependencies)
+        .map[Results.ActionResult](s=>Results.WorkflowSent(s))
+      val sentWorkflowFut = client.runtime.unsafeRunToFuture(sentWorkflow)
+      val postFut = sentWorkflowFut.recover{
         case th =>
           error(s"WORKFLOW could not be executed because of: \n ${th}")
           val m = Option(th.getMessage).combine(Option(th.getCause).map(_.getMessage)).getOrElse(th.toString)

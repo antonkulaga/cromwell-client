@@ -13,10 +13,6 @@ trait BasicActor extends Actor with LogSupport {
 
       case _: NullPointerException     ⇒ akka.actor.SupervisorStrategy.Resume
 
-      case c: hammock.CodecException =>
-        error("codec problem: " + c.message + " resuming....")
-        akka.actor.SupervisorStrategy.Resume
-
       case fs: java.nio.file.FileSystemException  =>
         error("file system problem: " + fs.getMessage + " resuming....")
         akka.actor.SupervisorStrategy.Resume
