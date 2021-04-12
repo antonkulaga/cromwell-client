@@ -7,8 +7,14 @@ import sttp.model.Header
 import wvlet.log.LogSupport
 import zio.Task
 import sttp.client3._
+
+import scala.concurrent.duration._
 import sttp.model.Uri
+
 import java.net.URI
+import java.net.http.HttpClient
+import java.net.http.HttpClient.Redirect
+import java.time
 
 
 trait CromwellClientShared extends CromwellClientLike with CromwellClientSharedZIO with LogSupport {
@@ -24,7 +30,19 @@ trait CromwellClientShared extends CromwellClientLike with CromwellClientSharedZ
       uri"http://cromwell:8000"
   }
 
-  implicit val zioBackend: Task[SttpBackend[Task, ZioStreams with capabilities.WebSockets]] =  HttpClientZioBackend()
+
+  lazy val httpClient: HttpClient = {
+    java.net.http.HttpClient.newBuilder()
+      .followRedirects(Redirect.ALWAYS)
+      .version(HttpClient.Version.HTTP_2)
+      .connectTimeout(time.Duration.ofMinutes(1))
+      .build()
+  }
+
+
+  //val a: Task[SttpBackend[Task, ZioStreams with capabilities.WebSockets]] = HttpClientZioBackend()
+  lazy implicit val zioBackend: SttpBackend[Task, ZioStreams with capabilities.WebSockets] =  HttpClientZioBackend.usingClient(httpClient)
+
 
   override def baseHost: String = new URI(base).getHost
 
@@ -71,9 +89,8 @@ trait CromwellClientShared extends CromwellClientLike with CromwellClientSharedZ
     * @param request
     * @return
     */
-  def text_request_zio(request: Request[Either[String, String], Any] ): ZIO[Any, Throwable, Response[Right[HttpError[String], String]]] = this.zioBackend.flatMap{
-    backend =>
-      request.send(backend).map{
+  def text_request_zio(request: Request[Either[String, String], Any] ): ZIO[Any, Throwable, Response[Right[HttpError[String], String]]] = {
+      request.send(zioBackend).map{
         case Response(Left(error), code, statusText, _ ,_, _) => Left(HttpError((error, statusText), code))
         case Response( Right(result), code, statusText, headers, history, request) => Right(Response(Right.apply[HttpError[String], String](result), code, statusText, headers, history, request))
       }.absolve
@@ -89,8 +106,7 @@ trait CromwellClientShared extends CromwellClientLike with CromwellClientSharedZ
 
 
   def json_request_zio[T](request: JsonRequest[T])(implicit decoder: io.circe.Decoder[T]): ZIO[Any, Throwable, T] = {
-    this.zioBackend.flatMap { case backend =>
-      val response: Task[Response[Either[ResponseExceptionJson, T]]] = request.send(backend)
+      val response: Task[Response[Either[ResponseExceptionJson, T]]] = request.send(zioBackend)
       response.map {
         case  Response(Left(error), code, status, header, history, request) =>
           logger.error(s"request with ${request.uri.toString} failed with ${code} CODE and ${error} ERROR and ${status} STATUS")
@@ -98,7 +114,6 @@ trait CromwellClientShared extends CromwellClientLike with CromwellClientSharedZ
         case Response(Right(result), _, _, _, _, _) =>
           Right(result)
       }.absolve
-    }
   }
 
 

@@ -24,7 +24,7 @@ object WebServer extends HttpApp with FailFastCirceSupport with LogSupport {
 
   // Set the default log formatter
   Logger.setDefaultFormatter(SourceCodeLogFormatter)
-  Logger.setDefaultLogLevel(LogLevel.DEBUG)
+  //Logger.setDefaultLogLevel(LogLevel.DEBUG)
 
   lazy val resourcePrefix = "public"
 

@@ -23,7 +23,7 @@ import scala.util.Random
   */
 object CromwellWeb extends scala.App with Base {
 
-  logger.setLogLevel(LogLevel.DEBUG)
+  //logger.setLogLevel(LogLevel.DEBUG)
 
   import mhtml._
   import org.scalajs.dom

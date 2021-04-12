@@ -22,7 +22,7 @@ class WebsocketClient(url: String) extends WebsocketSubscriber(url) with LogSupp
 
   Logger.setDefaultFormatter(SimpleSourceFormatter)
 
-  Logger.setDefaultLogLevel(LogLevel.DEBUG)
+  //Logger.setDefaultLogLevel(LogLevel.DEBUG)
   debug(s"starting websocket with address ${url}")
 
   lazy val opened = Var(false)

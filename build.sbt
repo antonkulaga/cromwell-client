@@ -6,7 +6,7 @@ import sbtcrossproject.CrossPlugin.autoImport.crossProject
 
 name := "cromwell-client-parent"
 
-scalaJSStage in Global := FullOptStage
+Global / scalaJSStage := FullOptStage
 
 //settings for all the projects
 lazy val commonSettings = Seq(
@@ -17,25 +17,11 @@ lazy val commonSettings = Seq(
 
 	version := "0.4.0",
 
-	unmanagedClasspath in Compile ++= (unmanagedResources in Compile).value,
+	Compile / unmanagedClasspath ++= (Compile / unmanagedResources).value,
 
 	updateOptions := updateOptions.value.withCachedResolution(true), //to speed up dependency resolution
 
-	resolvers += sbt.Resolver.bintrayRepo("comp-bio-aging", "main"),
-
-	resolvers += "Broad Artifactory Releases" at "https://artifactory.broadinstitute.org/artifactory/libs-release/",
-
-	resolvers += "Broad Artifactory Snapshots" at "https://artifactory.broadinstitute.org/artifactory/libs-snapshot/",
-
-		/*
-    libraryDependencies += "com.lihaoyi" % "ammonite" % "1.0.5" % Test cross CrossVersion.full,
-
-    sourceGenerators in Test += Def.task {
-      val file = (sourceManaged in Test).value / "amm.scala"
-      IO.write(file, """object amm extends App { ammonite.Main().run() }""")
-      Seq(file)
-    }.taskValue,
-    */
+	//resolvers += sbt.Resolver.bintrayRepo("comp-bio-aging", "main"),
 
 	//addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.1" cross CrossVersion.full),
 
@@ -57,7 +43,9 @@ lazy val commonSettings = Seq(
 
 	scalacOptions += "-Ymacro-annotations",
 
-	javacOptions ++= Seq("-Xlint", "-J-Xss256M", "-encoding", "UTF-8", "-XDignore.symbol.file")
+	javacOptions ++= Seq("-Xlint", "-J-Xss256M", "-encoding", "UTF-8", "-XDignore.symbol.file"),
+
+	javaOptions ++= Seq("-Djdk.internal.httpclient.debug=false", "-Djdk.httpclient.HttpClient.log=errors")
 )
 
 commonSettings
@@ -72,22 +60,22 @@ lazy val jquery = "3.5.1"
 
 lazy val airframeLogVersion = "20.4.1"
 
-lazy val sttpVersion = "3.1.1" //"2.2.9"
+lazy val sttpVersion = "3.1.9"
 
 lazy val  cromwellClient = crossProject(JSPlatform, JVMPlatform)
   .crossType(CrossType.Full)
   .in(file("client"))
   .settings(commonSettings: _*)
   .settings(
-    fork in run := true,
+    run / fork := true,
 
-    parallelExecution in Test := false,
+    Test / parallelExecution := false,
 
     name := "cromwell-client",
 
 		libraryDependencies ++= Seq(
 			"com.beachape" %%% "enumeratum" % "1.6.0",
-			"com.lihaoyi" %%% "pprint" % "0.6.3",
+			"com.lihaoyi" %%% "pprint" % "0.6.4",
 			"io.circe" %%% "circe-generic-extras" % "0.13.0",
 			"io.circe" %%% "circe-parser" % "0.13.0",
 			"io.circe" %%% "circe-generic" % "0.13.0",
@@ -130,7 +118,7 @@ lazy val cromwellWeb = crossProject(JSPlatform, JVMPlatform)
 	.in(file("web"))
 	.settings(commonSettings: _*)
 	.settings(
-		parallelExecution in Test := false,
+		Test / parallelExecution := false,
 		name := "cromwell-web",
 		libraryDependencies  ++= Seq(
 			"com.github.japgolly.scalacss" %%% "core" % "0.6.1",
@@ -163,19 +151,19 @@ lazy val cromwellWeb = crossProject(JSPlatform, JVMPlatform)
 			"org.webjars.bowergithub.fomantic" % "fomantic-ui" % "2.8.7",
 			"org.webjars" % "jquery" % jquery,
 			"org.webjars" % "webcomponentsjs" % webcomponents,
-			"org.webjars" % "swagger-ui" % "3.38.0" //Swagger UI
+			"org.webjars" % "swagger-ui" % "3.46.0" //Swagger UI
 		),
-		(managedClasspath in Runtime) += (packageBin in Assets).value,
-		(fullClasspath in Runtime) += (packageBin in Assets).value,
-		compile in Compile := ((compile in Compile) dependsOn scalaJSPipeline).value,
-		pipelineStages in Assets := Seq(scalaJSPipeline),
+		(Runtime / managedClasspath) += (Assets / packageBin).value,
+		//(Runtime / fullClasspath) += (packageBin in Assets).value,
+		Compile/ compile := ((Compile / compile) dependsOn scalaJSPipeline).value,
+		Assets / pipelineStages := Seq(scalaJSPipeline),
 		//pipelineStages in Assets := Seq(scalaJSDev), //to make compilation faster
 		//compile in Compile := ((compile in Compile) dependsOn scalaJSProd).value,
-		fork in run := true,
-		maintainer in Docker := "Anton Kulaga <antonkulaga@gmail.com>",
+		run / fork := true,
+		Docker / maintainer := "Anton Kulaga <antonkulaga@gmail.com>",
 		dockerBaseImage := "ghcr.io/graalvm/graalvm-ce:latest",
-		daemonUserUid in Docker := None,
-		daemonUser in Docker := "root",
+		Docker / daemonUserUid  := None,
+		Docker / daemonUser := "root",
 		dockerExposedVolumes := Seq("/data"),
 		dockerUpdateLatest := true,
 		dockerChmodType := DockerChmodType.UserGroupWriteExecute,
@@ -193,14 +181,14 @@ lazy val webJS = cromwellWeb.js
 lazy val webJVM = cromwellWeb.jvm.settings(
 	scalaJSProjects := Seq(webJS),
 	libraryDependencies ++= Seq(
-		"com.lihaoyi" %% "requests" % "0.6.5" % Test,
+		"com.lihaoyi" %% "requests" % "0.6.7" % Test,
 		"com.lihaoyi" %% "ammonite-ops" % "2.2.0" % Test
 	)
 )
 
-mainClass in Compile := (mainClass in webJVM in Compile).value
+Compile / mainClass := (mainClass in webJVM in Compile).value
 
-(fullClasspath in Runtime) += (packageBin in webJVM in Assets).value
+(Runtime / fullClasspath) += (packageBin in webJVM in Assets).value
 
 dockerUpdateLatest := true
 

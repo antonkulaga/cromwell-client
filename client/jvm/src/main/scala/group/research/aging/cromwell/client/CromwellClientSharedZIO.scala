@@ -6,6 +6,7 @@ import io.circe.Decoder
 import sttp.model._
 import wvlet.log.LogSupport
 
+import java.net.http.HttpClient
 import java.nio.ByteBuffer
 import scala.collection.immutable.ListMap
 
@@ -20,6 +21,7 @@ trait CromwellClientSharedZIO {
   type JsonRequest[T] = RequestT[Identity, Either[ResponseExceptionJson, T], Any]
 
   protected def parseUri(str: String): Uri
+
 
   /**
     * Send requests that assumes String answer, i.e. simple get or post without body
