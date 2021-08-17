@@ -21,17 +21,10 @@ lazy val commonSettings = Seq(
 
 	updateOptions := updateOptions.value.withCachedResolution(true), //to speed up dependency resolution
 
-	//resolvers += sbt.Resolver.bintrayRepo("comp-bio-aging", "main"),
-
-	//addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.1" cross CrossVersion.full),
 
 	addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.11.3" cross CrossVersion.full),
 
 		//addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.10"),
-
-	bintrayRepository := "main",
-
-	bintrayOrganization := Some("comp-bio-aging"),
 
 	licenses += ("MPL-2.0", url("http://opensource.org/licenses/MPL-2.0")),
 
@@ -49,8 +42,6 @@ lazy val commonSettings = Seq(
 )
 
 commonSettings
-
-lazy val hammockVersion = "0.11.3"
 
 lazy val semanticUI = "2.4.1"
 
@@ -74,7 +65,7 @@ lazy val  cromwellClient = crossProject(JSPlatform, JVMPlatform)
     name := "cromwell-client",
 
 		libraryDependencies ++= Seq(
-			"com.beachape" %%% "enumeratum" % "1.6.0",
+			"com.beachape" %%% "enumeratum" % "1.7.0",
 			"com.lihaoyi" %%% "pprint" % "0.6.4",
 			"io.circe" %%% "circe-generic-extras" % "0.13.0",
 			"io.circe" %%% "circe-parser" % "0.13.0",
@@ -86,18 +77,15 @@ lazy val  cromwellClient = crossProject(JSPlatform, JVMPlatform)
   .jvmSettings(
     libraryDependencies ++= Seq(
 			"com.github.pathikrit" %% "better-files" % "3.9.1",
-			//"com.pepegar" %% "hammock-apache-http" % hammockVersion,
-			//"com.pepegar" %% "hammock-akka-http" % hammockVersion,
 			"com.softwaremill.sttp.client3" %% "core" % sttpVersion,
 			"com.softwaremill.sttp.client3" %% "circe" % sttpVersion,
-			//"com.pepegar" %% "hammock-circe" % hammockVersion,
 			"com.softwaremill.sttp.client3" %% "httpclient-backend-zio" % sttpVersion,
 			//"com.softwaremill.sttp.client3" %% "akka-http-backend" % sttpVersion,
 			"com.typesafe.akka" %% "akka-stream" % akka
 		)
   )
   .jsSettings(
-		jsEnv := new org.scalajs.jsenv.jsdomnodejs.JSDOMNodeJSEnv,
+		//jsEnv := new org.scalajs.jsenv.jsdomnodejs.JSDOMNodeJSEnv,
 		libraryDependencies ++= Seq(
 			//"org.scala-js" %%% "scalajs-java-time" % "1.0.0",
 			"io.github.cquiroz" %%% "scala-java-time" % "2.0.0",
@@ -128,11 +116,10 @@ lazy val cromwellWeb = crossProject(JSPlatform, JVMPlatform)
 	)
 	.jsSettings(
 		libraryDependencies ++= Seq(
-			"in.nvilla" %%% "monadic-html" % "0.4.0",
+			"in.nvilla" %%% "monadic-html" % "0.4.1",
 			"org.akka-js" %%% "akkajsactorstream" % "2.2.6.3"
-			//"com.thoughtworks.binding" %%% "dom" % "11.9.0" excludeAll ExclusionRule(organization = "org.scala-lang.modules")
 		),
-		jsEnv := new org.scalajs.jsenv.jsdomnodejs.JSDOMNodeJSEnv,
+		//jsEnv := new org.scalajs.jsenv.jsdomnodejs.JSDOMNodeJSEnv,
 		scalaJSUseMainModuleInitializer := true
 	)
 	.jsConfigure(p=>p.enablePlugins(ScalaJSWeb).disablePlugins(RevolverPlugin))
