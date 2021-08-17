@@ -10,6 +10,12 @@ services:
     command: ["/wait-for-it/wait-for-it.sh mysql-db:3306 -t 120 -- java -Dconfig.file=/data/sources/cromwell-client/services/cromwell/app-config/application.conf -jar /app/cromwell.jar server"]
     ports:
       - "8000:8000"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.frontend.entryPoints=https"
+      - "traefik.http.routers.local.rule=Host(`cromwell.localhost`)"
+      - "traefik.http.routers.humenhance.rule=Host(`cromwell.agingkills.eu`)"
+      - "traefik.port=80"
   mysql-db:
     image: "mysql:8"
     environment:
@@ -42,3 +48,11 @@ services:
       mode: replicated
       restart_policy:
         condition: on-failure
+    labels:
+      - "traefik.enable=true"
+      - "traefik.frontend.entryPoints=https"
+      - "traefik.http.routers.local.rule=Host(`cromwell-client.localhost`)"
+      - "traefik.http.routers.humenhance.rule=Host(`cromwell-client.agingkills.eu`)"
+      - "traefik.port=80"
+    networks:
+      - web
