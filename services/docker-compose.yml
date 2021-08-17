@@ -14,7 +14,7 @@ services:
       - "traefik.enable=true"
       - "traefik.frontend.entryPoints=https"
       - "traefik.http.routers.local.rule=Host(`cromwell.localhost`)"
-      - "traefik.http.routers.humenhance.rule=Host(`cromwell.agingkills.eu`)"
+      - "traefik.http.routers.cromwell.rule=Host(`cromwell.agingkills.eu`)"
       - "traefik.port=80"
   mysql-db:
     image: "mysql:8"
@@ -52,7 +52,7 @@ services:
       - "traefik.enable=true"
       - "traefik.frontend.entryPoints=https"
       - "traefik.http.routers.local.rule=Host(`cromwell-client.localhost`)"
-      - "traefik.http.routers.humenhance.rule=Host(`cromwell-client.agingkills.eu`)"
+      - "traefik.http.routers.cromwell_client.rule=Host(`cromwell-client.agingkills.eu`)"
       - "traefik.port=80"
     networks:
       - web
