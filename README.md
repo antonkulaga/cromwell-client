@@ -13,7 +13,7 @@ reStart
 ```
 It is also published as a Docker container. You can run it as:
 ```bash
-docker run -p 8001:8001 quay.io/comp-bio-aging/cromwell-web:0.3.1
+docker run -p 8001:8001 quay.io/comp-bio-aging/cromwell-web:0.5.0
 ```
 
 ![Screenshot](/screenshot.png?raw=true "CromwellWeb screenshot")
@@ -40,7 +40,7 @@ Adding to dependencies
 add the following to you build.sbt
 ```scala
 resolvers += sbt.Resolver.bintrayRepo("comp-bio-aging", "main")
-libraryDependencies += "group.research.aging" %%% "cromwell-client" % "0.3.1"
+libraryDependencies += "group.research.aging" %%% "cromwell-client" % "0.5.0"
 ```
 Usage
 -----

@@ -8,8 +8,14 @@ services:
       - /data/cromwell-workflow-logs:/data/cromwell-workflow-logs
       - /var/run/docker.sock:/var/run/docker.sock
     command: ["/wait-for-it/wait-for-it.sh mysql-db:3306 -t 120 -- java -Dconfig.file=/data/sources/cromwell-client/services/cromwell/app-config/application.conf -jar /app/cromwell.jar server"]
-    ports:
-      - "8000:8000"
+    networks:
+      - web
+    labels:
+      - "traefik.enable=true"
+      - "traefik.frontend.entryPoints=https"
+      - "traefik.http.routers.local_cromwell.rule=Host(`cromwell.localhost`)"
+      - "traefik.http.routers.cromwell.rule=Host(`cromwell.agingkills.eu`)"
+      - "traefik.port=8000"
   mysql-db:
     image: "mysql:8"
     environment:
@@ -20,25 +26,30 @@ services:
       - ./mysql/my.cnf:/etc/mysql/my.cnf
       - /data/databases/mysql:/var/lib/mysql
       - /data/databases/mysql:/var/lib/mysql-files
-    ports:
-      - "3307:3306"
     cap_add:
       - SYS_NICE  # CAP_SYS_NICE
+    networks:
+      - web
   cromwell-client:
     image: quay.io/comp-bio-aging/cromwell-web:latest
     environment:
-      - CROMWELL=http://cromwell:8000
+      - CROMWELL=http://cromwell.agingkills.eu
       - CROMWELL_LOGS=/data/sources/cromwell-client/logs
     ports:
       - 8001:8001
     volumes:
       - /data:/data
       - /etc/hosts:/etc/hosts
-    deploy:
-      placement:
-        constraints:
-          - node.role == manager
-      replicas: 1
-      mode: replicated
-      restart_policy:
-        condition: on-failure
+    networks:
+      - web
+    labels:
+      - "traefik.enable=true"
+      - "traefik.frontend.entryPoints=https"
+      - "traefik.http.routers.local_cromwell-client.rule=Host(`cromwell-client.localhost`)"
+      - "traefik.http.routers.cromwell-client.rule=Host(`cromwell-client.agingkills.eu`)"
+      - "traefik.port=8001"
+
+networks:
+  web:
+    name: web
+    external: true
