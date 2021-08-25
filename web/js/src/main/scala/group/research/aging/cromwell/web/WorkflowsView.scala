@@ -11,12 +11,15 @@ import java.time.format.DateTimeFormatter
 //import com.thoughtworks.binding.Binding.BindingInstances.monadSyntax._
 
 
-class WorkflowsView(allMetadata: Rx[List[Metadata]], baseHost: Rx[String], commands: Var[Commands.Command]) extends WorkflowViewBase
+class WorkflowsView(allMetadata: Rx[List[Metadata]], baseHost: Rx[String], commands: Var[Commands.Command], filePrefixUrl: Rx[Option[String]]) extends WorkflowViewBase
 {
 
 
   val host: Rx[String] = baseHost.map(h => dom.window.location.protocol +"//"+ h + clientPort)
-  //val allMetadata: Var[List[Metadata]]  = Var(initialMetadata)
+  val fileBase = for{
+    b <- baseHost
+    f <- filePrefixUrl
+  } yield f.getOrElse(b)
 
 
   def metadataRow(r: Metadata): Elem = {
@@ -183,7 +186,7 @@ class WorkflowsView(allMetadata: Rx[List[Metadata]], baseHost: Rx[String], comma
       </thead>
       <tbody>
         {r.calls.toList
-        .flatMap(kv=> callRow(kv._1, kv._2, host))}
+        .flatMap{ case (key, value)=> callRow(key, value, fileBase)}}
       </tbody>
     </table>
   else <br/>

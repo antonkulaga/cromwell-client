@@ -13,6 +13,8 @@ object CromwellClient {
 
   lazy val defaultURL: String = scala.util.Properties.envOrElse("CROMWELL", s"http://localhost:${defaultServerPort}" )
 
+  lazy val filePrefixURL: Option[String] = scala.util.Properties.envOrNone("FILE_PREFIX_URL")
+
   lazy val defaultClientPort: String = scala.util.Properties.envOrElse("CROMWELL_CLIENT_PORT", "8001")
 
   lazy val defaultHost: String = new URI(defaultURL).getHost

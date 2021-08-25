@@ -50,7 +50,8 @@ case class State (client: CromwellClient,
                   infos: List[Messages.Info] = Nil,
                   effects: List[()=>Unit] = Nil,
                   pipelines: Pipelines = Pipelines.empty,
-                  heartBeat: HeartBeat = HeartBeat(None)
+                  heartBeat: HeartBeat = HeartBeat(None),
+                  fileUrlPrefix: Option[String] = None
                  )
 {
 

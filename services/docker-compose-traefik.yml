@@ -1,4 +1,6 @@
-version: '3.8'
+# note: this Traefik configuration is mostly used in the lab
+# you can use it as example to configure with your own traefik
+version: '3.9'
 services:
   cromwell:
     image: "quay.io/comp-bio-aging/cromwell:latest"
@@ -12,10 +14,15 @@ services:
       - web
     labels:
       - "traefik.enable=true"
-      - "traefik.frontend.entryPoints=https"
-      - "traefik.http.routers.local_cromwell.rule=Host(`cromwell.localhost`)"
+      # agingkills.eu configuration
+      - "traefik.http.routers.cromwell.entrypoints=http"
       - "traefik.http.routers.cromwell.rule=Host(`cromwell.agingkills.eu`)"
-      - "traefik.port=8000"
+      # local configuration
+      - "traefik.http.routers.local_cromwell.entrypoints=http"
+      - "traefik.http.routers.local_cromwell.rule=Host(`cromwell.localhost`)"
+      - "traefik.http.routers.local_cromwell.middlewares=auth@file" #note this is for viewing API
+      # services
+      - "traefik.http.services.cromwell.loadbalancer.server.port=8000"
   mysql-db:
     image: "mysql:8"
     environment:
@@ -26,17 +33,14 @@ services:
       - ./mysql/my.cnf:/etc/mysql/my.cnf
       - /data/databases/mysql:/var/lib/mysql
       - /data/databases/mysql:/var/lib/mysql-files
-    cap_add:
-      - SYS_NICE  # CAP_SYS_NICE
     networks:
       - web
   cromwell-client:
     image: quay.io/comp-bio-aging/cromwell-web:latest
     environment:
-      - CROMWELL=http://cromwell.agingkills.eu
+      - CROMWELL=http://cromwell:8000
       - CROMWELL_LOGS=/data/sources/cromwell-client/logs
-    ports:
-      - 8001:8001
+      - FILE_PREFIX_URL=http://cromwell-client.agingkills.eu
     volumes:
       - /data:/data
       - /etc/hosts:/etc/hosts
@@ -44,11 +48,16 @@ services:
       - web
     labels:
       - "traefik.enable=true"
-      - "traefik.frontend.entryPoints=https"
-      - "traefik.http.routers.local_cromwell-client.rule=Host(`cromwell-client.localhost`)"
+      # cromwell agingkills.eu
       - "traefik.http.routers.cromwell-client.rule=Host(`cromwell-client.agingkills.eu`)"
-      - "traefik.port=8001"
-
+      - "traefik.http.routers.cromwell-client.middlewares=auth@file"
+      - "traefik.http.routers.cromwell-client.entrypoints=http"
+      # cromwell local
+      - "traefik.http.routers.local_cromwell-client.rule=Host(`cromwell-client.localhost`)"
+      - "traefik.http.routers.local_cromwell-client.middlewares=auth@file"
+      - "traefik.http.routers.local_cromwell-client.entrypoints=http"
+      # services
+      - "traefik.http.services.cromwell-client.loadbalancer.server.port=8001"
 networks:
   web:
     name: web

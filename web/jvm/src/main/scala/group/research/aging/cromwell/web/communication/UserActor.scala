@@ -62,7 +62,8 @@ case class UserActor(username: String, initialClient: CromwellClient) extends Ba
 
     case WebsocketMessages.ConnectWsHandle(ref) =>
       this.context.become(operation(output :+ ref, client))
-      ref ! WebsocketMessages.WebsocketAction(Results.UpdateClient(client.base))
+      info(s"FILE PREFIX URL IS ${CromwellClient.filePrefixURL}")
+      ref ! WebsocketMessages.WebsocketAction(Results.UpdateClient(client.base, CromwellClient.filePrefixURL))
       //info("PIPELINES ROOT: "+ this.pipelinesRoot)
       //info("SENDING PIPELINES: " + this.allPipelines)
       ref ! WebsocketMessages.WebsocketAction(Results.UpdatePipelines(this.allPipelines))

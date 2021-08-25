@@ -19,5 +19,6 @@ COPY ./app-config /app-config
 RUN useradd -r -u 1002 $NB_USER
 RUN usermod -aG docker $NB_USER
 ENV EUID=1002
+EXPOSE 8000
 
 ENTRYPOINT ["/bin/sh", "-c"]

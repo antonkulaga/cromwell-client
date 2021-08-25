@@ -187,7 +187,7 @@ object CromwellWeb extends scala.App with Base {
       previous
 
 
-    case (previous, Results.UpdateClient(base)) => previous.copy(client = previous.client.copy(base = base), errors = Nil, infos = Nil)
+    case (previous, Results.UpdateClient(base, fileUrlPrefix)) => previous.copy(client = previous.client.copy(base = base), errors = Nil, infos = Nil, fileUrlPrefix = fileUrlPrefix)
     case (previous, Results.UpdatePipelines(pipelines)) =>  previous.copy(pipelines = pipelines)
     case (previous, upd: Results.UpdatedMetadata) => previous.copy(results = previous.results.updated(upd), errors = Nil, infos = Nil)
     case (previous, res: Results.QueryWorkflowResults) => {
@@ -208,7 +208,7 @@ object CromwellWeb extends scala.App with Base {
   val workflows = new WorkflowsView(
     state.map(_.sortedMetadata),
     state.map(_.client.baseHost),
-    commands
+    commands, state.map(_.fileUrlPrefix)
   )
 
   val errors = new ErrorsView(state.map(s=>s.errors),messages)

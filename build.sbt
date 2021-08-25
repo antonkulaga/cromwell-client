@@ -16,12 +16,13 @@ lazy val commonSettings = Seq(
 
 	scalaVersion :=  "2.13.6",
 
-	version := "0.5.0",
+	version := "0.5.1",
 
 	Compile / unmanagedClasspath ++= (Compile / unmanagedResources).value,
 
 	updateOptions := updateOptions.value.withCachedResolution(true), //to speed up dependency resolution
 
+	resolvers += "jitpack" at "https://jitpack.io",
 
 	addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.13.0" cross CrossVersion.full),
 
@@ -159,7 +160,7 @@ lazy val cromwellWeb = crossProject(JSPlatform, JVMPlatform)
 		dockerCommands ++= Seq(
 			Cmd("WORKDIR", "/data")
 		),
-		dockerExposedPorts := Seq(8080)
+		dockerExposedPorts := Seq(8001)
 	).jvmConfigure(p=>
 		p.enablePlugins(SbtWeb, JavaAppPackaging, DockerPlugin)
 	)

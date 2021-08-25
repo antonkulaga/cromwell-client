@@ -70,7 +70,7 @@ object Results {
   case class UpdatedStatus(info: WorkflowStatus) extends ActionResult
   */
   case class UpdatedMetadata(metadata: Map[String, Metadata]) extends ActionResult
-  case class UpdateClient(serverURL: String) extends ActionResult
+  case class UpdateClient(serverURL: String, fileUrlPrefix: Option[String] = None) extends ActionResult
   case class UpdatePipelines(pipelines: Pipelines) extends ActionResult
   case class ServerResult(action: Action) extends ActionResult
   case class WorkflowSent(status: StatusInfo) extends ActionResult
