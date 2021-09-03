@@ -17,6 +17,14 @@ services:
       # agingkills.eu configuration
       - "traefik.http.routers.cromwell.entrypoints=http"
       - "traefik.http.routers.cromwell.rule=Host(`cromwell.agingkills.eu`)"
+      # pic configuration
+      - "traefik.http.routers.pic_cromwell.entrypoints=http"
+      - "traefik.http.routers.pic_cromwell.rule=Host(`cromwell.pic`)"
+      - "traefik.http.routers.pic_cromwell.middlewares=auth@file" #note this is for viewing API
+      # poc configuration
+      - "traefik.http.routers.poc_cromwell.entrypoints=http"
+      - "traefik.http.routers.poc_cromwell.rule=Host(`cromwell.poc`)"
+      - "traefik.http.routers.poc_cromwell.middlewares=auth@file" #note this is for viewing API
       # local configuration
       - "traefik.http.routers.local_cromwell.entrypoints=http"
       - "traefik.http.routers.local_cromwell.rule=Host(`cromwell.localhost`)"
@@ -52,6 +60,14 @@ services:
       - "traefik.http.routers.cromwell-client.rule=Host(`cromwell-client.agingkills.eu`)"
       - "traefik.http.routers.cromwell-client.middlewares=auth@file"
       - "traefik.http.routers.cromwell-client.entrypoints=http"
+      # cromwell pic
+      - "traefik.http.routers.pic_cromwell-client.rule=Host(`cromwell-client.pic`)"
+      - "traefik.http.routers.pic_cromwell-client.middlewares=auth@file"
+      - "traefik.http.routers.pic_cromwell-client.entrypoints=http"
+      # cromwell poc
+      - "traefik.http.routers.poc_cromwell-client.rule=Host(`cromwell-client.poc`)"
+      - "traefik.http.routers.poc_cromwell-client.middlewares=auth@file"
+      - "traefik.http.routers.poc_cromwell-client.entrypoints=http"
       # cromwell local
       - "traefik.http.routers.local_cromwell-client.rule=Host(`cromwell-client.localhost`)"
       - "traefik.http.routers.local_cromwell-client.middlewares=auth@file"
