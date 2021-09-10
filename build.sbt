@@ -16,7 +16,7 @@ lazy val commonSettings = Seq(
 
 	scalaVersion :=  "2.13.6",
 
-	version := "0.5.1",
+	version := "0.5.2",
 
 	Compile / unmanagedClasspath ++= (Compile / unmanagedResources).value,
 
@@ -24,9 +24,7 @@ lazy val commonSettings = Seq(
 
 	resolvers += "jitpack" at "https://jitpack.io",
 
-	addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.13.0" cross CrossVersion.full),
-
-		//addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.10"),
+	addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.13.2" cross CrossVersion.full),
 
 	licenses += ("MPL-2.0", url("http://opensource.org/licenses/MPL-2.0")),
 
@@ -51,7 +49,7 @@ lazy val webcomponents = "1.0.1"
 
 lazy val jquery = "3.6.0"
 
-lazy val airframeLogVersion = "21.8.1"
+lazy val airframeLogVersion = "21.9.0"
 
 lazy val sttpVersion = "3.3.13"
 
@@ -130,8 +128,8 @@ lazy val cromwellWeb = crossProject(JSPlatform, JVMPlatform)
 			"com.typesafe.akka" %% "akka-http" % akkaHttp,
 			"com.typesafe.akka" %% "akka-http-xml" % akkaHttp,
 			"javax.ws.rs" % "javax.ws.rs-api" % "2.1.1", //for extra annotations
-			"com.github.swagger-akka-http" %% "swagger-akka-http" % "2.4.2",
-			"com.github.swagger-akka-http" %% "swagger-scala-module" % "2.3.1",
+			"com.github.swagger-akka-http" %% "swagger-akka-http" % "2.5.0",
+			"com.github.swagger-akka-http" %% "swagger-scala-module" % "2.3.3",
 			"com.vmunier" %% "scalajs-scripts" % "1.2.0",
       "de.heikoseeberger" %% "akka-http-circe" % "1.37.0", //"1.31.0",
 			"ch.megard" %% "akka-http-cors" % "1.1.2",

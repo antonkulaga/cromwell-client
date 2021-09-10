@@ -128,7 +128,11 @@ class WorkflowsView(allMetadata: Rx[List[Metadata]], baseHost: Rx[String], comma
             for{
             sa <- a.start
             sb <- b.start
-            } yield sa.isAfter(sb)).getOrElse(false)
+            } yield sa.isAfter(sb))
+            .getOrElse({
+              a.status != "Aborted"
+            })
+            //.getOrElse(false)
           )
     }.map(r=>metadataRow(r)))}
     </tbody>

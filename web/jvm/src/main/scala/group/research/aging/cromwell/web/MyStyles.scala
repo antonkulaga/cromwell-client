@@ -23,7 +23,10 @@ object MyStyles extends StyleSheet.Standalone {
     )
   */
   "#main" - (
-    overflowX.scroll,
+    overflowX.scroll
+  )
+  "#main\\ part" - (
+    paddingTop(55 px)
   )
 
   "#cromwell" - (
@@ -33,7 +36,9 @@ object MyStyles extends StyleSheet.Standalone {
   "#url" - (
     minWidth(280 px)
   )
+
   ".workflow_cell"- (
     maxWidth(800 px)
   )
+
 }
