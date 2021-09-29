@@ -48,8 +48,9 @@ Setting up files and host parameters
 ------------------------------------
 
 For setting up opening files/folders on the server you can to specify the FILE_PREFIX_URL environment variable.
-For example if the files can be accessed by http://cromwell-server then FILE_PREFIX_URL=http://cromwell-server should be specified either as a parameter for docker container or docker-compose configuration
-By default cromwell-client exposes /data/cromwell-executions folder on the file system, however it can be configured by DATA environment variable.
+For example if the files can be accessed by http://cromwell-server then FILE_PREFIX_URL=http://file_server_url should be specified either as a parameter for docker container or docker-compose configuration. if not specified it shows /data folder.
+By default, at http://cromwell-client:port/data/<your_path> it exposes exposes /data folder of the file system.
+It can be changed by configuring DATA environment variable (which is /data by default)
 
 Usage
 -----

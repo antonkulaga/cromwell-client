@@ -22,6 +22,9 @@ import scala.xml.Unparsed
   */
 object WebServer extends HttpApp with FailFastCirceSupport with LogSupport {
 
+
+  lazy val data_prefix: String = scala.util.Properties.envOrElse("DATA", "/data")
+
   // Set the default log formatter
   Logger.setDefaultFormatter(SourceCodeLogFormatter)
   //Logger.setDefaultLogLevel(LogLevel.DEBUG)
@@ -74,8 +77,8 @@ object WebServer extends HttpApp with FailFastCirceSupport with LogSupport {
     }
   }
 
-  def browse: Route = pathPrefix("data" / Remaining) { file =>
-    val folder = scala.util.Properties.envOrElse("DATA", "/data/cromwell-executions") + "/" + file
+  def browse: Route = pathPrefix( "data" / Remaining) { file =>
+    val folder = data_prefix + "/" + file
     getFromBrowseableDirectories(folder)
   }
 

@@ -29,7 +29,7 @@ services:
     environment:
       - CROMWELL=http://cromwell:8000
       - CROMWELL_LOGS=/data/sources/cromwell-client/logs
-      - DATA=/data/cromwell-executions
+      - DATA=/data
     ports:
       - 8001:8001
     volumes:
