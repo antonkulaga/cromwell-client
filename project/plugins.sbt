@@ -1,4 +1,4 @@
-addSbtPlugin("com.timushev.sbt" % "sbt-updates" % "0.5.1")
+addSbtPlugin("com.timushev.sbt" % "sbt-updates" % "0.6.0")
 
 addSbtPlugin("com.vmunier" % "sbt-web-scalajs" % "1.2.0")
 
@@ -6,8 +6,6 @@ addSbtPlugin("org.scala-js" % "sbt-scalajs" % "1.7.0")
 
 addSbtPlugin("io.spray" % "sbt-revolver" % "0.9.1") //live refresh
 
-addSbtPlugin("com.typesafe.sbt" % "sbt-native-packager" % "1.7.6")
+addSbtPlugin("com.github.sbt" % "sbt-native-packager" % "1.9.4")
 
 addSbtPlugin("org.portable-scala" % "sbt-scalajs-crossproject" % "1.1.0")
-
-addSbtPlugin("net.virtual-void" % "sbt-dependency-graph" % "0.9.2")

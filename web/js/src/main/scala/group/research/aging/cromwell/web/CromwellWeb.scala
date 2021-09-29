@@ -207,7 +207,7 @@ object CromwellWeb extends scala.App with Base {
 
   val workflows = new WorkflowsView(
     state.map(_.sortedMetadata),
-    state.map(_.client.baseHost),
+    state.map(s=>new java.net.URI(s.client.base)),
     commands, state.map(_.fileUrlPrefix)
   )
 

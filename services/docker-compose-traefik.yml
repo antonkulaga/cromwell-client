@@ -43,6 +43,7 @@ services:
       - CROMWELL=http://cromwell:8000
       - CROMWELL_LOGS=/data/sources/cromwell-client/logs
       - FILE_PREFIX_URL=http://cromwell-client.agingkills.eu
+      - DATA=/data/cromwell-executions
     volumes:
       - /data:/data
       - /etc/hosts:/etc/hosts

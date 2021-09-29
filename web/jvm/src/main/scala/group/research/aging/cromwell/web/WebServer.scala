@@ -75,7 +75,7 @@ object WebServer extends HttpApp with FailFastCirceSupport with LogSupport {
   }
 
   def browse: Route = pathPrefix("data" / Remaining) { file =>
-    val folder = scala.util.Properties.envOrElse("DATA", "/data") + "/" + file
+    val folder = scala.util.Properties.envOrElse("DATA", "/data/cromwell-executions") + "/" + file
     getFromBrowseableDirectories(folder)
   }
 

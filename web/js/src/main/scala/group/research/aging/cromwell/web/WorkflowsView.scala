@@ -3,23 +3,30 @@ package group.research.aging.cromwell.web
 import group.research.aging.cromwell.client.{LogCall, Metadata, WorkflowFailure}
 import mhtml._
 import org.scalajs.dom
-import org.scalajs.dom.Event
+import org.scalajs.dom.{Event, console, window}
+
+import java.net.URI
 import scalajs.js
 import scala.xml.Elem
-
 import java.time.format.DateTimeFormatter
 //import com.thoughtworks.binding.Binding.BindingInstances.monadSyntax._
 
 
-class WorkflowsView(allMetadata: Rx[List[Metadata]], baseHost: Rx[String], commands: Var[Commands.Command], filePrefixUrl: Rx[Option[String]]) extends WorkflowViewBase
+class WorkflowsView(allMetadata: Rx[List[Metadata]], url: Rx[URI],
+                    commands: Var[Commands.Command], filePrefixUrl: Rx[Option[String]]) extends WorkflowViewBase
 {
 
-
-  val host: Rx[String] = baseHost.map(h => dom.window.location.protocol +"//"+ h + clientPort)
+  //val host: Rx[String] =url.map(h => dom.window.location.protocol +"//"+ window.location.host + clientPort)
   val fileBase = for{
-    b <- baseHost
+    u <- url
     f <- filePrefixUrl
-  } yield f.getOrElse(b)
+  } yield {
+    //dom.console.log("CLIENT PORT IS ",clientPort)
+
+    f.getOrElse{
+      dom.window.location.protocol +"//"+ u.getHost + clientPort
+    }
+  }
 
 
   def metadataRow(r: Metadata): Elem = {
@@ -65,7 +72,8 @@ class WorkflowsView(allMetadata: Rx[List[Metadata]], baseHost: Rx[String], comma
       <tr>
         <td><a href={fileHost.map(h=> h + c.callRoot)} target="_blank">{name}</a></td>
         <td class={statusClass(c.executionStatus)}>{c.executionStatus}</td>
-        <td><a href={fileHost.map(h=> h + c.stdout)}  target ="_blank">{c.stdout}</a></td>
+        <td><a href={fileHost.map(h=>
+          {h + c.stdout})}  target ="_blank">{c.stdout}</a></td>
         <td><a href={fileHost.map(h=> h + c.stderr)} target ="_blank">{c.stderr}</a></td>
         <td>{c.callCaching.fold("")(r=>r.result)}</td>
         <td>{c.shardIndex}</td>
@@ -156,8 +164,8 @@ class WorkflowsView(allMetadata: Rx[List[Metadata]], baseHost: Rx[String], comma
           }</td>
         </tr>
         <tr>
-          <th>starts</th><td><h3><a href={host.map(h=> timingURL(h, r.id))} target ="_blank">{r.start.map(_.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))).getOrElse("")}</a></h3></td>
-          <th>ends</th><td><h3><a href={host.map(h=> timingURL(h, r.id))} target ="_blank">{r.end.map(_.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))).getOrElse("")}</a></h3></td>
+          <th>starts</th><td><h3><a href={url.map(u=> timingURL(u.toASCIIString, r.id))} target ="_blank">{r.start.map(_.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))).getOrElse("")}</a></h3></td>
+          <th>ends</th><td><h3><a href={url.map(u=> timingURL(u.toASCIIString, r.id))} target ="_blank">{r.end.map(_.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))).getOrElse("")}</a></h3></td>
         </tr>
 
         <tr>
@@ -165,7 +173,7 @@ class WorkflowsView(allMetadata: Rx[List[Metadata]], baseHost: Rx[String], comma
           <th>date</th><td>{r.dates}</td>
         </tr>
         <tr>
-          <th >root</th><td colspan="3"><a href={host.map(h=> h + r.workflowRoot)}  target ="_blank">{r.workflowRoot}</a></td>
+          <th >root</th><td colspan="3"><a href={fileBase.map(f=> f + r.workflowRoot)}  target ="_blank">{r.workflowRoot}</a></td>
         </tr>
         {(if(r.parentWorkflowId.isDefined)
         <tr>

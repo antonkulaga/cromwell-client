@@ -44,7 +44,8 @@ trait CromwellClientShared extends CromwellClientLike with CromwellClientSharedZ
   lazy implicit val zioBackend: SttpBackend[Task, ZioStreams with capabilities.WebSockets] =  HttpClientZioBackend.usingClient(httpClient)
 
 
-  override def baseHost: String = new URI(base).getHost
+  lazy val url: URI = new URI(base)
+  override def baseHost: String = url.getHost
 
   lazy val baseNoPort: String = {
     val first = base.indexOf(":/")
@@ -54,10 +55,6 @@ trait CromwellClientShared extends CromwellClientLike with CromwellClientSharedZ
 
   import sttp.client3._
   import zio._
-
-
-
-
 
   //def get(subpath: String, headers: Map[String, String]): Free[HttpF, HttpResponse]
 

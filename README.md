@@ -13,7 +13,7 @@ reStart
 ```
 It is also published as a Docker container. You can run it as:
 ```bash
-docker run -p 8001:8001 quay.io/comp-bio-aging/cromwell-web:0.5.0
+docker run -p 8001:8001 quay.io/comp-bio-aging/cromwell-web:0.5.2
 ```
 
 ![Screenshot](/screenshot.png?raw=true "CromwellWeb screenshot")
@@ -39,9 +39,18 @@ Adding to dependencies
 
 add the following to you build.sbt
 ```scala
-resolvers += sbt.Resolver.bintrayRepo("comp-bio-aging", "main")
-libraryDependencies += "group.research.aging" %%% "cromwell-client" % "0.5.1"
+resolvers += "jitpack" at "https://jitpack.io"
+libraryDependencies += "group.research.aging" %%% "cromwell-client" % "0.5.2"
 ```
+
+
+Setting up files and host parameters
+------------------------------------
+
+For setting up opening files/folders on the server you can to specify the FILE_PREFIX_URL environment variable.
+For example if the files can be accessed by http://cromwell-server then FILE_PREFIX_URL=http://cromwell-server should be specified either as a parameter for docker container or docker-compose configuration
+By default cromwell-client exposes /data/cromwell-executions folder on the file system, however it can be configured by DATA environment variable.
+
 Usage
 -----
 
