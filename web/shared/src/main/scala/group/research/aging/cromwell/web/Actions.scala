@@ -118,7 +118,7 @@ object Commands{
 
   case class StreamMetadata(status: WorkflowStatus = WorkflowStatus.AnyStatus, id: String = UUID.randomUUID().toString) extends Command
   object QueryWorkflows {
-    lazy val default: QueryWorkflows = QueryWorkflows(WorkflowStatus.AnyStatus, expandSubworkflows = true, 50, 0)
+    lazy val default: QueryWorkflows = QueryWorkflows(WorkflowStatus.AnyStatus, expandSubworkflows = true, 25, 0)
     def apply(query: WorkflowQueryLike): QueryWorkflows = QueryWorkflows(
       status = query.status, expandSubworkflows = query.expandSubworkflows, limit = query.limit, offset = query.offset
     )
@@ -129,7 +129,7 @@ object Commands{
       override def combine(x: QueryWorkflows, y: QueryWorkflows): QueryWorkflows = y //ugly but works
     }
   }
-  case class QueryWorkflows(status: WorkflowStatus, expandSubworkflows: Boolean = true, limit: Int = 50, offset: Int = 0) extends Command with WorkflowQueryLike
+  case class QueryWorkflows(status: WorkflowStatus, expandSubworkflows: Boolean = true, limit: Int = 25, offset: Int = 0) extends Command with WorkflowQueryLike
   case class GetQuery(status: WorkflowStatus, includeSubworkflows: Boolean = true) extends Command
   case class UpdateStatus(status: WorkflowStatus)  extends Command
   case class SelectPipeline(name: String) extends Command
