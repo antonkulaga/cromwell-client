@@ -12,7 +12,7 @@ RUN git clone https://github.com/vishnubob/wait-for-it.git
 RUN mkdir data
 WORKDIR data
 
-COPY ./app-config /app-config
+#COPY ./app-config /app-config
 
 #22-29
 
