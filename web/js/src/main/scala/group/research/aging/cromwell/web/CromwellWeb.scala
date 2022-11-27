@@ -3,16 +3,7 @@ package group.research.aging.cromwell.web
 import group.research.aging.cromwell.client.CromwellClient
 import group.research.aging.cromwell.web.Messages.ExplainedError
 import group.research.aging.cromwell.web.communication.{WebsocketClient, WebsocketMessages}
-//import org.querki.jquery._
 import wvlet.log.LogLevel
-
-import org.scalajs.jquery.JQueryStatic
-import scala.scalajs.js
-import scala.scalajs.js.annotation.JSImport
-
-@js.native
-@JSImport("jquery", JSImport.Namespace)
-object jquery extends JQueryStatic
 
 import scala.util.Random
 

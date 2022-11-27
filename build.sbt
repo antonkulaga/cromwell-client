@@ -46,9 +46,9 @@ lazy val semanticUI = "2.4.1"
 
 lazy val webcomponents = "1.0.1"
 
-lazy val jquery = "3.6.0"
+lazy val jquery = "3.6.1"
 
-lazy val airframeLogVersion = "22.7.3"
+lazy val airframeLogVersion = "22.11.4"
 
 lazy val sttpVersion = "3.5.2"
 
@@ -87,8 +87,7 @@ lazy val  cromwellClient = crossProject(JSPlatform, JVMPlatform)
   .jsSettings(
 		//jsEnv := new org.scalajs.jsenv.jsdomnodejs.JSDOMNodeJSEnv,
 		libraryDependencies ++= Seq(
-			"io.github.cquiroz" %%% "scala-java-time" % "2.5.0",
-			"be.doeraene" %%% "scalajs-jquery" % "1.0.0"
+			"io.github.cquiroz" %%% "scala-java-time" % "2.5.0"
 		)
 	)
 
@@ -96,8 +95,8 @@ lazy val cromwellClientJVM = cromwellClient.jvm
 
 lazy val cromwellClientJS = cromwellClient.js
 
-lazy val akka = "2.6.18"
-lazy val akkaHttp = "10.2.7"
+lazy val akka = "2.7.0"
+lazy val akkaHttp = "10.4.0"
 
 lazy val cromwellWeb = crossProject(JSPlatform, JVMPlatform)
 	.crossType(CrossType.Full)
@@ -107,14 +106,14 @@ lazy val cromwellWeb = crossProject(JSPlatform, JVMPlatform)
 		Test / parallelExecution := false,
 		name := "cromwell-web",
 		libraryDependencies  ++= Seq(
-			"com.github.japgolly.scalacss" %%% "core" % "0.7.0",
+			"com.github.japgolly.scalacss" %%% "core" % "1.0.0",
 			"org.wvlet.airframe" %%% "airframe-log" % airframeLogVersion
 			//"org.scala-lang.modules" %% "scala-collection-compat" % "2.3.2"
 		)
 	)
 	.jsSettings(
 		libraryDependencies ++= Seq(
-			"in.nvilla" %%% "monadic-html" % "0.4.1",
+			"in.nvilla" %%% "monadic-html" % "0.5.0-RC1",
 			"org.akka-js" %%% "akkajsactorstream" % "2.2.6.14"
 		),
 		//jsEnv := new org.scalajs.jsenv.jsdomnodejs.JSDOMNodeJSEnv,
@@ -127,16 +126,16 @@ lazy val cromwellWeb = crossProject(JSPlatform, JVMPlatform)
 			"com.typesafe.akka" %% "akka-http" % akkaHttp,
 			"com.typesafe.akka" %% "akka-http-xml" % akkaHttp,
 			"javax.ws.rs" % "javax.ws.rs-api" % "2.1.1", //for extra annotations
-			"com.github.swagger-akka-http" %% "swagger-akka-http" % "2.5.2",
-			"com.github.swagger-akka-http" %% "swagger-scala-module" % "2.3.4",
+			"com.github.swagger-akka-http" %% "swagger-akka-http" % "2.9.1",
+			"com.github.swagger-akka-http" %% "swagger-scala-module" % "2.8.2",
 			"com.vmunier" %% "scalajs-scripts" % "1.2.0",
-      "de.heikoseeberger" %% "akka-http-circe" % "1.37.0", //"1.31.0",
-			"ch.megard" %% "akka-http-cors" % "1.1.2",
+      "de.heikoseeberger" %% "akka-http-circe" % "1.39.2", //"1.31.0",
+			"ch.megard" %% "akka-http-cors" % "1.1.3",
 			"org.webjars" % "Semantic-UI" %  semanticUI,
 			"org.webjars.bowergithub.fomantic" % "fomantic-ui" % "2.9.0",
 			"org.webjars" % "jquery" % jquery,
 			"org.webjars" % "webcomponentsjs" % webcomponents,
-			"org.webjars" % "swagger-ui" % "4.11.1", //Swagger UI
+			"org.webjars" % "swagger-ui" % "4.15.5", //Swagger UI
 			"com.lihaoyi" %% "requests" % "0.7.1" % Test,
 			"com.lihaoyi" %% "ammonite-ops" % "2.4.1" % Test),
 		(Runtime / managedClasspath) += (Assets / packageBin).value,

@@ -40,7 +40,7 @@ Adding to dependencies
 add the following to you build.sbt
 ```scala
 resolvers += "jitpack" at "https://jitpack.io"
-libraryDependencies += "group.research.aging" %%% "cromwell-client" % "0.5.3"
+libraryDependencies += "group.research.aging" %%% "cromwell-client" % "0.5.4"
 ```
 
 
