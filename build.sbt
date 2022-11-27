@@ -13,9 +13,9 @@ lazy val commonSettings = Seq(
 
 	organization := "group.research.aging",
 
-	scalaVersion :=  "2.13.8",
+	scalaVersion :=  "2.13.10",
 
-	version := "0.5.3",
+	version := "0.5.4",
 
 	Compile / unmanagedClasspath ++= (Compile / unmanagedResources).value,
 
@@ -50,9 +50,9 @@ lazy val jquery = "3.6.0"
 
 lazy val airframeLogVersion = "22.7.3"
 
-lazy val sttpVersion = "3.4.0"
+lazy val sttpVersion = "3.5.2"
 
-lazy val circeVersion = "0.14.2"
+lazy val circeVersion = "0.14.3"
 
 lazy val  cromwellClient = crossProject(JSPlatform, JVMPlatform)
   .crossType(CrossType.Full)
@@ -67,7 +67,7 @@ lazy val  cromwellClient = crossProject(JSPlatform, JVMPlatform)
 
 		libraryDependencies ++= Seq(
 			"com.beachape" %%% "enumeratum" % "1.7.0",
-			"com.lihaoyi" %%% "pprint" % "0.7.3",
+			"com.lihaoyi" %%% "pprint" % "0.8.1",
 			"io.circe" %%% "circe-generic-extras" % circeVersion,
 			"io.circe" %%% "circe-parser" %  circeVersion,
 			"io.circe" %%% "circe-generic" %  circeVersion,
@@ -87,7 +87,7 @@ lazy val  cromwellClient = crossProject(JSPlatform, JVMPlatform)
   .jsSettings(
 		//jsEnv := new org.scalajs.jsenv.jsdomnodejs.JSDOMNodeJSEnv,
 		libraryDependencies ++= Seq(
-			"io.github.cquiroz" %%% "scala-java-time" % "2.4.0",
+			"io.github.cquiroz" %%% "scala-java-time" % "2.5.0",
 			"be.doeraene" %%% "scalajs-jquery" % "1.0.0"
 		)
 	)
@@ -133,7 +133,7 @@ lazy val cromwellWeb = crossProject(JSPlatform, JVMPlatform)
       "de.heikoseeberger" %% "akka-http-circe" % "1.37.0", //"1.31.0",
 			"ch.megard" %% "akka-http-cors" % "1.1.2",
 			"org.webjars" % "Semantic-UI" %  semanticUI,
-			"org.webjars.bowergithub.fomantic" % "fomantic-ui" % "2.8.8",
+			"org.webjars.bowergithub.fomantic" % "fomantic-ui" % "2.9.0",
 			"org.webjars" % "jquery" % jquery,
 			"org.webjars" % "webcomponentsjs" % webcomponents,
 			"org.webjars" % "swagger-ui" % "4.11.1", //Swagger UI
