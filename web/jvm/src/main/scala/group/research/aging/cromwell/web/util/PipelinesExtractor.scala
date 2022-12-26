@@ -50,8 +50,11 @@ trait PipelinesExtractor  {
       fileOption("./pipelines").orElse(
         fileOption("./workflows").orElse(
           System.getProperty("user.home") match {
-            case null => None
-            case v=> fileOption(v + "/pipelines").orElse(fileOption(v + "/workflows")).filter(_.isDirectory).orElse(None)
+            case null =>
+              logger.warn("Cannot read location for pipelines, user.home is zero")
+              None
+            case v=>
+              fileOption(v + "/pipelines").orElse(fileOption(v + "/workflows")).filter(_.isDirectory).orElse(None)
           }
         )
       )
