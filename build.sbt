@@ -46,9 +46,9 @@ lazy val semanticUI = "2.4.1"
 
 lazy val webcomponents = "1.0.1"
 
-lazy val jquery = "3.6.1"
+lazy val jquery = "3.6.3"
 
-lazy val airframeLogVersion = "22.11.4"
+lazy val airframeLogVersion = "23.2.5"
 
 lazy val sttpVersion = "3.5.2"
 
@@ -126,17 +126,17 @@ lazy val cromwellWeb = crossProject(JSPlatform, JVMPlatform)
 			"com.typesafe.akka" %% "akka-http" % akkaHttp,
 			"com.typesafe.akka" %% "akka-http-xml" % akkaHttp,
 			"javax.ws.rs" % "javax.ws.rs-api" % "2.1.1", //for extra annotations
-			"com.github.swagger-akka-http" %% "swagger-akka-http" % "2.9.1",
-			"com.github.swagger-akka-http" %% "swagger-scala-module" % "2.8.2",
+			"com.github.swagger-akka-http" %% "swagger-akka-http" % "2.10.0",
+			"com.github.swagger-akka-http" %% "swagger-scala-module" % "2.9.0",
 			"com.vmunier" %% "scalajs-scripts" % "1.2.0",
       "de.heikoseeberger" %% "akka-http-circe" % "1.39.2", //"1.31.0",
 			"ch.megard" %% "akka-http-cors" % "1.1.3",
 			"org.webjars" % "Semantic-UI" %  semanticUI,
-			"org.webjars.bowergithub.fomantic" % "fomantic-ui" % "2.9.0",
+			"org.webjars.bowergithub.fomantic" % "fomantic-ui" % "2.9.2",
 			"org.webjars" % "jquery" % jquery,
 			"org.webjars" % "webcomponentsjs" % webcomponents,
 			"org.webjars" % "swagger-ui" % "4.15.5", //Swagger UI
-			"com.lihaoyi" %% "requests" % "0.7.1" % Test,
+			"com.lihaoyi" %% "requests" % "0.8.0" % Test,
 			"com.lihaoyi" %% "ammonite-ops" % "2.4.1" % Test),
 		(Runtime / managedClasspath) += (Assets / packageBin).value,
 		//(Runtime / fullClasspath) += (packageBin in Assets).value,

@@ -2,7 +2,7 @@ addSbtPlugin("com.timushev.sbt" % "sbt-updates" % "0.6.4")
 
 addSbtPlugin("com.vmunier" % "sbt-web-scalajs" % "1.2.0")
 
-addSbtPlugin("org.scala-js" % "sbt-scalajs" % "1.12.0")
+addSbtPlugin("org.scala-js" % "sbt-scalajs" % "1.13.0")
 
 
 addSbtPlugin("org.scala-js" % "sbt-scalajs" % "1.8.0")
