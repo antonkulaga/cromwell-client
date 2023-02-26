@@ -16,9 +16,9 @@ WORKDIR data
 
 #22-29
 
-RUN useradd -r -u 1002 $NB_USER
+RUN useradd -r -u 1004 $NB_USER
 RUN usermod -aG docker $NB_USER
-ENV EUID=1002
+ENV EUID=1004
 EXPOSE 8000
 
 ENTRYPOINT ["/bin/sh", "-c"]
