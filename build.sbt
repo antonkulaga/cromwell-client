@@ -13,9 +13,9 @@ lazy val commonSettings = Seq(
 
 	organization := "group.research.aging",
 
-	scalaVersion :=  "2.13.10",
+	scalaVersion :=  "2.13.13",
 
-	version := "0.5.4",
+	version := "0.5.5",
 
 	Compile / unmanagedClasspath ++= (Compile / unmanagedResources).value,
 
@@ -23,7 +23,7 @@ lazy val commonSettings = Seq(
 
 	resolvers += "jitpack" at "https://jitpack.io",
 
-	addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.13.2" cross CrossVersion.full),
+	addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.13.3" cross CrossVersion.full),
 
 	licenses += ("MPL-2.0", url("http://opensource.org/licenses/MPL-2.0")),
 
@@ -66,7 +66,7 @@ lazy val  cromwellClient = crossProject(JSPlatform, JVMPlatform)
     name := "cromwell-client",
 
 		libraryDependencies ++= Seq(
-			"com.beachape" %%% "enumeratum" % "1.7.0",
+			"com.beachape" %%% "enumeratum" % "1.7.3",
 			"com.lihaoyi" %%% "pprint" % "0.8.1",
 			"io.circe" %%% "circe-generic-extras" % circeVersion,
 			"io.circe" %%% "circe-parser" %  circeVersion,
